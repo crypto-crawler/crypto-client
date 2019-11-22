@@ -1,6 +1,6 @@
 {
   "name": "crypto-order",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A library to place and cancel orders in crypto exchange",
   "main": "src/index.ts",
   "scripts": {
@@ -31,16 +31,16 @@
   "bugs": {
     "url": "https://github.com/soulmachine/crypto-order/issues"
   },
-  "homepage": "https://github.com/soulmachine/crypto-order",
+  "homepage": "https://github.com/soulmachine/crypto-order#readme",
   "devDependencies": {
     "@types/assert": "^1.4.3",
-    "@types/node": "^12.12.8",
+    "@types/node": "^12.12.11",
     "@types/yargs": "^13.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.7.0",
-    "@typescript-eslint/parser": "^2.7.0",
+    "@typescript-eslint/eslint-plugin": "^2.8.0",
+    "@typescript-eslint/parser": "^2.8.0",
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-prettier": "^6.5.0",
+    "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-markdown": "^1.0.1",
@@ -50,6 +50,6 @@
   },
   "dependencies": {
     "assert": "^2.0.0",
-    "yargs": "^14.2.0"
+    "yargs": "^15.0.2"
   }
 }

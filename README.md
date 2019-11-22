@@ -1,2 +1,4 @@
 # crypto-order
-A library to place and cancel orders in crypto exchanges
+
+A library to place and cancel orders at crypto exchanges.
+
