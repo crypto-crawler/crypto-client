@@ -23,7 +23,7 @@ const eslintrc = {
     },
   ],
   rules: {
-    'no-console': 'off',
+    camelcase: 0,
   },
 };
 

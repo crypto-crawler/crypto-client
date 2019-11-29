@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "target": "es2017",
     "module": "commonjs",
+    "declaration": true,
+    "outDir": "dist",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     "strict": true /* Enable all strict type-checking options. */,
 
@@ -15,9 +18,8 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "noImplicitAny": true,
 
-    "target": "es2019",
-    "lib": ["es2019"]
+    "lib": ["esnext", "dom"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
