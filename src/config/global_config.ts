@@ -3,6 +3,7 @@ export interface UserConfig {
   eosPrivateKey?: string;
   eosApiEndpoints?: string[];
   ethPrivateKey?: string;
+  whaleExApiKey?: string;
 }
 
 // Should be initialized by init().
@@ -10,6 +11,7 @@ export const USER_CONFIG: UserConfig = {
   eosAccount: '',
   eosPrivateKey: '',
   ethPrivateKey: '',
+  whaleExApiKey: '',
 };
 
 export const EOS_API_ENDPOINTS = [

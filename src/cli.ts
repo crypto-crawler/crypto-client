@@ -18,9 +18,12 @@ const { argv } = yargs.options({
     type: 'string',
     demandOption: true,
   },
+  whaleExApiKey: {
+    type: 'string',
+  },
 });
 
-async function testAll(): Promise<void> {
+export default async function testNewdex(): Promise<void> {
   const placeOrderId = await placeOrder('Newdex', 'EIDOS_EOS', '0.00121', '9.2644', false);
   console.info(placeOrderId);
 
@@ -31,11 +34,23 @@ async function testAll(): Promise<void> {
   console.info(cancelOrderId);
 }
 
+async function testWhaleEx(): Promise<void> {
+  const orderId = await placeOrder('WhaleEx', 'EIDOS_EOS', '0.00121', '9.2644', false);
+  console.info(orderId);
+
+  console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
+
+  console.info(await cancelOrder('WhaleEx', 'EIDOS_EOS', orderId));
+
+  console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
+}
+
 (async () => {
   await init({
     eosAccount: argv.eosAccount,
     eosPrivateKey: argv.eosPrivateKey,
+    whaleExApiKey: argv.whaleExApiKey,
   });
 
-  await testAll();
+  await testWhaleEx();
 })();

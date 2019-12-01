@@ -1,16 +1,22 @@
 import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
 import * as Newdex from './order/newdex';
+import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 
 export const EXCHANGES = ['Newdex', 'WhaleEx'] as const;
 export type SupportedExchange = typeof EXCHANGES[number];
 
+/**
+ * Initialize.
+ *
+ */
 export async function init({
   eosAccount = '',
   eosPrivateKey = '',
   eosApiEndpoints = [],
   ethPrivateKey = '',
+  whaleExApiKey = '',
 }: UserConfig): Promise<void> {
   if (!((eosAccount && eosPrivateKey) || ethPrivateKey)) {
     throw new Error('There should be at leaset one valid configuration.');
@@ -27,6 +33,10 @@ export async function init({
   }
 
   if (ethPrivateKey) USER_CONFIG.ethPrivateKey = ethPrivateKey;
+
+  if (whaleExApiKey) {
+    await WhaleEx.initilize(whaleExApiKey);
+  }
 }
 
 /**
@@ -57,6 +67,9 @@ export async function placeOrder(
   switch (exchange) {
     case 'Newdex':
       return Newdex.placeOrder(pair, price, quantity, sell);
+    case 'WhaleEx': {
+      return WhaleEx.placeOrder(pair, price, quantity, sell);
+    }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -88,11 +101,22 @@ export async function cancelOrder(
     case 'Newdex': {
       return Newdex.cancelOrder(orderId_or_transactionId);
     }
+    case 'WhaleEx': {
+      return WhaleEx.cancelOrder(orderId_or_transactionId);
+    }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
 }
 
+/**
+ * Query an order.
+ *
+ * @param exchange The exchange name
+ * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param orderId_or_transactionId orderId if central, transactionId if dex
+ * @returns The order information
+ */
 export async function queryOrder(
   exchange: string,
   pair: string,
@@ -105,6 +129,9 @@ export async function queryOrder(
   switch (exchange) {
     case 'Newdex': {
       return Newdex.queryOrder(pair, orderId_or_transactionId);
+    }
+    case 'WhaleEx': {
+      return WhaleEx.queryOrder(pair, orderId_or_transactionId);
     }
     default:
       throw Error(`Unknown exchange: ${exchange}`);

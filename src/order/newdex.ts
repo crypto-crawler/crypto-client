@@ -16,15 +16,6 @@ import {
 
 let NEWDEX_INFO: ExchangeInfo;
 
-/**
- * Place an order.
- *
- * @param pair The normalized pair, e.g., EIDOS_EOS
- * @param price The price
- * @param quantity The quantity
- * @param sell true, sell; false, buy
- * @returns transaction_id
- */
 export async function placeOrder(
   pair: string,
   price: string,
@@ -35,7 +26,7 @@ export async function placeOrder(
   if (NEWDEX_INFO === undefined) {
     NEWDEX_INFO = await getExchangeInfo('Newdex');
   }
-  const pairInfo = NEWDEX_INFO.pairs.filter(p => p.normalized_pair === pair)[0] as NewdexPairInfo;
+  const pairInfo = NEWDEX_INFO.pairs[pair] as NewdexPairInfo;
 
   if (!validatePriceQuantity(price, quantity, pairInfo)) {
     throw new Error('Validaton on price and quantity failed');
@@ -135,7 +126,7 @@ export async function queryOrder(pair: string, transactionId: string): Promise<o
   if (NEWDEX_INFO === undefined) {
     NEWDEX_INFO = await getExchangeInfo('Newdex');
   }
-  const pairInfo = NEWDEX_INFO.pairs.filter(p => p.normalized_pair === pair)[0] as NewdexPairInfo;
+  const pairInfo = NEWDEX_INFO.pairs[pair] as NewdexPairInfo;
   assert.equal(
     order.contract,
     sell ? pairInfo.base_symbol.contract : pairInfo.quote_symbol.contract,
