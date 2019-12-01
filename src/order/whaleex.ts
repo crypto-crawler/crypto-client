@@ -95,7 +95,7 @@ export async function placeOrder(
   assert.equal(response.status, 200);
 
   if (response.data.returnCode === '0') {
-    assert.equal(response.data.message, 'success');
+    assert.equal(typeof response.data.result, 'string');
     return response.data.result as string;
   }
   throw new Error(JSON.stringify(response.data));

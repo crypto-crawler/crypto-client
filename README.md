@@ -32,6 +32,11 @@ const CryptoOrder = require('crypto-order'); // eslint-disable-line import/no-un
 })();
 ```
 
+## Supported Exchanges
+
+- Newdex
+- WhaleEx
+
 ## Related Projects
 
 - [crypto-crawler](https://www.npmjs.com/package/crypto-crawler), crawl orderbook and trade messages from crypto exchanges.
