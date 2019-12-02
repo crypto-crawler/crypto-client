@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import yargs from 'yargs';
-import { init, placeOrder, queryOrder, cancelOrder, EXCHANGES } from './index';
+import { init, placeOrder, queryOrder, cancelOrder, SUPPORTED_EXCHANGES } from './index';
 
 const { argv } = yargs.options({
   exchange: {
-    choices: EXCHANGES,
+    choices: SUPPORTED_EXCHANGES,
     type: 'string',
     demandOption: true,
   },

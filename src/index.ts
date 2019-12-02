@@ -5,8 +5,7 @@ import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 
-export const EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'] as const;
-export type SupportedExchange = typeof EXCHANGES[number];
+export const SUPPORTED_EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'];
 
 /**
  * Initialize.
@@ -55,13 +54,14 @@ export async function init({
  * @returns transaction_id for dex, or order_id for central
  */
 export async function placeOrder(
-  exchange: SupportedExchange,
+  exchange: string,
   pair: string,
   price: string,
   quantity: string,
   sell: boolean,
 ): Promise<string> {
   assert.ok(exchange);
+  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
   assert.ok(pair);
   assert.equal(pair.split('_').length, 2);
   if (['Newdex', 'WhaleEx'].includes(exchange)) {
@@ -99,6 +99,7 @@ export async function cancelOrder(
   orderId_or_transactionId: string,
 ): Promise<boolean | string> {
   assert.ok(exchange);
+  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
   assert.ok(pair);
   assert.ok(orderId_or_transactionId);
   assert.equal(pair.split('_').length, 2);
@@ -136,6 +137,7 @@ export async function queryOrder(
   orderId_or_transactionId: string,
 ): Promise<object | undefined> {
   assert.ok(exchange);
+  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
   assert.ok(pair);
   assert.ok(orderId_or_transactionId);
   assert.equal(pair.split('_').length, 2);
