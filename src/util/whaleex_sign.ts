@@ -23,7 +23,7 @@ function defaultHandler(params: Params): Params {
   };
 }
 
-type Params = { [key: string]: string | number | boolean };
+export type Params = { [key: string]: string | number | boolean };
 type Handler = (params: Params) => Params;
 
 const HANDLER: { [key: string]: Handler } = {

@@ -62,7 +62,8 @@ export async function placeOrder(
   return transactionId;
 }
 
-export async function cancelOrder(transactionId: string): Promise<boolean | string> {
+export async function cancelOrder(pair: string, transactionId: string): Promise<boolean | string> {
+  assert.ok(pair);
   assert.ok(USER_CONFIG.eosAccount);
 
   const orderId = await Bloks.getOrderId(transactionId);

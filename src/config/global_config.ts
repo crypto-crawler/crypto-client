@@ -4,6 +4,8 @@ export interface UserConfig {
   eosApiEndpoints?: string[];
   ethPrivateKey?: string;
   whaleExApiKey?: string;
+  MXCAccessKey?: string;
+  MXCSecretKey?: string;
 }
 
 // Should be initialized by init().
@@ -12,6 +14,8 @@ export const USER_CONFIG: UserConfig = {
   eosPrivateKey: '',
   ethPrivateKey: '',
   whaleExApiKey: '',
+  MXCAccessKey: '',
+  MXCSecretKey: '',
 };
 
 export const EOS_API_ENDPOINTS = [

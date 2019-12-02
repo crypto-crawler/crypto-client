@@ -101,7 +101,8 @@ export async function placeOrder(
   throw new Error(JSON.stringify(response.data));
 }
 
-export async function cancelOrder(orderId: string): Promise<boolean> {
+export async function cancelOrder(pair: string, orderId: string): Promise<boolean> {
+  assert.ok(pair);
   const path = `/api/v1/order/orders/${orderId}/submitcancel`;
   const params = signData('POST', path);
 

@@ -1,6 +1,6 @@
 {
   "name": "crypto-order",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A library to place and cancel orders in crypto exchange",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -63,7 +63,7 @@
     "eos-utils": "0.0.4",
     "eosjs": "^20.0.0",
     "eosjs-ecc": "^4.0.7",
-    "exchange-info": "^1.0.8",
+    "exchange-info": "^1.0.10",
     "long": "^4.0.0",
     "mathjs": "^6.2.5",
     "node-fetch": "^2.6.0",

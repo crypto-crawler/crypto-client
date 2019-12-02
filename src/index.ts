@@ -1,10 +1,11 @@
 import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
+import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 
-export const EXCHANGES = ['Newdex', 'WhaleEx'] as const;
+export const EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'] as const;
 export type SupportedExchange = typeof EXCHANGES[number];
 
 /**
@@ -17,25 +18,29 @@ export async function init({
   eosApiEndpoints = [],
   ethPrivateKey = '',
   whaleExApiKey = '',
+  MXCAccessKey = '',
+  MXCSecretKey = '',
 }: UserConfig): Promise<void> {
-  if (!((eosAccount && eosPrivateKey) || ethPrivateKey)) {
-    throw new Error('There should be at leaset one valid configuration.');
-  }
+  if (eosAccount) {
+    USER_CONFIG.eosAccount = eosAccount;
+    if (!isValidPrivate(eosPrivateKey)) throw Error(`Invalid EOS private key: ${eosPrivateKey}`);
+    USER_CONFIG.eosPrivateKey = eosPrivateKey;
 
-  if (eosAccount) USER_CONFIG.eosAccount = eosAccount;
-
-  if (!isValidPrivate(eosPrivateKey)) throw Error(`Invalid EOS private key: ${eosPrivateKey}`);
-  USER_CONFIG.eosPrivateKey = eosPrivateKey;
-
-  if (eosApiEndpoints && eosApiEndpoints.length) {
-    // clear EOS_API_ENDPOINTS and copy all elements of eosApiEndpoints into it
-    EOS_API_ENDPOINTS.splice(0, EOS_API_ENDPOINTS.length, ...eosApiEndpoints);
+    if (eosApiEndpoints && eosApiEndpoints.length) {
+      // clear EOS_API_ENDPOINTS and copy all elements of eosApiEndpoints into it
+      EOS_API_ENDPOINTS.splice(0, EOS_API_ENDPOINTS.length, ...eosApiEndpoints);
+    }
   }
 
   if (ethPrivateKey) USER_CONFIG.ethPrivateKey = ethPrivateKey;
 
   if (whaleExApiKey) {
     await WhaleEx.initilize(whaleExApiKey);
+  }
+  if (MXCAccessKey) {
+    assert.ok(MXCSecretKey);
+    USER_CONFIG.MXCAccessKey = MXCAccessKey!;
+    USER_CONFIG.MXCSecretKey = MXCSecretKey!;
   }
 }
 
@@ -57,14 +62,19 @@ export async function placeOrder(
   sell: boolean,
 ): Promise<string> {
   assert.ok(exchange);
+  assert.ok(pair);
   assert.equal(pair.split('_').length, 2);
-  const quoteCurrency = pair.split('_')[1];
-  if (quoteCurrency === 'EOS') {
-    assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
-    assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
+  if (['Newdex', 'WhaleEx'].includes(exchange)) {
+    const quoteCurrency = pair.split('_')[1];
+    if (quoteCurrency === 'EOS') {
+      assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
+      assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
+    }
   }
 
   switch (exchange) {
+    case 'MXC':
+      return MXC.placeOrder(pair, price, quantity, sell);
     case 'Newdex':
       return Newdex.placeOrder(pair, price, quantity, sell);
     case 'WhaleEx': {
@@ -89,21 +99,24 @@ export async function cancelOrder(
   orderId_or_transactionId: string,
 ): Promise<boolean | string> {
   assert.ok(exchange);
+  assert.ok(pair);
   assert.ok(orderId_or_transactionId);
   assert.equal(pair.split('_').length, 2);
-  const quoteCurrency = pair.split('_')[1];
-  if (quoteCurrency === 'EOS') {
-    assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
-    assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
+  if (['Newdex', 'WhaleEx'].includes(exchange)) {
+    const quoteCurrency = pair.split('_')[1];
+    if (quoteCurrency === 'EOS') {
+      assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
+      assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
+    }
   }
 
   switch (exchange) {
-    case 'Newdex': {
-      return Newdex.cancelOrder(orderId_or_transactionId);
-    }
-    case 'WhaleEx': {
-      return WhaleEx.cancelOrder(orderId_or_transactionId);
-    }
+    case 'MXC':
+      return MXC.cancelOrder(pair, orderId_or_transactionId);
+    case 'Newdex':
+      return Newdex.cancelOrder(pair, orderId_or_transactionId);
+    case 'WhaleEx':
+      return WhaleEx.cancelOrder(pair, orderId_or_transactionId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -123,16 +136,17 @@ export async function queryOrder(
   orderId_or_transactionId: string,
 ): Promise<object | undefined> {
   assert.ok(exchange);
+  assert.ok(pair);
   assert.ok(orderId_or_transactionId);
   assert.equal(pair.split('_').length, 2);
 
   switch (exchange) {
-    case 'Newdex': {
+    case 'MXC':
+      return MXC.queryOrder(pair, orderId_or_transactionId);
+    case 'Newdex':
       return Newdex.queryOrder(pair, orderId_or_transactionId);
-    }
-    case 'WhaleEx': {
+    case 'WhaleEx':
       return WhaleEx.queryOrder(pair, orderId_or_transactionId);
-    }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
