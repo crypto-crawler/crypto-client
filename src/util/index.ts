@@ -55,9 +55,9 @@ export async function retry(
   throw error;
 }
 
-function validatePrecision(number: string, precision: number): boolean {
-  if (!number.includes('.')) return false;
-  return number.length - 1 - number.indexOf('.') === precision;
+export function calcPrecision(numberStr: string): number {
+  if (!numberStr.includes('.')) return 0;
+  return numberStr.length - numberStr.indexOf('.') - 1;
 }
 
 export function validatePriceQuantity(
@@ -65,10 +65,12 @@ export function validatePriceQuantity(
   quantity: string,
   pairInfo: PairInfo,
 ): boolean {
-  assert.ok(validatePrecision(price, pairInfo.price_precision));
-  assert.ok(validatePrecision(quantity, pairInfo.quantity_precision));
+  assert.equal(calcPrecision(price), pairInfo.price_precision, "price_precision doesn't match");
+  assert.equal(calcPrecision(quantity), pairInfo.base_precision, "base_precision doesn't match");
   if (parseFloat(quantity) * parseFloat(price) <= pairInfo.min_order_volume) {
-    throw Error(`The trading volume must be greater than ${pairInfo.min_order_volume} EOS`);
+    throw Error(
+      `The trading volume is less than ${pairInfo.min_order_volume} ${pairInfo.split('_')[1]}`,
+    );
   }
   return true;
 }

@@ -5,6 +5,7 @@ import getExchangeInfo, { ExchangeInfo, WhaleExPairInfo } from 'exchange-info';
 // import debug from '../util/debug';
 import { signData, signDataOrder, SymbolObj, WhaleExOrder } from '../util/whaleex_sign';
 import { USER_CONFIG } from '../config';
+import { validatePriceQuantity } from '../util';
 
 let WHALEEX_INFO: ExchangeInfo;
 
@@ -51,6 +52,7 @@ const ID_STORE: { getId: () => Promise<string> } = {
 };
 
 export async function initilize(apiKey: string): Promise<void> {
+  assert.ok(apiKey);
   USER_CONFIG.whaleExApiKey = apiKey;
   const idStore = await createIdStore();
   ID_STORE.getId = idStore.getId;
@@ -62,10 +64,16 @@ export async function placeOrder(
   quantity: string,
   sell: boolean,
 ): Promise<string> {
+  assert.ok(USER_CONFIG.whaleExApiKey, 'APIKey is empty');
+
   if (WHALEEX_INFO === undefined) {
     WHALEEX_INFO = await getExchangeInfo('WhaleEx');
   }
   const pairInfo = WHALEEX_INFO.pairs[pair] as WhaleExPairInfo;
+
+  if (!validatePriceQuantity(price, quantity, pairInfo)) {
+    throw new Error('Validaton on price and quantity failed');
+  }
 
   const path = '/api/v1/order/orders/place';
 
@@ -103,6 +111,8 @@ export async function placeOrder(
 
 export async function cancelOrder(pair: string, orderId: string): Promise<boolean> {
   assert.ok(pair);
+  assert.ok(USER_CONFIG.whaleExApiKey);
+
   const path = `/api/v1/order/orders/${orderId}/submitcancel`;
   const params = signData('POST', path);
 
@@ -113,6 +123,8 @@ export async function cancelOrder(pair: string, orderId: string): Promise<boolea
 
 export async function queryOrder(pair: string, orderId: string): Promise<object | undefined> {
   assert.ok(pair);
+  assert.ok(USER_CONFIG.whaleExApiKey);
+
   const path = `/api/v1/order/orders/${orderId}`;
   const params = signData('GET', path);
   const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);

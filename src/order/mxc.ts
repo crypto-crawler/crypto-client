@@ -5,6 +5,7 @@ import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
 import debug from '../util/debug';
 import { USER_CONFIG } from '../config';
 import { Params, sort } from '../util/whaleex_sign';
+import { validatePriceQuantity } from '../util';
 
 const API_BASE_URL = 'https://www.mxc.com';
 
@@ -63,10 +64,17 @@ export async function placeOrder(
 ): Promise<string> {
   assert.ok(pair);
   checkTradable(pair);
+  assert.ok(USER_CONFIG.MXCAccessKey);
+  assert.ok(USER_CONFIG.MXCSecretKey);
+
   if (MXC_INFO === undefined) {
     MXC_INFO = await getExchangeInfo('MXC');
   }
   const pairInfo = MXC_INFO.pairs[pair] as PairInfo;
+
+  if (!validatePriceQuantity(price, quantity, pairInfo)) {
+    throw new Error('Validaton on price and quantity failed');
+  }
 
   const path = '/open/api/v1/private/order';
 
