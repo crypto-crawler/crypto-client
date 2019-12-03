@@ -15,13 +15,7 @@ const CryptoOrder = require('crypto-order'); // eslint-disable-line import/no-un
   });
 
   // buy
-  const transactionId = await CryptoOrder.placeOrder(
-    'Newdex',
-    'EIDOS_EOS',
-    '0.00121',
-    '9.2644',
-    false,
-  );
+  const transactionId = await CryptoOrder.placeOrder('Newdex', 'EIDOS_EOS', 0.00121, 9.2644, false);
   console.info(transactionId);
 
   const orderInfo = await CryptoOrder.queryOrder('Newdex', 'EIDOS_EOS', transactionId);
