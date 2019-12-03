@@ -1,6 +1,6 @@
 {
   "name": "crypto-order",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A library to place and cancel orders in crypto exchange",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +11,7 @@
     "start": "node ./dist/index.js",
     "lint": "eslint . --ext '.js,.jsx,.ts,.tsx,.md'",
     "prettier": "prettier -c --write '**/*'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config jest.config.json --no-cache"
   },
   "pre-commit": [
     "prettier",
@@ -38,14 +38,15 @@
   "devDependencies": {
     "@types/assert": "^1.4.3",
     "@types/debug": "^4.1.5",
+    "@types/jest": "^24.0.23",
     "@types/long": "^4.0.0",
     "@types/mathjs": "^6.0.2",
     "@types/node": "^12.12.14",
     "@types/node-fetch": "^2.5.4",
     "@types/text-encoding": "0.0.35",
     "@types/yargs": "^13.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.9.0",
-    "@typescript-eslint/parser": "^2.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.10.0",
+    "@typescript-eslint/parser": "^2.10.0",
     "eslint": "^6.7.2",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.7.0",
@@ -53,17 +54,20 @@
     "eslint-plugin-jest": "^23.1.1",
     "eslint-plugin-markdown": "^1.0.1",
     "eslint-plugin-prettier": "^3.1.1",
+    "jest": "^24.9.0",
     "prettier": "^1.19.1",
+    "ts-jest": "^24.2.0",
     "typescript": "^3.7.2"
   },
   "dependencies": {
     "assert": "^2.0.0",
     "axios": "^0.19.0",
+    "bignumber.js": "^9.0.0",
     "debug": "^4.1.1",
     "eos-utils": "0.0.4",
     "eosjs": "^20.0.0",
     "eosjs-ecc": "^4.0.7",
-    "exchange-info": "^1.0.10",
+    "exchange-info": "^1.0.11",
     "long": "^4.0.0",
     "mathjs": "^6.2.5",
     "node-fetch": "^2.6.0",

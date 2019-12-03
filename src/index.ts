@@ -1,11 +1,16 @@
 import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
+import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
+import { numberToString, validatePriceQuantity } from './util';
 
-export const SUPPORTED_EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'];
+export const SUPPORTED_EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'] as const;
+export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
+
+const exchangeInfoCache: { [key: string]: ExchangeInfo } = {};
 
 /**
  * Initialize.
@@ -43,23 +48,7 @@ export async function init({
   }
 }
 
-/**
- * Place an order.
- *
- * @param exchange  The exchange name
- * @param pair The normalized pair, e.g., EIDOS_EOS
- * @param price The price
- * @param quantity The quantity
- * @param sell true if sell, otherwise false
- * @returns transaction_id for dex, or order_id for central
- */
-export async function placeOrder(
-  exchange: string,
-  pair: string,
-  price: string,
-  quantity: string,
-  sell: boolean,
-): Promise<string> {
+function checkExchangeAndPair(exchange: SupportedExchange, pair: string): boolean {
   assert.ok(exchange);
   assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
   assert.ok(pair);
@@ -71,14 +60,71 @@ export async function placeOrder(
       assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
     }
   }
+  return true;
+}
+
+async function convertPriceAndQuantityToStrings(
+  pairInfo: PairInfo,
+  price: number,
+  quantity: number,
+  sell: boolean,
+): Promise<[string, string]> {
+  const priceStr = numberToString(price, pairInfo.price_precision, !sell);
+  const quantityStr = numberToString(quantity, pairInfo.base_precision, false);
+  const orderVolume = parseFloat(priceStr) * parseFloat(quantityStr);
+  if (orderVolume < pairInfo.min_order_volume) {
+    throw new Error(
+      `Order volume ${orderVolume}  is less than min_order_volume ${pairInfo.min_order_volume} ${
+        pairInfo.split('_')[1]
+      }`,
+    );
+  }
+
+  if (!validatePriceQuantity(priceStr, quantityStr, pairInfo)) {
+    throw new Error('Validaton on price and quantity failed');
+  }
+
+  return [priceStr, quantityStr];
+}
+
+/**
+ * Place an order.
+ *
+ * @param exchange  The exchange name
+ * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param price The price
+ * @param quantity The quantity
+ * @param sell true if sell, otherwise false
+ * @returns transaction_id for dex, or order_id for central
+ */
+export async function placeOrder(
+  exchange: SupportedExchange,
+  pair: string,
+  price: number,
+  quantity: number,
+  sell: boolean,
+): Promise<string> {
+  checkExchangeAndPair(exchange, pair);
+
+  if (!(exchange in exchangeInfoCache)) {
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+  }
+  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+
+  const [priceStr, quantityStr] = await convertPriceAndQuantityToStrings(
+    pairInfo,
+    price,
+    quantity,
+    sell,
+  );
 
   switch (exchange) {
     case 'MXC':
-      return MXC.placeOrder(pair, price, quantity, sell);
+      return MXC.placeOrder(pairInfo, priceStr, quantityStr, sell);
     case 'Newdex':
-      return Newdex.placeOrder(pair, price, quantity, sell);
+      return Newdex.placeOrder(pairInfo, priceStr, quantityStr, sell);
     case 'WhaleEx': {
-      return WhaleEx.placeOrder(pair, price, quantity, sell);
+      return WhaleEx.placeOrder(pairInfo, priceStr, quantityStr, sell);
     }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
@@ -94,30 +140,25 @@ export async function placeOrder(
  * @returns boolean if central, transaction_id if dex
  */
 export async function cancelOrder(
-  exchange: string,
+  exchange: SupportedExchange,
   pair: string,
   orderId_or_transactionId: string,
 ): Promise<boolean | string> {
-  assert.ok(exchange);
-  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
-  assert.ok(pair);
   assert.ok(orderId_or_transactionId);
-  assert.equal(pair.split('_').length, 2);
-  if (['Newdex', 'WhaleEx'].includes(exchange)) {
-    const quoteCurrency = pair.split('_')[1];
-    if (quoteCurrency === 'EOS') {
-      assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
-      assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
-    }
+  checkExchangeAndPair(exchange, pair);
+
+  if (!(exchange in exchangeInfoCache)) {
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
   }
+  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
   switch (exchange) {
     case 'MXC':
-      return MXC.cancelOrder(pair, orderId_or_transactionId);
+      return MXC.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
-      return Newdex.cancelOrder(pair, orderId_or_transactionId);
+      return Newdex.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'WhaleEx':
-      return WhaleEx.cancelOrder(pair, orderId_or_transactionId);
+      return WhaleEx.cancelOrder(pairInfo, orderId_or_transactionId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -132,23 +173,25 @@ export async function cancelOrder(
  * @returns The order information
  */
 export async function queryOrder(
-  exchange: string,
+  exchange: SupportedExchange,
   pair: string,
   orderId_or_transactionId: string,
 ): Promise<object | undefined> {
-  assert.ok(exchange);
-  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
-  assert.ok(pair);
   assert.ok(orderId_or_transactionId);
-  assert.equal(pair.split('_').length, 2);
+  checkExchangeAndPair(exchange, pair);
+
+  if (!(exchange in exchangeInfoCache)) {
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+  }
+  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
   switch (exchange) {
     case 'MXC':
-      return MXC.queryOrder(pair, orderId_or_transactionId);
+      return MXC.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
-      return Newdex.queryOrder(pair, orderId_or_transactionId);
+      return Newdex.queryOrder(pairInfo, orderId_or_transactionId);
     case 'WhaleEx':
-      return WhaleEx.queryOrder(pair, orderId_or_transactionId);
+      return WhaleEx.queryOrder(pairInfo, orderId_or_transactionId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }

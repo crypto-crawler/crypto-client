@@ -1,4 +1,5 @@
 import { strict as assert } from 'assert';
+import BigNumber from 'bignumber.js';
 import { PairInfo } from 'exchange-info';
 
 export type AsyncFunc = (...args: any[]) => Promise<any>;
@@ -58,6 +59,20 @@ export async function retry(
 export function calcPrecision(numberStr: string): number {
   if (!numberStr.includes('.')) return 0;
   return numberStr.length - numberStr.indexOf('.') - 1;
+}
+
+export function numberToString(n: number, decimal: number, ceil: boolean = false): string {
+  const rounded = new BigNumber(n)
+    .times(new BigNumber(10).pow(decimal + 1))
+    .integerValue()
+    .div(10);
+  const restored = ceil
+    ? rounded.integerValue(BigNumber.ROUND_CEIL)
+    : rounded.integerValue(BigNumber.ROUND_DOWN);
+  return restored
+    .div(new BigNumber(10).pow(decimal))
+    .toNumber()
+    .toFixed(decimal);
 }
 
 export function validatePriceQuantity(

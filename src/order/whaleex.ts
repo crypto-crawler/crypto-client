@@ -1,13 +1,10 @@
 // forked from https://github.com/WhaleEx/API/blob/master/sample/nodejs/whaleex-api.js
 import { strict as assert } from 'assert';
 import Axios from 'axios';
-import getExchangeInfo, { ExchangeInfo, WhaleExPairInfo } from 'exchange-info';
+import { PairInfo } from 'exchange-info';
 // import debug from '../util/debug';
 import { signData, signDataOrder, SymbolObj, WhaleExOrder } from '../util/whaleex_sign';
 import { USER_CONFIG } from '../config';
-import { validatePriceQuantity } from '../util';
-
-let WHALEEX_INFO: ExchangeInfo;
 
 const URL_PREFIX = 'https://api.whaleex.com/BUSINESS';
 
@@ -59,21 +56,13 @@ export async function initilize(apiKey: string): Promise<void> {
 }
 
 export async function placeOrder(
-  pair: string,
+  pairInfo: PairInfo,
   price: string,
   quantity: string,
   sell: boolean,
 ): Promise<string> {
+  assert.ok(pairInfo);
   assert.ok(USER_CONFIG.whaleExApiKey, 'APIKey is empty');
-
-  if (WHALEEX_INFO === undefined) {
-    WHALEEX_INFO = await getExchangeInfo('WhaleEx');
-  }
-  const pairInfo = WHALEEX_INFO.pairs[pair] as WhaleExPairInfo;
-
-  if (!validatePriceQuantity(price, quantity, pairInfo)) {
-    throw new Error('Validaton on price and quantity failed');
-  }
 
   const path = '/api/v1/order/orders/place';
 
@@ -85,8 +74,8 @@ export async function placeOrder(
     type: sell ? 'sell-limit' : 'buy-limit',
   };
   const symbolObj: SymbolObj = {
-    baseToken: pair.split('_')[0],
-    quoteToken: pair.split('_')[1],
+    baseToken: pairInfo.normalized_pair.split('_')[0],
+    quoteToken: pairInfo.normalized_pair.split('_')[1],
     basePrecision: pairInfo.base_precision,
     quotePrecision: pairInfo.quote_precision,
     baseContract: pairInfo.base_contract!,
@@ -109,8 +98,8 @@ export async function placeOrder(
   throw new Error(JSON.stringify(response.data));
 }
 
-export async function cancelOrder(pair: string, orderId: string): Promise<boolean> {
-  assert.ok(pair);
+export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
+  assert.ok(pairInfo);
   assert.ok(USER_CONFIG.whaleExApiKey);
 
   const path = `/api/v1/order/orders/${orderId}/submitcancel`;
@@ -121,8 +110,8 @@ export async function cancelOrder(pair: string, orderId: string): Promise<boolea
   return response.status === 200 && response.data.returnCode === '0';
 }
 
-export async function queryOrder(pair: string, orderId: string): Promise<object | undefined> {
-  assert.ok(pair);
+export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<object | undefined> {
+  assert.ok(pairInfo);
   assert.ok(USER_CONFIG.whaleExApiKey);
 
   const path = `/api/v1/order/orders/${orderId}`;

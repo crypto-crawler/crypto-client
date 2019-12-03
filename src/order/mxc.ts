@@ -1,11 +1,10 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
-import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
+import { PairInfo } from 'exchange-info';
 import debug from '../util/debug';
 import { USER_CONFIG } from '../config';
 import { Params, sort } from '../util/whaleex_sign';
-import { validatePriceQuantity } from '../util';
 
 const API_BASE_URL = 'https://www.mxc.com';
 
@@ -39,8 +38,6 @@ const SUPPORTED_PAIRS = [
   'IRIS_USDT',
 ];
 
-let MXC_INFO: ExchangeInfo;
-
 function checkTradable(pair: string): boolean {
   const tradable = SUPPORTED_PAIRS.includes(pair);
   assert.ok(tradable, `The pair ${pair} is not tradable through API`);
@@ -57,24 +54,15 @@ function sign(params: Params, secretKey: string): [string, string] {
 }
 
 export async function placeOrder(
-  pair: string,
+  pairInfo: PairInfo,
   price: string,
   quantity: string,
   sell: boolean,
 ): Promise<string> {
-  assert.ok(pair);
-  checkTradable(pair);
+  assert.ok(pairInfo);
+  checkTradable(pairInfo.normalized_pair);
   assert.ok(USER_CONFIG.MXCAccessKey);
   assert.ok(USER_CONFIG.MXCSecretKey);
-
-  if (MXC_INFO === undefined) {
-    MXC_INFO = await getExchangeInfo('MXC');
-  }
-  const pairInfo = MXC_INFO.pairs[pair] as PairInfo;
-
-  if (!validatePriceQuantity(price, quantity, pairInfo)) {
-    throw new Error('Validaton on price and quantity failed');
-  }
 
   const path = '/open/api/v1/private/order';
 
@@ -102,14 +90,9 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pair: string, orderId: string): Promise<boolean> {
-  assert.ok(pair);
-  checkTradable(pair);
-
-  if (MXC_INFO === undefined) {
-    MXC_INFO = await getExchangeInfo('MXC');
-  }
-  const pairInfo = MXC_INFO.pairs[pair] as PairInfo;
+export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
+  assert.ok(pairInfo);
+  checkTradable(pairInfo.normalized_pair);
 
   const path = '/open/api/v1/private/order';
 
@@ -129,14 +112,9 @@ export async function cancelOrder(pair: string, orderId: string): Promise<boolea
   return response.status === 200 && response.data.code === 200;
 }
 
-export async function queryOrder(pair: string, orderId: string): Promise<object | undefined> {
-  assert.ok(pair);
-  checkTradable(pair);
-
-  if (MXC_INFO === undefined) {
-    MXC_INFO = await getExchangeInfo('MXC');
-  }
-  const pairInfo = MXC_INFO.pairs[pair] as PairInfo;
+export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<object | undefined> {
+  assert.ok(pairInfo);
+  checkTradable(pairInfo.normalized_pair);
 
   const path = '/open/api/v1/private/order';
 

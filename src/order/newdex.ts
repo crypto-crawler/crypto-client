@@ -1,8 +1,7 @@
 import { strict as assert } from 'assert';
 import { Serialize } from 'eosjs';
-import getExchangeInfo, { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
+import { PairInfo } from 'exchange-info';
 import { getTableRows } from 'eos-utils';
-import { validatePriceQuantity } from '../util';
 import { USER_CONFIG } from '../config';
 import { NewdexOrder } from '../pojo';
 import { Bloks } from '../blockchain';
@@ -14,23 +13,14 @@ import {
   EOS_QUANTITY_PRECISION,
 } from '../blockchain/eos';
 
-let NEWDEX_INFO: ExchangeInfo;
-
 export async function placeOrder(
-  pair: string,
+  pairInfo: PairInfo,
   price: string,
   quantity: string,
   sell: boolean,
 ): Promise<string> {
+  assert.ok(pairInfo);
   assert.ok(USER_CONFIG.eosAccount);
-  if (NEWDEX_INFO === undefined) {
-    NEWDEX_INFO = await getExchangeInfo('Newdex');
-  }
-  const pairInfo = NEWDEX_INFO.pairs[pair] as NewdexPairInfo;
-
-  if (!validatePriceQuantity(price, quantity, pairInfo)) {
-    throw new Error('Validaton on price and quantity failed');
-  }
 
   const memo: NewdexOrder = {
     type: sell ? 'sell-limit' : 'buy-limit',
@@ -62,8 +52,12 @@ export async function placeOrder(
   return transactionId;
 }
 
-export async function cancelOrder(pair: string, transactionId: string): Promise<boolean | string> {
-  assert.ok(pair);
+export async function cancelOrder(
+  pairInfo: PairInfo,
+  transactionId: string,
+): Promise<boolean | string> {
+  assert.ok(pairInfo);
+  assert.ok(transactionId);
   assert.ok(USER_CONFIG.eosAccount);
 
   const orderId = await Bloks.getOrderId(transactionId);
@@ -97,7 +91,10 @@ export interface NewdexOrderOnChain {
   count: number;
 }
 
-export async function queryOrder(pair: string, transactionId: string): Promise<object | undefined> {
+export async function queryOrder(
+  pairInfo: PairInfo,
+  transactionId: string,
+): Promise<object | undefined> {
   const orderId = await Bloks.getOrderId(transactionId);
   let response = await getTableRows({
     code: 'newdexpublic',
@@ -124,10 +121,6 @@ export async function queryOrder(pair: string, transactionId: string): Promise<o
 
   assert.equal(order.owner, USER_CONFIG.eosAccount!);
 
-  if (NEWDEX_INFO === undefined) {
-    NEWDEX_INFO = await getExchangeInfo('Newdex');
-  }
-  const pairInfo = NEWDEX_INFO.pairs[pair] as NewdexPairInfo;
   assert.equal(
     order.contract,
     sell ? pairInfo.base_symbol.contract : pairInfo.quote_symbol.contract,

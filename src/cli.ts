@@ -27,7 +27,7 @@ const { argv } = yargs.options({
 });
 
 export async function testNewdex(): Promise<void> {
-  const placeOrderId = await placeOrder('Newdex', 'EIDOS_EOS', '0.00121', '9.2644', false);
+  const placeOrderId = await placeOrder('Newdex', 'EIDOS_EOS', 0.00121, 9.2644, false);
   console.info(placeOrderId);
 
   const orderInfo = await queryOrder('Newdex', 'EIDOS_EOS', placeOrderId);
@@ -38,7 +38,7 @@ export async function testNewdex(): Promise<void> {
 }
 
 export async function testWhaleEx(): Promise<void> {
-  const orderId = await placeOrder('WhaleEx', 'EIDOS_EOS', '0.00121', '9.2644', false);
+  const orderId = await placeOrder('WhaleEx', 'EIDOS_EOS', 0.00121, 9.2644, false);
   console.info(orderId);
 
   console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
@@ -49,7 +49,7 @@ export async function testWhaleEx(): Promise<void> {
 }
 
 export async function testMXC(): Promise<void> {
-  const orderId = await placeOrder('MXC', 'BTC_USDT', '3307.95', '0.001999', false);
+  const orderId = await placeOrder('MXC', 'BTC_USDT', 3307.95, 0.001999, false);
   console.info(orderId);
 
   console.info(await queryOrder('MXC', 'BTC_USDT', orderId));
