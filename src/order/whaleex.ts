@@ -29,12 +29,16 @@ async function getGlobalIds(remark = '0'): Promise<{ remark: string; list: strin
  */
 async function createIdStore(): Promise<{ getId: () => Promise<string> }> {
   let { remark, list } = await getGlobalIds();
+  let lastTimestamp = Date.now();
   return {
     getId: async (): Promise<string> => {
-      if (list.length === 0) {
+      const now = Date.now();
+      // IDs expire after 5 minutes
+      if (list.length === 0 || now - lastTimestamp >= 5 * 60 * 1000) {
         const { remark: _remark, list: _ids } = await getGlobalIds(remark);
         remark = _remark;
         list = _ids;
+        lastTimestamp = now;
       }
       return list.pop()!;
     },
