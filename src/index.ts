@@ -7,6 +7,8 @@ import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 import { numberToString, validatePriceQuantity } from './util';
 
+export { UserConfig } from './config';
+
 export const SUPPORTED_EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
 
