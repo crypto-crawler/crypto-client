@@ -77,7 +77,7 @@ async function convertPriceAndQuantityToStrings(
   if (orderVolume < pairInfo.min_order_volume) {
     throw new Error(
       `Order volume ${orderVolume}  is less than min_order_volume ${pairInfo.min_order_volume} ${
-        pairInfo.split('_')[1]
+        pairInfo.normalized_pair.split('_')[1]
       }`,
     );
   }
