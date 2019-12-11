@@ -9,7 +9,10 @@ import {
   sendEOS,
   sendEOSToken,
   sendTransaction,
+  getRandomRpc,
   getRandomApi,
+  queryEOSBalance,
+  queryEOSTokenBalance,
   EOS_QUANTITY_PRECISION,
 } from '../blockchain/eos';
 
@@ -126,4 +129,17 @@ export async function queryOrder(
     sell ? pairInfo.base_symbol.contract : pairInfo.quote_symbol.contract,
   );
   return order;
+}
+
+export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
+  if (currency === 'EOS') {
+    return queryEOSBalance(USER_CONFIG.eosAccount!, getRandomRpc());
+  }
+  assert.equal(currency, pairInfo.base_symbol.sym.split(',')[1]);
+  return queryEOSTokenBalance(
+    USER_CONFIG.eosAccount!,
+    currency,
+    pairInfo.base_symbol.contract,
+    getRandomRpc(),
+  );
 }

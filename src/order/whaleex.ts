@@ -140,3 +140,20 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   }
   return undefined;
 }
+
+export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
+  assert.ok(pairInfo.normalized_pair.includes(currency));
+  const path = `/api/v1/asset/${currency}`;
+  const params = signData('GET', path);
+  const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
+  assert.equal(response.status, 200);
+
+  if (response.data.returnCode !== '0') {
+    return -1;
+  }
+  assert.equal(currency, response.data.result.currency);
+  const total = parseFloat(response.data.result.total);
+  const frozen = parseFloat(response.data.result.frozen);
+  assert(total >= frozen);
+  return total - frozen;
+}

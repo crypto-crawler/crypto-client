@@ -40,10 +40,19 @@ export async function queryEOSBalance(account: string, rpc: JsonRpc): Promise<nu
   return balance;
 }
 
-export async function queryEIDOSBalance(account: string, rpc: JsonRpc): Promise<number> {
-  const balanceInfo = await rpc.get_currency_balance('eidosonecoin', account, 'EIDOS');
+export async function queryEOSTokenBalance(
+  account: string,
+  symbol: string,
+  contract: string,
+  rpc: JsonRpc,
+): Promise<number> {
+  const balanceInfo = await rpc.get_currency_balance(contract, account, symbol);
   const balance = parseFloat(balanceInfo[0].split(' ')[0]);
   return balance;
+}
+
+export async function queryEIDOSBalance(account: string, rpc: JsonRpc): Promise<number> {
+  return queryEOSTokenBalance(account, 'EIDOS', 'eidosonecoin', rpc);
 }
 
 export async function sendTransaction(actions: Serialize.Action[], api: Api): Promise<any> {

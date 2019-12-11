@@ -198,3 +198,28 @@ export async function queryOrder(
       throw Error(`Unknown exchange: ${exchange}`);
   }
 }
+
+export async function queryBalance(
+  exchange: SupportedExchange,
+  pair: string,
+  currency: string,
+): Promise<number> {
+  checkExchangeAndPair(exchange, pair);
+
+  if (!(exchange in exchangeInfoCache)) {
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+  }
+  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+
+  switch (exchange) {
+    case 'MXC':
+      MXC.checkTradable(pair);
+      return MXC.queryBalance(pairInfo, currency);
+    case 'Newdex':
+      return Newdex.queryBalance(pairInfo, currency);
+    case 'WhaleEx':
+      return WhaleEx.queryBalance(pairInfo, currency);
+    default:
+      throw Error(`Unknown exchange: ${exchange}`);
+  }
+}

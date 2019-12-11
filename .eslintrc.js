@@ -24,6 +24,7 @@ const eslintrc = {
   ],
   rules: {
     camelcase: 0,
+    'import/extensions': 0,
   },
 };
 

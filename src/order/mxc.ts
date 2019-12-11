@@ -38,7 +38,7 @@ const SUPPORTED_PAIRS = [
   'IRIS_USDT',
 ];
 
-function checkTradable(pair: string): boolean {
+export function checkTradable(pair: string): boolean {
   const tradable = SUPPORTED_PAIRS.includes(pair);
   assert.ok(tradable, `The pair ${pair} is not tradable through API`);
   return tradable;
@@ -60,7 +60,6 @@ export async function placeOrder(
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);
-  checkTradable(pairInfo.normalized_pair);
   assert.ok(USER_CONFIG.MXCAccessKey);
   assert.ok(USER_CONFIG.MXCSecretKey);
 
@@ -92,7 +91,6 @@ export async function placeOrder(
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
   assert.ok(pairInfo);
-  checkTradable(pairInfo.normalized_pair);
 
   const path = '/open/api/v1/private/order';
 
@@ -114,7 +112,6 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
 
 export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<object | undefined> {
   assert.ok(pairInfo);
-  checkTradable(pairInfo.normalized_pair);
 
   const path = '/open/api/v1/private/order';
 
@@ -145,8 +142,7 @@ export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<o
   };
 }
 
-// for debug only
-export async function getAccountInfo(): Promise<{
+async function getAccountInfo(): Promise<{
   [key: string]: { frozen: string; available: string };
 }> {
   assert.ok(USER_CONFIG.MXCAccessKey);
@@ -166,4 +162,11 @@ export async function getAccountInfo(): Promise<{
   assert.equal(response.status, 200);
 
   return response.data;
+}
+
+export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
+  assert.ok(pairInfo.normalized_pair.includes(currency));
+
+  const accountInfo = await getAccountInfo();
+  return parseFloat(accountInfo[currency].available);
 }

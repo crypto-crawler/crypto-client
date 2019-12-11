@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import yargs from 'yargs';
-import { init, placeOrder, queryOrder, cancelOrder, SUPPORTED_EXCHANGES } from './index';
+import {
+  init,
+  placeOrder,
+  queryOrder,
+  cancelOrder,
+  queryBalance,
+  SUPPORTED_EXCHANGES,
+} from './index';
 
 const { argv } = yargs.options({
   exchange: {
@@ -69,4 +76,5 @@ export async function testMXC(): Promise<void> {
   });
 
   await testMXC();
+  console.info(await queryBalance('MXC', 'EOS_USDT', 'EOS'));
 })();
