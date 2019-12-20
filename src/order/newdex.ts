@@ -6,8 +6,8 @@ import { USER_CONFIG } from '../config';
 import { NewdexOrder } from '../pojo';
 import { Bloks } from '../blockchain';
 import {
-  sendEOS,
-  sendEOSToken,
+  sendEOSAction,
+  sendEOSTokenAction,
   sendTransaction,
   getRandomRpc,
   getRandomApi,
@@ -15,6 +15,43 @@ import {
   queryEOSTokenBalance,
   EOS_QUANTITY_PRECISION,
 } from '../blockchain/eos';
+
+export function createOrder(
+  eosAccount: string,
+  pairInfo: PairInfo,
+  price: string,
+  quantity: string,
+  sell: boolean,
+): Serialize.Action {
+  assert.ok(pairInfo);
+  assert.ok(eosAccount);
+
+  const memo: NewdexOrder = {
+    type: sell ? 'sell-limit' : 'buy-limit',
+    symbol: pairInfo.pair_symbol,
+    price,
+    channel: 'dapp',
+    ref: 'coinrace.com',
+  };
+
+  const action = sell
+    ? sendEOSTokenAction(
+        eosAccount,
+        'newdexpublic',
+        pairInfo.base_symbol.sym.split(',')[1],
+        pairInfo.base_symbol.contract,
+        quantity,
+        JSON.stringify(memo),
+      )
+    : sendEOSAction(
+        eosAccount,
+        'newdexpublic',
+        (parseFloat(price) * parseFloat(quantity)).toFixed(EOS_QUANTITY_PRECISION),
+        JSON.stringify(memo),
+      );
+
+  return action;
+}
 
 export async function placeOrder(
   pairInfo: PairInfo,
@@ -25,34 +62,9 @@ export async function placeOrder(
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.eosAccount);
 
-  const memo: NewdexOrder = {
-    type: sell ? 'sell-limit' : 'buy-limit',
-    symbol: pairInfo.pair_symbol,
-    price,
-    channel: 'dapp',
-    ref: 'coinrace.com',
-  };
-
-  const response = sell
-    ? await sendEOSToken(
-        USER_CONFIG.eosAccount!,
-        USER_CONFIG.eosPrivateKey!,
-        'newdexpublic',
-        pairInfo.base_symbol.sym.split(',')[1],
-        pairInfo.base_symbol.contract,
-        quantity,
-        JSON.stringify(memo),
-      )
-    : await sendEOS(
-        USER_CONFIG.eosAccount!,
-        USER_CONFIG.eosPrivateKey!,
-        'newdexpublic',
-        (parseFloat(price) * parseFloat(quantity)).toFixed(EOS_QUANTITY_PRECISION),
-        JSON.stringify(memo),
-      );
-
-  const transactionId = response.transaction_id || response.id;
-  return transactionId;
+  const action = createOrder(USER_CONFIG.eosAccount!, pairInfo, price, quantity, sell);
+  const response = await sendTransaction([action], getRandomApi(USER_CONFIG.eosPrivateKey!));
+  return response.transaction_id || response.id;
 }
 
 export async function cancelOrder(

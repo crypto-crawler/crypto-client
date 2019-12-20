@@ -67,13 +67,12 @@ export async function sendTransaction(actions: Serialize.Action[], api: Api): Pr
   );
 }
 
-export async function sendEOS(
+export function sendEOSAction(
   from: string,
-  privateKey: string,
   to: string,
   quantity: string,
   memo = '',
-): Promise<any> {
+): Serialize.Action {
   const action: Serialize.Action = {
     account: 'eosio.token',
     name: 'transfer',
@@ -91,7 +90,47 @@ export async function sendEOS(
     },
   };
 
+  return action;
+}
+
+export async function sendEOS(
+  from: string,
+  privateKey: string,
+  to: string,
+  quantity: string,
+  memo = '',
+): Promise<any> {
+  const action = sendEOSAction(from, to, quantity, memo);
+
   return sendTransaction([action], getRandomApi(privateKey));
+}
+
+export function sendEOSTokenAction(
+  from: string,
+  to: string,
+  symbol: string,
+  contract: string,
+  quantity: string,
+  memo = '',
+): Serialize.Action {
+  const action: Serialize.Action = {
+    account: contract,
+    name: 'transfer',
+    authorization: [
+      {
+        actor: from,
+        permission: 'active',
+      },
+    ],
+    data: {
+      from,
+      to,
+      quantity: `${quantity} ${symbol}`,
+      memo,
+    },
+  };
+
+  return action;
 }
 
 // EOS token is similar to ETH ERC20 token.
@@ -115,22 +154,7 @@ export async function sendEOSToken(
   quantity: string,
   memo = '',
 ): Promise<any> {
-  const action: Serialize.Action = {
-    account: contract,
-    name: 'transfer',
-    authorization: [
-      {
-        actor: from,
-        permission: 'active',
-      },
-    ],
-    data: {
-      from,
-      to,
-      quantity: `${quantity} ${symbol}`,
-      memo,
-    },
-  };
+  const action = sendEOSTokenAction(from, to, symbol, contract, quantity, memo);
 
   return sendTransaction([action], getRandomApi(privateKey));
 }

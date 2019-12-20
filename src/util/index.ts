@@ -89,3 +89,27 @@ export function validatePriceQuantity(
   }
   return true;
 }
+
+export function convertPriceAndQuantityToStrings(
+  pairInfo: PairInfo,
+  price: number,
+  quantity: number,
+  sell: boolean,
+): [string, string, string] {
+  const priceStr = numberToString(price, pairInfo.price_precision, !sell);
+  const quantityStr = numberToString(quantity, pairInfo.base_precision, false);
+  const orderVolume = parseFloat(priceStr) * parseFloat(quantityStr);
+  if (orderVolume < pairInfo.min_order_volume) {
+    throw new Error(
+      `Order volume ${orderVolume}  is less than min_order_volume ${pairInfo.min_order_volume} ${
+        pairInfo.normalized_pair.split('_')[1]
+      }`,
+    );
+  }
+
+  if (!validatePriceQuantity(priceStr, quantityStr, pairInfo)) {
+    throw new Error('Validaton on price and quantity failed');
+  }
+
+  return [priceStr, quantityStr, numberToString(orderVolume, pairInfo.quote_precision, true)];
+}

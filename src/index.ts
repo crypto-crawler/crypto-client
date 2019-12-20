@@ -1,11 +1,11 @@
 import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
-import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
+import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
-import { numberToString, validatePriceQuantity } from './util';
+import { convertPriceAndQuantityToStrings } from './util';
 
 export { UserConfig } from './config';
 
@@ -65,30 +65,6 @@ function checkExchangeAndPair(exchange: SupportedExchange, pair: string): boolea
   return true;
 }
 
-async function convertPriceAndQuantityToStrings(
-  pairInfo: PairInfo,
-  price: number,
-  quantity: number,
-  sell: boolean,
-): Promise<[string, string]> {
-  const priceStr = numberToString(price, pairInfo.price_precision, !sell);
-  const quantityStr = numberToString(quantity, pairInfo.base_precision, false);
-  const orderVolume = parseFloat(priceStr) * parseFloat(quantityStr);
-  if (orderVolume < pairInfo.min_order_volume) {
-    throw new Error(
-      `Order volume ${orderVolume}  is less than min_order_volume ${pairInfo.min_order_volume} ${
-        pairInfo.normalized_pair.split('_')[1]
-      }`,
-    );
-  }
-
-  if (!validatePriceQuantity(priceStr, quantityStr, pairInfo)) {
-    throw new Error('Validaton on price and quantity failed');
-  }
-
-  return [priceStr, quantityStr];
-}
-
 /**
  * Place an order.
  *
@@ -113,12 +89,7 @@ export async function placeOrder(
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
-  const [priceStr, quantityStr] = await convertPriceAndQuantityToStrings(
-    pairInfo,
-    price,
-    quantity,
-    sell,
-  );
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
 
   switch (exchange) {
     case 'MXC':
