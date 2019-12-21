@@ -1,9 +1,10 @@
 import BigNumber from 'bignumber.js';
 import { strict as assert } from 'assert';
-import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
 import { sendEOSAction, sendEOSTokenAction, EOS_QUANTITY_PRECISION } from '../blockchain/eos';
 import { numberToString } from '../util';
+import { ActionExtended } from '../pojo';
+import { USER_CONFIG } from '../config';
 
 function createOrderId(): string {
   const orderId = new BigNumber(Math.floor(Date.now() / 1000))
@@ -16,14 +17,13 @@ function createOrderId(): string {
 
 // eslint-disable-next-line import/prefer-default-export
 export function createOrder(
-  eosAccount: string,
   pairInfo: PairInfo,
   price: string,
   quantity: string,
   sell: boolean,
-): [Serialize.Action, string] {
+): ActionExtended {
   assert.ok(pairInfo);
-  assert.ok(eosAccount);
+  assert.ok(USER_CONFIG.eosAccount);
   assert.equal(pairInfo.quote_contract, 'eosio.token');
   assert.ok(pairInfo.normalized_pair.endsWith('_EOS'));
   assert.equal(pairInfo.quote_precision, EOS_QUANTITY_PRECISION);
@@ -46,7 +46,7 @@ export function createOrder(
     .integerValue(BigNumber.ROUND_CEIL)
     .toString();
 
-  const memo = `order:${eosAccount} | ${
+  const memo = `order:${USER_CONFIG.eosAccount} | ${
     sell ? 'sell' : 'buy'
   } | limit | ${pairInfo.base_contract!} | ${
     pairInfo.baseCurrency
@@ -56,14 +56,19 @@ export function createOrder(
 
   const action = sell
     ? sendEOSTokenAction(
-        eosAccount,
+        USER_CONFIG.eosAccount!,
         'whaleextrust',
         pairInfo.baseCurrency,
         pairInfo.base_contract!,
         quantity,
         memo,
       )
-    : sendEOSAction(eosAccount, 'whaleextrust', quoteQuantity, memo);
+    : sendEOSAction(USER_CONFIG.eosAccount!, 'whaleextrust', quoteQuantity, memo);
 
-  return [action, orderId];
+  const actionExt: ActionExtended = {
+    exchange: 'WhaleEx',
+    action,
+    orderId,
+  };
+  return actionExt;
 }

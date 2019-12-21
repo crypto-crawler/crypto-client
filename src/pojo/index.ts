@@ -1,8 +1,9 @@
+import { Serialize } from 'eosjs';
+
 export * from './msg';
 
-export interface ActionData {
-  from: string;
-  to: string;
-  quantity: string;
-  memo: string;
+export interface ActionExtended {
+  exchange: string;
+  action: Serialize.Action;
+  orderId?: string;
 }

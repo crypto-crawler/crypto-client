@@ -4,6 +4,8 @@ import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
+import { createOrder as createOrderWhaleEx } from './order/whaleex_eos';
+import { ActionExtended } from './pojo';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 import { convertPriceAndQuantityToStrings } from './util';
 
@@ -63,6 +65,45 @@ function checkExchangeAndPair(exchange: SupportedExchange, pair: string): boolea
     }
   }
   return true;
+}
+
+/**
+ * Create an Order object but don't sent it.
+ *
+ * This API is only used in DEX exchanges.
+ *
+ * @param exchange Dex exchange name
+ * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param price The price
+ * @param quantity The quantity
+ * @param sell true if sell, otherwise false
+ * @returns ActionExtended
+ */
+export async function createOrder(
+  exchange: 'Newdex' | 'WhaleEx',
+  pair: string,
+  price: number,
+  quantity: number,
+  sell: boolean,
+): Promise<ActionExtended> {
+  checkExchangeAndPair(exchange, pair);
+
+  if (!(exchange in exchangeInfoCache)) {
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+  }
+  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+
+  switch (exchange) {
+    case 'Newdex':
+      return Newdex.createOrder(pairInfo, priceStr, quantityStr, sell);
+    case 'WhaleEx': {
+      return createOrderWhaleEx(pairInfo, priceStr, quantityStr, sell);
+    }
+    default:
+      throw Error(`Unknown exchange: ${exchange}`);
+  }
 }
 
 /**

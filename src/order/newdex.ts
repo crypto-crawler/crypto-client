@@ -3,8 +3,9 @@ import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
 import { getTableRows } from 'eos-utils';
 import { USER_CONFIG } from '../config';
-import { NewdexOrder } from '../pojo';
+import { NewdexOrder, ActionExtended } from '../pojo';
 import { Bloks } from '../blockchain';
+
 import {
   sendEOSAction,
   sendEOSTokenAction,
@@ -17,14 +18,13 @@ import {
 } from '../blockchain/eos';
 
 export function createOrder(
-  eosAccount: string,
   pairInfo: PairInfo,
   price: string,
   quantity: string,
   sell: boolean,
-): Serialize.Action {
+): ActionExtended {
   assert.ok(pairInfo);
-  assert.ok(eosAccount);
+  assert.ok(USER_CONFIG.eosAccount);
 
   const memo: NewdexOrder = {
     type: sell ? 'sell-limit' : 'buy-limit',
@@ -36,7 +36,7 @@ export function createOrder(
 
   const action = sell
     ? sendEOSTokenAction(
-        eosAccount,
+        USER_CONFIG.eosAccount!,
         'newdexpublic',
         pairInfo.base_symbol.sym.split(',')[1],
         pairInfo.base_symbol.contract,
@@ -44,13 +44,16 @@ export function createOrder(
         JSON.stringify(memo),
       )
     : sendEOSAction(
-        eosAccount,
+        USER_CONFIG.eosAccount!,
         'newdexpublic',
         (parseFloat(price) * parseFloat(quantity)).toFixed(EOS_QUANTITY_PRECISION),
         JSON.stringify(memo),
       );
 
-  return action;
+  return {
+    exchange: 'Newdex',
+    action,
+  };
 }
 
 export async function placeOrder(
@@ -62,8 +65,11 @@ export async function placeOrder(
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.eosAccount);
 
-  const action = createOrder(USER_CONFIG.eosAccount!, pairInfo, price, quantity, sell);
-  const response = await sendTransaction([action], getRandomApi(USER_CONFIG.eosPrivateKey!));
+  const actionExt = createOrder(pairInfo, price, quantity, sell);
+  const response = await sendTransaction(
+    [actionExt.action],
+    getRandomApi(USER_CONFIG.eosPrivateKey!),
+  );
   return response.transaction_id || response.id;
 }
 
