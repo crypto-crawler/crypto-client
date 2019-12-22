@@ -19,13 +19,11 @@ export const USER_CONFIG: UserConfig = {
 };
 
 export const EOS_API_ENDPOINTS = [
-  'http://api-mainnet.starteos.io',
   'http://api.main.alohaeos.com',
   'http://eos.eoscafeblock.com',
   'http://eos.infstones.io',
   'http://peer1.eoshuobipool.com:8181',
   'http://peer2.eoshuobipool.com:8181',
-  'https://api-mainnet.starteos.io',
   'https://api.main.alohaeos.com',
   'https://api.redpacketeos.com',
   'https://api.zbeos.com',
@@ -37,6 +35,8 @@ export const EOS_API_ENDPOINTS = [
 ];
 
 export const EOS_API_ENDPOINTS_BLACKLIST = [
+  'http://api-mainnet.starteos.io',
+  'https://api-mainnet.starteos.io',
   'https://api.eoslaomao.com',
   'https://mainnet.eoscannon.io',
 ];

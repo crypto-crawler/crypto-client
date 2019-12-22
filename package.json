@@ -1,6 +1,6 @@
 {
   "name": "crypto-order",
-  "version": "0.10.6",
+  "version": "0.10.8",
   "description": "A library to place and cancel orders in crypto exchange",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
