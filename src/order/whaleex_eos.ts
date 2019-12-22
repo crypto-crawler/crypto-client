@@ -39,11 +39,11 @@ export function createOrder(
   const quoteQuantity = numberToString(
     parseFloat(price) * parseFloat(quantity),
     pairInfo.quote_precision,
-    true,
+    !sell,
   );
   const quoteQuantityStr = new BigNumber(quoteQuantity)
     .times(10 ** pairInfo.quote_precision)
-    .integerValue(BigNumber.ROUND_CEIL)
+    .integerValue(sell ? BigNumber.ROUND_FLOOR : BigNumber.ROUND_CEIL)
     .toString();
 
   const memo = `order:${USER_CONFIG.eosAccount} | ${
@@ -67,7 +67,7 @@ export function createOrder(
   const actionExt: ActionExtended = {
     exchange: 'WhaleEx',
     action,
-    orderId,
+    orderId: orderId.replace(' ', ''),
   };
   return actionExt;
 }
