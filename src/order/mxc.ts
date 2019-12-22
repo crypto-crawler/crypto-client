@@ -5,6 +5,7 @@ import { PairInfo } from 'exchange-info';
 import debug from '../util/debug';
 import { USER_CONFIG } from '../config';
 import { Params, sort } from '../util/whaleex_sign';
+import { convertPriceAndQuantityToStrings } from '../util';
 
 const API_BASE_URL = 'https://www.mxc.com';
 
@@ -55,13 +56,15 @@ function sign(params: Params, secretKey: string): [string, string] {
 
 export async function placeOrder(
   pairInfo: PairInfo,
-  price: string,
-  quantity: string,
+  price: number,
+  quantity: number,
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.MXCAccessKey);
   assert.ok(USER_CONFIG.MXCSecretKey);
+
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
 
   const path = '/open/api/v1/private/order';
 
@@ -69,8 +72,8 @@ export async function placeOrder(
     api_key: USER_CONFIG.MXCAccessKey!,
     req_time: Date.now(),
     market: pairInfo.raw_pair,
-    price,
-    quantity,
+    price: priceStr,
+    quantity: quantityStr,
     trade_type: sell ? 2 : 1,
   };
   const [paramsText, signature] = sign(params, USER_CONFIG.MXCSecretKey!);

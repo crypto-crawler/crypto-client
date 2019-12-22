@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { strict as assert } from 'assert';
 import { PairInfo } from 'exchange-info';
 import { createTransferAction, EOS_QUANTITY_PRECISION } from 'eos-utils';
-import { numberToString } from '../util';
+import { convertPriceAndQuantityToStrings } from '../util';
 import { ActionExtended } from '../pojo';
 import { USER_CONFIG } from '../config';
 
@@ -18,8 +18,8 @@ function createOrderId(): string {
 // eslint-disable-next-line import/prefer-default-export
 export function createOrder(
   pairInfo: PairInfo,
-  price: string,
-  quantity: string,
+  price: number,
+  quantity: number,
   sell: boolean,
 ): ActionExtended {
   assert.ok(pairInfo);
@@ -28,41 +28,36 @@ export function createOrder(
   assert.ok(pairInfo.normalized_pair.endsWith('_EOS'));
   assert.equal(pairInfo.quote_precision, EOS_QUANTITY_PRECISION);
 
-  // const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+  const [priceStr, quantityStr, quoteQuantityStr] = convertPriceAndQuantityToStrings(
+    pairInfo,
+    price,
+    quantity,
+    sell,
+  );
 
   const orderId = createOrderId();
 
-  const baseQuantity = new BigNumber(quantity)
-    .times(10 ** pairInfo.base_precision)
-    .integerValue(BigNumber.ROUND_FLOOR)
-    .toString();
-  const quoteQuantity = numberToString(
-    parseFloat(price) * parseFloat(quantity),
-    pairInfo.quote_precision,
-    !sell,
-  );
-  const quoteQuantityStr = new BigNumber(quoteQuantity)
-    .times(10 ** pairInfo.quote_precision)
-    .integerValue(sell ? BigNumber.ROUND_FLOOR : BigNumber.ROUND_CEIL)
-    .toString();
-
   const memo = `order:${USER_CONFIG.eosAccount} | ${
     sell ? 'sell' : 'buy'
-  } | limit | ${pairInfo.base_contract!} | ${
-    pairInfo.baseCurrency
-  } | ${baseQuantity} | eosio.token | EOS | ${quoteQuantityStr} | 10 | 10 | whaleexchang | ${orderId} | ${Math.floor(
+  } | limit | ${pairInfo.base_contract!} | ${pairInfo.baseCurrency} | ${quantityStr.replace(
+    '.',
+    '',
+  )} | eosio.token | EOS | ${quoteQuantityStr.replace(
+    '.',
+    '',
+  )} | 10 | 10 | whaleexchang | ${orderId} | ${Math.floor(
     Date.now() / 1000,
-  )} | | ${price} | coinrace.com:`;
+  )} | | ${priceStr} | coinrace.com:`;
 
   const action = sell
     ? createTransferAction(
         USER_CONFIG.eosAccount!,
         'whaleextrust',
         pairInfo.baseCurrency,
-        quantity,
+        quantityStr,
         memo,
       )
-    : createTransferAction(USER_CONFIG.eosAccount!, 'whaleextrust', 'EOS', quoteQuantity, memo);
+    : createTransferAction(USER_CONFIG.eosAccount!, 'whaleextrust', 'EOS', quoteQuantityStr, memo);
 
   const actionExt: ActionExtended = {
     exchange: 'WhaleEx',

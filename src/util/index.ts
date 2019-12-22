@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
 import { PairInfo } from 'exchange-info';
+import { getTokenInfo } from 'eos-token-info';
 
 export type AsyncFunc = (...args: any[]) => Promise<any>;
 
@@ -76,15 +77,27 @@ export function numberToString(n: number, decimal: number, ceil: boolean = false
 }
 
 export function validatePriceQuantity(
+  pairInfo: PairInfo,
   price: string,
   quantity: string,
-  pairInfo: PairInfo,
+  quoteQuantity: string,
 ): boolean {
+  const baseTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[0]);
+  const quoteTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[1]);
+  assert.equal(calcPrecision(quantity), baseTokenInfo.decimals);
+  assert.equal(calcPrecision(quoteQuantity), quoteTokenInfo.decimals);
   assert.equal(calcPrecision(price), pairInfo.price_precision, "price_precision doesn't match");
   assert.equal(calcPrecision(quantity), pairInfo.base_precision, "base_precision doesn't match");
-  if (parseFloat(quantity) * parseFloat(price) <= pairInfo.min_order_volume) {
+  assert.equal(
+    calcPrecision(quoteQuantity),
+    pairInfo.quote_precision,
+    "quote_precision doesn't match",
+  );
+  if (parseFloat(quoteQuantity) <= pairInfo.min_order_volume) {
     throw Error(
-      `The trading volume is less than ${pairInfo.min_order_volume} ${pairInfo.split('_')[1]}`,
+      `The order volume ${quoteQuantity} is less than min_order_volume ${
+        pairInfo.min_order_volume
+      } ${pairInfo.normalized_pair.split('_')[1]}`,
     );
   }
   return true;
@@ -98,18 +111,13 @@ export function convertPriceAndQuantityToStrings(
 ): [string, string, string] {
   const priceStr = numberToString(price, pairInfo.price_precision, !sell);
   const quantityStr = numberToString(quantity, pairInfo.base_precision, false);
-  const orderVolume = parseFloat(priceStr) * parseFloat(quantityStr);
-  if (orderVolume < pairInfo.min_order_volume) {
-    throw new Error(
-      `Order volume ${orderVolume}  is less than min_order_volume ${pairInfo.min_order_volume} ${
-        pairInfo.normalized_pair.split('_')[1]
-      }`,
-    );
-  }
+  const quoteQuantity = numberToString(
+    parseFloat(priceStr) * parseFloat(quantityStr),
+    pairInfo.quote_precision,
+    !sell,
+  );
 
-  if (!validatePriceQuantity(priceStr, quantityStr, pairInfo)) {
-    throw new Error('Validaton on price and quantity failed');
-  }
+  assert.ok(validatePriceQuantity(pairInfo, priceStr, quantityStr, quoteQuantity));
 
-  return [priceStr, quantityStr, numberToString(orderVolume, pairInfo.quote_precision, true)];
+  return [priceStr, quantityStr, quoteQuantity];
 }

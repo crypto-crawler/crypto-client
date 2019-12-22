@@ -5,22 +5,28 @@ import { getTableRows, getCurrencyBalance, createTransferAction, sendTransaction
 import { USER_CONFIG } from '../config';
 import { NewdexOrder, ActionExtended } from '../pojo';
 import { Bloks } from '../blockchain';
-
-const EOS_QUANTITY_PRECISION = 4;
+import { convertPriceAndQuantityToStrings } from '../util';
 
 export function createOrder(
   pairInfo: PairInfo,
-  price: string,
-  quantity: string,
+  price: number,
+  quantity: number,
   sell: boolean,
 ): ActionExtended {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.eosAccount);
 
+  const [priceStr, quantityStr, quoteQuantityStr] = convertPriceAndQuantityToStrings(
+    pairInfo,
+    price,
+    quantity,
+    sell,
+  );
+
   const memo: NewdexOrder = {
     type: sell ? 'sell-limit' : 'buy-limit',
     symbol: pairInfo.pair_symbol,
-    price,
+    price: priceStr,
     channel: 'dapp',
     ref: 'coinrace.com',
   };
@@ -30,14 +36,14 @@ export function createOrder(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
         pairInfo.base_symbol.sym.split(',')[1],
-        quantity,
+        quantityStr,
         JSON.stringify(memo),
       )
     : createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
         'EOS',
-        (parseFloat(price) * parseFloat(quantity)).toFixed(EOS_QUANTITY_PRECISION),
+        quoteQuantityStr,
         JSON.stringify(memo),
       );
 
@@ -49,8 +55,8 @@ export function createOrder(
 
 export async function placeOrder(
   pairInfo: PairInfo,
-  price: string,
-  quantity: string,
+  price: number,
+  quantity: number,
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);

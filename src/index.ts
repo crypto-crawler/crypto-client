@@ -7,7 +7,6 @@ import * as WhaleEx from './order/whaleex';
 import { createOrder as createOrderWhaleEx } from './order/whaleex_eos';
 import { ActionExtended } from './pojo';
 import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
-import { convertPriceAndQuantityToStrings } from './util';
 
 export { UserConfig } from './config';
 
@@ -93,13 +92,11 @@ export async function createOrder(
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
-
   switch (exchange) {
     case 'Newdex':
-      return Newdex.createOrder(pairInfo, priceStr, quantityStr, sell);
+      return Newdex.createOrder(pairInfo, price, quantity, sell);
     case 'WhaleEx': {
-      return createOrderWhaleEx(pairInfo, priceStr, quantityStr, sell);
+      return createOrderWhaleEx(pairInfo, price, quantity, sell);
     }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
@@ -130,15 +127,13 @@ export async function placeOrder(
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
-
   switch (exchange) {
     case 'MXC':
-      return MXC.placeOrder(pairInfo, priceStr, quantityStr, sell);
+      return MXC.placeOrder(pairInfo, price, quantity, sell);
     case 'Newdex':
-      return Newdex.placeOrder(pairInfo, priceStr, quantityStr, sell);
+      return Newdex.placeOrder(pairInfo, price, quantity, sell);
     case 'WhaleEx': {
-      return WhaleEx.placeOrder(pairInfo, priceStr, quantityStr, sell);
+      return WhaleEx.placeOrder(pairInfo, price, quantity, sell);
     }
     default:
       throw Error(`Unknown exchange: ${exchange}`);

@@ -4,6 +4,7 @@ import Axios from 'axios';
 import { PairInfo } from 'exchange-info';
 // import debug from '../util/debug';
 import { signData, signDataOrder, SymbolObj, WhaleExOrder } from '../util/whaleex_sign';
+import { convertPriceAndQuantityToStrings } from '../util';
 import { USER_CONFIG } from '../config';
 
 const URL_PREFIX = 'https://api.whaleex.com/BUSINESS';
@@ -61,19 +62,21 @@ export async function initilize(apiKey: string): Promise<void> {
 
 export async function placeOrder(
   pairInfo: PairInfo,
-  price: string,
-  quantity: string,
+  price: number,
+  quantity: number,
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.whaleExApiKey, 'APIKey is empty');
 
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+
   const path = '/api/v1/order/orders/place';
 
   const order: WhaleExOrder = {
     orderId: await ID_STORE.getId(),
-    amount: quantity,
-    price,
+    amount: quantityStr,
+    price: priceStr,
     symbol: pairInfo.raw_pair,
     type: sell ? 'sell-limit' : 'buy-limit',
   };
