@@ -2,10 +2,10 @@
 import { strict as assert } from 'assert';
 import { privateToPublic, sign, signHash } from 'eosjs-ecc';
 import crypto from 'crypto';
+import { EOS_QUANTITY_PRECISION } from 'eos-utils';
 import Long from 'long';
 import { create, all } from 'mathjs';
 import { USER_CONFIG } from '../config';
-import { EOS_QUANTITY_PRECISION } from '../blockchain/eos';
 
 const math = create(all, {
   number: 'BigNumber',

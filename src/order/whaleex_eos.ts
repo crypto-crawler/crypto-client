@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { strict as assert } from 'assert';
 import { PairInfo } from 'exchange-info';
-import { sendEOSAction, sendEOSTokenAction, EOS_QUANTITY_PRECISION } from '../blockchain/eos';
+import { createTransferAction, EOS_QUANTITY_PRECISION } from 'eos-utils';
 import { numberToString } from '../util';
 import { ActionExtended } from '../pojo';
 import { USER_CONFIG } from '../config';
@@ -55,15 +55,14 @@ export function createOrder(
   )} | | ${price} | coinrace.com:`;
 
   const action = sell
-    ? sendEOSTokenAction(
+    ? createTransferAction(
         USER_CONFIG.eosAccount!,
         'whaleextrust',
         pairInfo.baseCurrency,
-        pairInfo.base_contract!,
         quantity,
         memo,
       )
-    : sendEOSAction(USER_CONFIG.eosAccount!, 'whaleextrust', quoteQuantity, memo);
+    : createTransferAction(USER_CONFIG.eosAccount!, 'whaleextrust', 'EOS', quoteQuantity, memo);
 
   const actionExt: ActionExtended = {
     exchange: 'WhaleEx',

@@ -1,21 +1,18 @@
 import { strict as assert } from 'assert';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
-import { getTableRows } from 'eos-utils';
+import {
+  getTableRows,
+  getRandomApi,
+  getCurrencyBalance,
+  createTransferAction,
+  sendTransaction,
+} from 'eos-utils';
 import { USER_CONFIG } from '../config';
 import { NewdexOrder, ActionExtended } from '../pojo';
 import { Bloks } from '../blockchain';
 
-import {
-  sendEOSAction,
-  sendEOSTokenAction,
-  sendTransaction,
-  getRandomRpc,
-  getRandomApi,
-  queryEOSBalance,
-  queryEOSTokenBalance,
-  EOS_QUANTITY_PRECISION,
-} from '../blockchain/eos';
+const EOS_QUANTITY_PRECISION = 4;
 
 export function createOrder(
   pairInfo: PairInfo,
@@ -35,17 +32,17 @@ export function createOrder(
   };
 
   const action = sell
-    ? sendEOSTokenAction(
+    ? createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
         pairInfo.base_symbol.sym.split(',')[1],
-        pairInfo.base_symbol.contract,
         quantity,
         JSON.stringify(memo),
       )
-    : sendEOSAction(
+    : createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
+        'EOS',
         (parseFloat(price) * parseFloat(quantity)).toFixed(EOS_QUANTITY_PRECISION),
         JSON.stringify(memo),
       );
@@ -150,14 +147,6 @@ export async function queryOrder(
 }
 
 export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
-  if (currency === 'EOS') {
-    return queryEOSBalance(USER_CONFIG.eosAccount!, getRandomRpc());
-  }
-  assert.equal(currency, pairInfo.base_symbol.sym.split(',')[1]);
-  return queryEOSTokenBalance(
-    USER_CONFIG.eosAccount!,
-    currency,
-    pairInfo.base_symbol.contract,
-    getRandomRpc(),
-  );
+  assert(pairInfo.normalized_pair.endsWith('_EOS'));
+  return getCurrencyBalance(USER_CONFIG.eosAccount!, currency);
 }
