@@ -1,13 +1,7 @@
 import { strict as assert } from 'assert';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
-import {
-  getTableRows,
-  getRandomApi,
-  getCurrencyBalance,
-  createTransferAction,
-  sendTransaction,
-} from 'eos-utils';
+import { getTableRows, getCurrencyBalance, createTransferAction, sendTransaction } from 'eos-utils';
 import { USER_CONFIG } from '../config';
 import { NewdexOrder, ActionExtended } from '../pojo';
 import { Bloks } from '../blockchain';
@@ -63,10 +57,7 @@ export async function placeOrder(
   assert.ok(USER_CONFIG.eosAccount);
 
   const actionExt = createOrder(pairInfo, price, quantity, sell);
-  const response = await sendTransaction(
-    [actionExt.action],
-    getRandomApi(USER_CONFIG.eosPrivateKey!),
-  );
+  const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!);
   return response.transaction_id || response.id;
 }
 
@@ -92,7 +83,7 @@ export async function cancelOrder(
     data: orderId,
   };
 
-  const response = await sendTransaction([action], getRandomApi(USER_CONFIG.eosPrivateKey!));
+  const response = await sendTransaction([action], USER_CONFIG.eosPrivateKey!);
   return response.transaction_id || response.id;
 }
 
