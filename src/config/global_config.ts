@@ -6,17 +6,18 @@ export interface UserConfig {
   whaleExApiKey?: string;
   MXCAccessKey?: string;
   MXCSecretKey?: string;
+  CB_ACCESS_KEY?: string;
+  CB_ACCESS_SECRET?: string;
+  CB_ACCESS_PASSPHRASE?: string;
+  BINANCE_API_KEY?: string;
+  BINANCE_API_SECRET?: string;
+  HUOBI_ACCESS_KEY?: string;
+  HUOBI_SECRET_KEY?: string;
+  HUOBI_ACCOUNT_ID?: number;
 }
 
 // Should be initialized by init().
-export const USER_CONFIG: UserConfig = {
-  eosAccount: '',
-  eosPrivateKey: '',
-  ethPrivateKey: '',
-  whaleExApiKey: '',
-  MXCAccessKey: '',
-  MXCSecretKey: '',
-};
+export const USER_CONFIG: UserConfig = {};
 
 export const EOS_API_ENDPOINTS = [
   'http://api.main.alohaeos.com',

@@ -82,10 +82,13 @@ export function validatePriceQuantity(
   quantity: string,
   quoteQuantity: string,
 ): boolean {
-  const baseTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[0]);
-  const quoteTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[1]);
-  assert.equal(calcPrecision(quantity), baseTokenInfo.decimals);
-  assert.equal(calcPrecision(quoteQuantity), quoteTokenInfo.decimals);
+  if (pairInfo.normalized_pair.endsWith('_EOS')) {
+    const baseTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[0]);
+    const quoteTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[1]);
+    assert.equal(calcPrecision(quantity), baseTokenInfo.decimals);
+    assert.equal(calcPrecision(quoteQuantity), quoteTokenInfo.decimals);
+  }
+
   assert.equal(calcPrecision(price), pairInfo.price_precision, "price_precision doesn't match");
   assert.equal(calcPrecision(quantity), pairInfo.base_precision, "base_precision doesn't match");
   assert.equal(
@@ -93,11 +96,18 @@ export function validatePriceQuantity(
     pairInfo.quote_precision,
     "quote_precision doesn't match",
   );
-  if (parseFloat(quoteQuantity) <= pairInfo.min_order_volume) {
+  if (parseFloat(quoteQuantity) <= pairInfo.min_quote_quantity) {
     throw Error(
-      `The order volume ${quoteQuantity} is less than min_order_volume ${
-        pairInfo.min_order_volume
+      `The order volume ${quoteQuantity} is less than min_quote_quantity ${
+        pairInfo.min_quote_quantity
       } ${pairInfo.normalized_pair.split('_')[1]}`,
+    );
+  }
+  if (pairInfo.min_base_quantity && parseFloat(quantity) < pairInfo.min_base_quantity) {
+    throw Error(
+      `The base quantity ${quantity} is less than min_base_quantity ${pairInfo.min_base_quantity} ${
+        pairInfo.normalized_pair.split('_')[0]
+      }`,
     );
   }
   return true;

@@ -109,7 +109,7 @@ export interface NewdexOrderOnChain {
 export async function queryOrder(
   pairInfo: PairInfo,
   transactionId: string,
-): Promise<object | undefined> {
+): Promise<{ [key: string]: any } | undefined> {
   const orderId = await Bloks.getOrderId(transactionId);
   let response = await getTableRows({
     code: 'newdexpublic',
@@ -143,7 +143,6 @@ export async function queryOrder(
   return order;
 }
 
-export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
-  assert(pairInfo.normalized_pair.endsWith('_EOS'));
-  return getCurrencyBalance(USER_CONFIG.eosAccount!, currency);
+export async function queryBalance(symbol: string): Promise<number> {
+  return getCurrencyBalance(USER_CONFIG.eosAccount!, symbol);
 }

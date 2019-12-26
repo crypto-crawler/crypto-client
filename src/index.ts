@@ -1,6 +1,9 @@
 import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
+import * as Binance from './order/binance';
+import * as Coinbase from './order/coinbase';
+import * as Huobi from './order/huobi';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
@@ -10,7 +13,14 @@ import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
 
 export { UserConfig } from './config';
 
-export const SUPPORTED_EXCHANGES = ['MXC', 'Newdex', 'WhaleEx'] as const;
+export const SUPPORTED_EXCHANGES = [
+  'Binance',
+  'Coinbase',
+  'Huobi',
+  'MXC',
+  'Newdex',
+  'WhaleEx',
+] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
 
 const exchangeInfoCache: { [key: string]: ExchangeInfo } = {};
@@ -27,6 +37,14 @@ export async function init({
   whaleExApiKey = '',
   MXCAccessKey = '',
   MXCSecretKey = '',
+  CB_ACCESS_KEY = '',
+  CB_ACCESS_SECRET = '',
+  CB_ACCESS_PASSPHRASE = '',
+  BINANCE_API_KEY = '',
+  BINANCE_API_SECRET = '',
+  HUOBI_ACCESS_KEY = '',
+  HUOBI_SECRET_KEY = '',
+  HUOBI_ACCOUNT_ID = 0,
 }: UserConfig): Promise<void> {
   if (eosAccount) {
     USER_CONFIG.eosAccount = eosAccount;
@@ -48,6 +66,25 @@ export async function init({
     assert.ok(MXCSecretKey);
     USER_CONFIG.MXCAccessKey = MXCAccessKey!;
     USER_CONFIG.MXCSecretKey = MXCSecretKey!;
+  }
+  if (CB_ACCESS_KEY) {
+    assert.ok(CB_ACCESS_SECRET);
+    assert.ok(CB_ACCESS_PASSPHRASE);
+    USER_CONFIG.CB_ACCESS_KEY = CB_ACCESS_KEY;
+    USER_CONFIG.CB_ACCESS_SECRET = CB_ACCESS_SECRET;
+    USER_CONFIG.CB_ACCESS_PASSPHRASE = CB_ACCESS_PASSPHRASE;
+  }
+  if (BINANCE_API_KEY) {
+    assert.ok(BINANCE_API_SECRET);
+    USER_CONFIG.BINANCE_API_KEY = BINANCE_API_KEY;
+    USER_CONFIG.BINANCE_API_SECRET = BINANCE_API_SECRET;
+  }
+  if (HUOBI_ACCESS_KEY) {
+    assert.ok(HUOBI_SECRET_KEY);
+    USER_CONFIG.HUOBI_ACCESS_KEY = HUOBI_ACCESS_KEY;
+    USER_CONFIG.HUOBI_SECRET_KEY = HUOBI_SECRET_KEY;
+    USER_CONFIG.HUOBI_ACCOUNT_ID =
+      HUOBI_ACCOUNT_ID || (await Huobi.queryAccounts()).filter(x => x.type === 'spot')[0].id;
   }
 }
 
@@ -119,6 +156,7 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
+  clientOrderId?: string,
 ): Promise<string> {
   checkExchangeAndPair(exchange, pair);
 
@@ -128,6 +166,12 @@ export async function placeOrder(
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
   switch (exchange) {
+    case 'Binance':
+      return Binance.placeOrder(pairInfo, price, quantity, sell);
+    case 'Coinbase':
+      return Coinbase.placeOrder(pairInfo, price, quantity, sell);
+    case 'Huobi':
+      return Huobi.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
     case 'MXC':
       return MXC.placeOrder(pairInfo, price, quantity, sell);
     case 'Newdex':
@@ -162,6 +206,12 @@ export async function cancelOrder(
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
   switch (exchange) {
+    case 'Binance':
+      return Binance.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'Coinbase':
+      return Coinbase.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'Huobi':
+      return Huobi.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'MXC':
       return MXC.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
@@ -185,7 +235,7 @@ export async function queryOrder(
   exchange: SupportedExchange,
   pair: string,
   orderId_or_transactionId: string,
-): Promise<object | undefined> {
+): Promise<{ [key: string]: any } | undefined> {
   assert.ok(orderId_or_transactionId);
   checkExchangeAndPair(exchange, pair);
 
@@ -195,6 +245,12 @@ export async function queryOrder(
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
   switch (exchange) {
+    case 'Binance':
+      return Binance.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'Coinbase':
+      return Coinbase.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'Huobi':
+      return Huobi.queryOrder(pairInfo, orderId_or_transactionId);
     case 'MXC':
       return MXC.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
@@ -206,26 +262,16 @@ export async function queryOrder(
   }
 }
 
-export async function queryBalance(
-  exchange: SupportedExchange,
-  pair: string,
-  currency: string,
-): Promise<number> {
-  checkExchangeAndPair(exchange, pair);
-
-  if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
-  }
-  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
-
+export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
   switch (exchange) {
+    case 'Binance':
+      return Binance.queryBalance(symbol);
     case 'MXC':
-      MXC.checkTradable(pair);
-      return MXC.queryBalance(pairInfo, currency);
+      return MXC.queryBalance(symbol);
     case 'Newdex':
-      return Newdex.queryBalance(pairInfo, currency);
+      return Newdex.queryBalance(symbol);
     case 'WhaleEx':
-      return WhaleEx.queryBalance(pairInfo, currency);
+      return WhaleEx.queryBalance(symbol);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }

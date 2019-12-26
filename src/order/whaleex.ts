@@ -117,7 +117,10 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return response.status === 200 && response.data.returnCode === '0';
 }
 
-export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<object | undefined> {
+export async function queryOrder(
+  pairInfo: PairInfo,
+  orderId: string,
+): Promise<{ [key: string]: any } | undefined> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.whaleExApiKey);
 
@@ -144,17 +147,16 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   return undefined;
 }
 
-export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
-  assert.ok(pairInfo.normalized_pair.includes(currency));
-  const path = `/api/v1/asset/${currency}`;
+export async function queryBalance(symbol: string): Promise<number> {
+  const path = `/api/v1/asset/${symbol}`;
   const params = signData('GET', path);
   const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
   assert.equal(response.status, 200);
 
   if (response.data.returnCode !== '0') {
-    return -1;
+    return 0;
   }
-  assert.equal(currency, response.data.result.currency);
+  assert.equal(symbol, response.data.result.currency);
   const total = parseFloat(response.data.result.total);
   const frozen = parseFloat(response.data.result.frozen);
   assert(total >= frozen);

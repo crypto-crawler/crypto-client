@@ -113,7 +113,10 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return response.status === 200 && response.data.code === 200;
 }
 
-export async function queryOrder(pairInfo: PairInfo, orderId: string): Promise<object | undefined> {
+export async function queryOrder(
+  pairInfo: PairInfo,
+  orderId: string,
+): Promise<{ [key: string]: any } | undefined> {
   assert.ok(pairInfo);
 
   const path = '/open/api/v1/private/order';
@@ -167,9 +170,7 @@ async function getAccountInfo(): Promise<{
   return response.data;
 }
 
-export async function queryBalance(pairInfo: PairInfo, currency: string): Promise<number> {
-  assert.ok(pairInfo.normalized_pair.includes(currency));
-
+export async function queryBalance(symbol: string): Promise<number> {
   const accountInfo = await getAccountInfo();
-  return parseFloat(accountInfo[currency].available);
+  return symbol in accountInfo ? parseFloat(accountInfo[symbol].available) : 0;
 }
