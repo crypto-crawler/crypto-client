@@ -1,6 +1,6 @@
 {
   "name": "crypto-order",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "A library to place and cancel orders in crypto exchange",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,10 +39,10 @@
   "devDependencies": {
     "@types/assert": "^1.4.3",
     "@types/debug": "^4.1.5",
-    "@types/jest": "^24.0.24",
+    "@types/jest": "^24.0.25",
     "@types/long": "^4.0.0",
     "@types/mathjs": "^6.0.2",
-    "@types/node": "^13.1.0",
+    "@types/node": "^13.1.1",
     "@types/node-fetch": "^2.5.4",
     "@types/text-encoding": "0.0.35",
     "@types/yargs": "^13.0.4",
