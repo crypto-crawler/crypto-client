@@ -1,1 +1,1 @@
-export * from './global_config';
+export * from './user_config';

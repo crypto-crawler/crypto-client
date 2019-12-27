@@ -9,7 +9,7 @@ import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { createOrder as createOrderWhaleEx } from './order/whaleex_eos';
 import { ActionExtended } from './pojo';
-import { UserConfig, USER_CONFIG, EOS_API_ENDPOINTS } from './config';
+import { UserConfig, USER_CONFIG } from './config';
 
 export { UserConfig } from './config';
 
@@ -32,7 +32,6 @@ const exchangeInfoCache: { [key: string]: ExchangeInfo } = {};
 export async function init({
   eosAccount = '',
   eosPrivateKey = '',
-  eosApiEndpoints = [],
   ethPrivateKey = '',
   whaleExApiKey = '',
   MXCAccessKey = '',
@@ -50,11 +49,6 @@ export async function init({
     USER_CONFIG.eosAccount = eosAccount;
     if (!isValidPrivate(eosPrivateKey)) throw Error(`Invalid EOS private key: ${eosPrivateKey}`);
     USER_CONFIG.eosPrivateKey = eosPrivateKey;
-
-    if (eosApiEndpoints && eosApiEndpoints.length) {
-      // clear EOS_API_ENDPOINTS and copy all elements of eosApiEndpoints into it
-      EOS_API_ENDPOINTS.splice(0, EOS_API_ENDPOINTS.length, ...eosApiEndpoints);
-    }
   }
 
   if (ethPrivateKey) USER_CONFIG.ethPrivateKey = ethPrivateKey;
