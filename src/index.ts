@@ -260,6 +260,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
   switch (exchange) {
     case 'Binance':
       return Binance.queryBalance(symbol);
+    case 'Coinbase':
+      return Coinbase.queryBalance(symbol);
     case 'MXC':
       return MXC.queryBalance(symbol);
     case 'Newdex':

@@ -73,16 +73,16 @@ export async function testBinance(): Promise<void> {
 }
 
 export async function testCoinbase(): Promise<void> {
-  console.info(await queryBalance('Coinbase', 'EOS'));
+  console.info(await queryBalance('Coinbase', 'BCH'));
 
-  const orderId = await placeOrder('Coinbase', 'EOS_USDT', 10.9, 1.1, true);
+  const orderId = await placeOrder('Coinbase', 'BCH_USD', 607.48, 0.6731677072288, true);
   console.info(orderId);
 
-  console.info(await queryOrder('Coinbase', 'EOS_USDT', orderId));
+  console.info(await queryOrder('Coinbase', 'BCH_USD', orderId));
 
-  console.info(await cancelOrder('Coinbase', 'EOS_USDT', orderId));
+  console.info(await cancelOrder('Coinbase', 'BCH_USD', orderId));
 
-  console.info(await queryOrder('Coinbase', 'EOS_USDT', orderId));
+  console.info(await queryOrder('Coinbase', 'BCH_USD', orderId));
 }
 
 export async function testHuobi(): Promise<void> {
@@ -159,9 +159,5 @@ export async function testMXC(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testMXC();
-
-  // await testWhaleEx();
-  // await testWhaleExEos();
-  console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', '103350367647369'));
+  await testCoinbase();
 })();

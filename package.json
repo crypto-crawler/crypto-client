@@ -1,7 +1,7 @@
 {
   "name": "crypto-order",
-  "version": "0.11.7",
-  "description": "A library to place and cancel orders in crypto exchange",
+  "version": "0.11.8",
+  "description": "A library to place and cancel orders at crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "src/index.ts",
@@ -16,7 +16,8 @@
   },
   "pre-commit": [
     "prettier",
-    "lint"
+    "lint",
+    "test"
   ],
   "repository": {
     "type": "git",

@@ -31,7 +31,7 @@ export async function placeOrder(
   const order: LimitOrder = {
     type: 'limit',
     side: sell ? 'sell' : 'buy',
-    product_id: pairInfo.product_id,
+    product_id: pairInfo.id,
     price: priceStr,
     size: quantityStr,
   };
@@ -46,11 +46,8 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   const client = createAuthenticatedClient();
 
   const arr = await client.cancelOrder(orderId);
-  // TODO:
-  console.info(arr);
-  assert.equal(arr.length, 1);
 
-  return true;
+  return ((arr as unknown) as string) === orderId; // TODO: coinbase-pro need to fix its types
 }
 
 export async function queryOrder(
@@ -61,24 +58,27 @@ export async function queryOrder(
 
   const client = createAuthenticatedClient();
 
-  const orderInfo = await client.getOrder(orderId);
-  assert.equal(orderInfo.id, orderId);
-  assert.equal(orderInfo.product_id, pairInfo.product_id);
+  try {
+    const orderInfo = await client.getOrder(orderId);
+    assert.equal(orderInfo.id, orderId);
+    assert.equal(orderInfo.product_id, pairInfo.id);
 
-  // TODO: 404
-
-  return orderInfo;
+    return orderInfo;
+  } catch (e) {
+    if (e?.response?.statusCode === 404) {
+      return undefined; // orderId not exist
+    }
+    throw e;
+  }
 }
 
 export async function queryBalance(symbol: string): Promise<number> {
   assert.ok(symbol);
   const client = createAuthenticatedClient();
 
-  const accounts = await client.getCoinbaseAccounts();
-
-  console.info(accounts);
+  const accounts = await client.getAccounts();
 
   const arr = accounts.filter(x => x.currency === symbol);
 
-  return arr.length > 0 ? arr[0].balance : 0;
+  return arr.length > 0 ? parseFloat(arr[0].available) : 0;
 }
