@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import yargs from 'yargs';
+import { USER_CONFIG } from './config';
 import {
-  init,
-  createOrder,
-  placeOrder,
-  queryOrder,
   cancelOrder,
+  createOrder,
+  init,
+  placeOrder,
   queryBalance,
+  queryOrder,
   SUPPORTED_EXCHANGES,
 } from './index';
-import { USER_CONFIG } from './config';
 
 const { argv } = yargs.options({
   exchange: {
@@ -48,6 +48,15 @@ const { argv } = yargs.options({
   BINANCE_API_SECRET: {
     type: 'string',
   },
+  BITSTAMP_API_KEY: {
+    type: 'string',
+  },
+  BITSTAMP_API_SECRET: {
+    type: 'string',
+  },
+  BITSTAMP_USER_ID: {
+    type: 'number',
+  },
   HUOBI_ACCESS_KEY: {
     type: 'string',
   },
@@ -70,6 +79,19 @@ export async function testBinance(): Promise<void> {
   console.info(await cancelOrder('Binance', 'EOS_USDT', orderId));
 
   console.info(await queryOrder('Binance', 'EOS_USDT', orderId));
+}
+
+export async function testBitstamp(): Promise<void> {
+  console.info(await queryBalance('Bitstamp', 'ETH'));
+
+  const orderId = await placeOrder('Bitstamp', 'ETH_USD', 200.9, 0.5, true);
+  console.info(orderId);
+
+  console.info(await queryOrder('Bitstamp', 'ETH_USD', orderId));
+
+  console.info(await cancelOrder('Bitstamp', 'ETH_USD', orderId));
+
+  console.info(await queryOrder('Bitstamp', 'ETH_USD', orderId));
 }
 
 export async function testCoinbase(): Promise<void> {
@@ -152,6 +174,9 @@ export async function testMXC(): Promise<void> {
     CB_ACCESS_PASSPHRASE: argv.CB_ACCESS_PASSPHRASE,
     BINANCE_API_KEY: argv.BINANCE_API_KEY,
     BINANCE_API_SECRET: argv.BINANCE_API_SECRET,
+    BITSTAMP_API_KEY: argv.BITSTAMP_API_KEY,
+    BITSTAMP_API_SECRET: argv.BITSTAMP_API_SECRET,
+    BITSTAMP_USER_ID: argv.BITSTAMP_USER_ID,
     HUOBI_ACCESS_KEY: argv.HUOBI_ACCESS_KEY,
     HUOBI_SECRET_KEY: argv.HUOBI_SECRET_KEY,
     HUOBI_ACCOUNT_ID: argv.HUOBI_ACCOUNT_ID,
@@ -159,5 +184,5 @@ export async function testMXC(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testCoinbase();
+  await testBitstamp();
 })();

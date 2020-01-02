@@ -11,6 +11,9 @@ export interface UserConfig {
   CB_ACCESS_PASSPHRASE?: string;
   BINANCE_API_KEY?: string;
   BINANCE_API_SECRET?: string;
+  BITSTAMP_API_KEY?: string;
+  BITSTAMP_API_SECRET?: string;
+  BITSTAMP_USER_ID?: number;
   HUOBI_ACCESS_KEY?: string;
   HUOBI_SECRET_KEY?: string;
   HUOBI_ACCOUNT_ID?: number;

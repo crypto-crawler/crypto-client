@@ -1,7 +1,9 @@
-import { isValidPrivate } from 'eosjs-ecc';
 import { strict as assert } from 'assert';
+import { isValidPrivate } from 'eosjs-ecc';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
+import { UserConfig, USER_CONFIG } from './config';
 import * as Binance from './order/binance';
+import * as Bitstamp from './order/bitstamp';
 import * as Coinbase from './order/coinbase';
 import * as Huobi from './order/huobi';
 import * as MXC from './order/mxc';
@@ -9,12 +11,12 @@ import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
 import { createOrder as createOrderWhaleEx } from './order/whaleex_eos';
 import { ActionExtended } from './pojo';
-import { UserConfig, USER_CONFIG } from './config';
 
 export { UserConfig } from './config';
 
 export const SUPPORTED_EXCHANGES = [
   'Binance',
+  'Bitstamp',
   'Coinbase',
   'Huobi',
   'MXC',
@@ -41,6 +43,9 @@ export async function init({
   CB_ACCESS_PASSPHRASE = '',
   BINANCE_API_KEY = '',
   BINANCE_API_SECRET = '',
+  BITSTAMP_USER_ID = 0,
+  BITSTAMP_API_KEY = '',
+  BITSTAMP_API_SECRET = '',
   HUOBI_ACCESS_KEY = '',
   HUOBI_SECRET_KEY = '',
   HUOBI_ACCOUNT_ID = 0,
@@ -72,6 +77,12 @@ export async function init({
     assert.ok(BINANCE_API_SECRET);
     USER_CONFIG.BINANCE_API_KEY = BINANCE_API_KEY;
     USER_CONFIG.BINANCE_API_SECRET = BINANCE_API_SECRET;
+  }
+  if (BITSTAMP_API_KEY) {
+    assert.ok(BITSTAMP_API_SECRET);
+    USER_CONFIG.BITSTAMP_API_KEY = BITSTAMP_API_KEY;
+    USER_CONFIG.BITSTAMP_API_SECRET = BITSTAMP_API_SECRET;
+    USER_CONFIG.BITSTAMP_USER_ID = BITSTAMP_USER_ID;
   }
   if (HUOBI_ACCESS_KEY) {
     assert.ok(HUOBI_SECRET_KEY);
@@ -162,6 +173,8 @@ export async function placeOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.placeOrder(pairInfo, price, quantity, sell);
+    case 'Bitstamp':
+      return Bitstamp.placeOrder(pairInfo, price, quantity, sell);
     case 'Coinbase':
       return Coinbase.placeOrder(pairInfo, price, quantity, sell);
     case 'Huobi':
@@ -202,6 +215,8 @@ export async function cancelOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'Bitstamp':
+      return Bitstamp.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Coinbase':
       return Coinbase.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Huobi':
@@ -241,6 +256,8 @@ export async function queryOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'Bitstamp':
+      return Bitstamp.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Coinbase':
       return Coinbase.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Huobi':
@@ -260,6 +277,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
   switch (exchange) {
     case 'Binance':
       return Binance.queryBalance(symbol);
+    case 'Bitstamp':
+      return Bitstamp.queryBalance(symbol);
     case 'Coinbase':
       return Coinbase.queryBalance(symbol);
     case 'MXC':
