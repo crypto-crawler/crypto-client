@@ -27,12 +27,7 @@ const { argv } = yargs.options({
   whaleExApiKey: {
     type: 'string',
   },
-  MXCAccessKey: {
-    type: 'string',
-  },
-  MXCSecretKey: {
-    type: 'string',
-  },
+
   CB_ACCESS_KEY: {
     type: 'string',
   },
@@ -65,6 +60,12 @@ const { argv } = yargs.options({
   },
   HUOBI_ACCOUNT_ID: {
     type: 'number',
+  },
+  MXCAccessKey: {
+    type: 'string',
+  },
+  MXCSecretKey: {
+    type: 'string',
   },
 });
 

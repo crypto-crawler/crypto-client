@@ -36,8 +36,6 @@ export async function init({
   eosPrivateKey = '',
   ethPrivateKey = '',
   whaleExApiKey = '',
-  MXCAccessKey = '',
-  MXCSecretKey = '',
   CB_ACCESS_KEY = '',
   CB_ACCESS_SECRET = '',
   CB_ACCESS_PASSPHRASE = '',
@@ -49,6 +47,8 @@ export async function init({
   HUOBI_ACCESS_KEY = '',
   HUOBI_SECRET_KEY = '',
   HUOBI_ACCOUNT_ID = 0,
+  MXCAccessKey = '',
+  MXCSecretKey = '',
 }: UserConfig): Promise<void> {
   if (eosAccount) {
     USER_CONFIG.eosAccount = eosAccount;
@@ -60,11 +60,6 @@ export async function init({
 
   if (whaleExApiKey) {
     await WhaleEx.initilize(whaleExApiKey);
-  }
-  if (MXCAccessKey) {
-    assert.ok(MXCSecretKey);
-    USER_CONFIG.MXCAccessKey = MXCAccessKey!;
-    USER_CONFIG.MXCSecretKey = MXCSecretKey!;
   }
   if (CB_ACCESS_KEY) {
     assert.ok(CB_ACCESS_SECRET);
@@ -90,6 +85,11 @@ export async function init({
     USER_CONFIG.HUOBI_SECRET_KEY = HUOBI_SECRET_KEY;
     USER_CONFIG.HUOBI_ACCOUNT_ID =
       HUOBI_ACCOUNT_ID || (await Huobi.queryAccounts()).filter(x => x.type === 'spot')[0].id;
+  }
+  if (MXCAccessKey) {
+    assert.ok(MXCSecretKey);
+    USER_CONFIG.MXCAccessKey = MXCAccessKey!;
+    USER_CONFIG.MXCSecretKey = MXCSecretKey!;
   }
 }
 

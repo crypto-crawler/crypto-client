@@ -4,8 +4,6 @@ export interface UserConfig {
   eosApiEndpoints?: string[];
   ethPrivateKey?: string;
   whaleExApiKey?: string;
-  MXCAccessKey?: string;
-  MXCSecretKey?: string;
   CB_ACCESS_KEY?: string;
   CB_ACCESS_SECRET?: string;
   CB_ACCESS_PASSPHRASE?: string;
@@ -17,6 +15,8 @@ export interface UserConfig {
   HUOBI_ACCESS_KEY?: string;
   HUOBI_SECRET_KEY?: string;
   HUOBI_ACCOUNT_ID?: number;
+  MXCAccessKey?: string;
+  MXCSecretKey?: string;
 }
 
 // Should be initialized by init().
