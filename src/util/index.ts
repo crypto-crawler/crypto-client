@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
-import { PairInfo } from 'exchange-info';
 import { getTokenInfo } from 'eos-token-info';
+import { PairInfo } from 'exchange-info';
 
 export type AsyncFunc = (...args: any[]) => Promise<any>;
 
@@ -96,7 +96,9 @@ export function validatePriceQuantity(
     pairInfo.quote_precision,
     "quote_precision doesn't match",
   );
-  if (parseFloat(quoteQuantity) <= pairInfo.min_quote_quantity) {
+
+  assert.ok(pairInfo.min_base_quantity || pairInfo.min_quote_quantity);
+  if (pairInfo.min_quote_quantity && parseFloat(quoteQuantity) <= pairInfo.min_quote_quantity) {
     throw Error(
       `The order volume ${quoteQuantity} is less than min_quote_quantity ${
         pairInfo.min_quote_quantity
