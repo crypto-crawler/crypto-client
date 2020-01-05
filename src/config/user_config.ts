@@ -15,6 +15,8 @@ export interface UserConfig {
   HUOBI_ACCESS_KEY?: string;
   HUOBI_SECRET_KEY?: string;
   HUOBI_ACCOUNT_ID?: number;
+  KRAKEN_API_KEY?: string;
+  KRAKEN_PRIVATE_KEY?: string;
   MXCAccessKey?: string;
   MXCSecretKey?: string;
 }

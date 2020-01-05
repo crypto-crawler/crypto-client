@@ -6,6 +6,7 @@ import * as Binance from './order/binance';
 import * as Bitstamp from './order/bitstamp';
 import * as Coinbase from './order/coinbase';
 import * as Huobi from './order/huobi';
+import * as Kraken from './order/kraken';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
 import * as WhaleEx from './order/whaleex';
@@ -19,6 +20,7 @@ export const SUPPORTED_EXCHANGES = [
   'Bitstamp',
   'Coinbase',
   'Huobi',
+  'Kraken',
   'MXC',
   'Newdex',
   'WhaleEx',
@@ -47,6 +49,8 @@ export async function init({
   HUOBI_ACCESS_KEY = '',
   HUOBI_SECRET_KEY = '',
   HUOBI_ACCOUNT_ID = 0,
+  KRAKEN_API_KEY = '',
+  KRAKEN_PRIVATE_KEY = '',
   MXCAccessKey = '',
   MXCSecretKey = '',
 }: UserConfig): Promise<void> {
@@ -85,6 +89,11 @@ export async function init({
     USER_CONFIG.HUOBI_SECRET_KEY = HUOBI_SECRET_KEY;
     USER_CONFIG.HUOBI_ACCOUNT_ID =
       HUOBI_ACCOUNT_ID || (await Huobi.queryAccounts()).filter(x => x.type === 'spot')[0].id;
+  }
+  if (KRAKEN_API_KEY) {
+    assert.ok(KRAKEN_PRIVATE_KEY);
+    USER_CONFIG.KRAKEN_API_KEY = KRAKEN_API_KEY;
+    USER_CONFIG.KRAKEN_PRIVATE_KEY = KRAKEN_PRIVATE_KEY;
   }
   if (MXCAccessKey) {
     assert.ok(MXCSecretKey);
@@ -179,6 +188,8 @@ export async function placeOrder(
       return Coinbase.placeOrder(pairInfo, price, quantity, sell);
     case 'Huobi':
       return Huobi.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+    case 'Kraken':
+      return Kraken.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
     case 'MXC':
       return MXC.placeOrder(pairInfo, price, quantity, sell);
     case 'Newdex':
@@ -221,6 +232,8 @@ export async function cancelOrder(
       return Coinbase.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Huobi':
       return Huobi.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'Kraken':
+      return Kraken.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'MXC':
       return MXC.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
@@ -262,6 +275,8 @@ export async function queryOrder(
       return Coinbase.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Huobi':
       return Huobi.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'Kraken':
+      return Kraken.queryOrder(pairInfo, orderId_or_transactionId);
     case 'MXC':
       return MXC.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
@@ -281,6 +296,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
       return Bitstamp.queryBalance(symbol);
     case 'Coinbase':
       return Coinbase.queryBalance(symbol);
+    case 'Kraken':
+      return Kraken.queryBalance(symbol);
     case 'MXC':
       return MXC.queryBalance(symbol);
     case 'Newdex':

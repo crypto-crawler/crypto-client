@@ -61,6 +61,12 @@ const { argv } = yargs.options({
   HUOBI_ACCOUNT_ID: {
     type: 'number',
   },
+  KRAKEN_API_KEY: {
+    type: 'string',
+  },
+  KRAKEN_PRIVATE_KEY: {
+    type: 'string',
+  },
   MXCAccessKey: {
     type: 'string',
   },
@@ -150,6 +156,19 @@ export async function testWhaleExEos(): Promise<void> {
   // console.info(txid);
 }
 
+export async function testKraken(): Promise<void> {
+  console.info(await queryBalance('Kraken', 'USD'));
+
+  const orderId = await placeOrder('Kraken', 'EOS_USD', 1.6666, 3.11111111, false);
+  console.info(orderId);
+
+  console.info(await queryOrder('Kraken', 'EOS_USD', orderId));
+
+  console.info(await cancelOrder('Kraken', 'EOS_USD', orderId));
+
+  console.info(await queryOrder('Kraken', 'EOS_USD', orderId));
+}
+
 export async function testMXC(): Promise<void> {
   console.info(await queryBalance('MXC', 'EOS'));
 
@@ -164,26 +183,9 @@ export async function testMXC(): Promise<void> {
 }
 
 (async () => {
-  await init({
-    eosAccount: argv.eosAccount,
-    eosPrivateKey: argv.eosPrivateKey,
-    whaleExApiKey: argv.whaleExApiKey,
-    MXCAccessKey: argv.MXCAccessKey,
-    MXCSecretKey: argv.MXCSecretKey,
-    CB_ACCESS_KEY: argv.CB_ACCESS_KEY,
-    CB_ACCESS_SECRET: argv.CB_ACCESS_SECRET,
-    CB_ACCESS_PASSPHRASE: argv.CB_ACCESS_PASSPHRASE,
-    BINANCE_API_KEY: argv.BINANCE_API_KEY,
-    BINANCE_API_SECRET: argv.BINANCE_API_SECRET,
-    BITSTAMP_API_KEY: argv.BITSTAMP_API_KEY,
-    BITSTAMP_API_SECRET: argv.BITSTAMP_API_SECRET,
-    BITSTAMP_USER_ID: argv.BITSTAMP_USER_ID,
-    HUOBI_ACCESS_KEY: argv.HUOBI_ACCESS_KEY,
-    HUOBI_SECRET_KEY: argv.HUOBI_SECRET_KEY,
-    HUOBI_ACCOUNT_ID: argv.HUOBI_ACCOUNT_ID,
-  });
+  await init(argv);
 
   console.info(USER_CONFIG);
 
-  await testBitstamp();
+  await testKraken();
 })();
