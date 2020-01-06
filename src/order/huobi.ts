@@ -1,6 +1,6 @@
-import crypto from 'crypto';
+import { strict as assert } from 'assert';
 import Axios from 'axios';
-import assert from 'assert';
+import crypto from 'crypto';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
