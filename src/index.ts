@@ -9,6 +9,7 @@ import * as Huobi from './order/huobi';
 import * as Kraken from './order/kraken';
 import * as MXC from './order/mxc';
 import * as Newdex from './order/newdex';
+import * as OKEx_Spot from './order/okex_spot';
 import * as WhaleEx from './order/whaleex';
 import { createOrder as createOrderWhaleEx } from './order/whaleex_eos';
 import { ActionExtended } from './pojo';
@@ -23,6 +24,7 @@ export const SUPPORTED_EXCHANGES = [
   'Kraken',
   'MXC',
   'Newdex',
+  'OKEx_Spot',
   'WhaleEx',
 ] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
@@ -53,6 +55,9 @@ export async function init({
   KRAKEN_PRIVATE_KEY = '',
   MXCAccessKey = '',
   MXCSecretKey = '',
+  OKEX_SPOT_API_KEY = '',
+  OKEX_SPOT_API_SECRET = '',
+  OKEX_SPOT_API_PASSPHRASE = '',
 }: UserConfig): Promise<void> {
   if (eosAccount) {
     USER_CONFIG.eosAccount = eosAccount;
@@ -99,6 +104,14 @@ export async function init({
     assert.ok(MXCSecretKey);
     USER_CONFIG.MXCAccessKey = MXCAccessKey!;
     USER_CONFIG.MXCSecretKey = MXCSecretKey!;
+  }
+  if (OKEX_SPOT_API_KEY) {
+    assert.ok(OKEX_SPOT_API_SECRET);
+    assert.ok(OKEX_SPOT_API_PASSPHRASE);
+
+    USER_CONFIG.OKEX_SPOT_API_KEY = OKEX_SPOT_API_KEY!;
+    USER_CONFIG.OKEX_SPOT_API_SECRET = OKEX_SPOT_API_SECRET!;
+    USER_CONFIG.OKEX_SPOT_API_PASSPHRASE = OKEX_SPOT_API_PASSPHRASE!;
   }
 }
 
@@ -194,6 +207,8 @@ export async function placeOrder(
       return MXC.placeOrder(pairInfo, price, quantity, sell);
     case 'Newdex':
       return Newdex.placeOrder(pairInfo, price, quantity, sell);
+    case 'OKEx_Spot':
+      return OKEx_Spot.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
     case 'WhaleEx': {
       return WhaleEx.placeOrder(pairInfo, price, quantity, sell);
     }
@@ -238,6 +253,8 @@ export async function cancelOrder(
       return MXC.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
       return Newdex.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'OKEx_Spot':
+      return OKEx_Spot.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'WhaleEx':
       return WhaleEx.cancelOrder(pairInfo, orderId_or_transactionId);
     default:
@@ -281,6 +298,8 @@ export async function queryOrder(
       return MXC.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Newdex':
       return Newdex.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'OKEx_Spot':
+      return OKEx_Spot.queryOrder(pairInfo, orderId_or_transactionId);
     case 'WhaleEx':
       return WhaleEx.queryOrder(pairInfo, orderId_or_transactionId);
     default:
@@ -302,6 +321,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
       return MXC.queryBalance(symbol);
     case 'Newdex':
       return Newdex.queryBalance(symbol);
+    case 'OKEx_Spot':
+      return OKEx_Spot.queryBalance(symbol);
     case 'WhaleEx':
       return WhaleEx.queryBalance(symbol);
     default:

@@ -73,6 +73,15 @@ const { argv } = yargs.options({
   MXCSecretKey: {
     type: 'string',
   },
+  OKEX_SPOT_API_KEY: {
+    type: 'string',
+  },
+  OKEX_SPOT_API_SECRET: {
+    type: 'string',
+  },
+  OKEX_SPOT_API_PASSPHRASE: {
+    type: 'string',
+  },
 });
 
 export async function testBinance(): Promise<void> {
@@ -138,6 +147,19 @@ export async function testNewdex(): Promise<void> {
   console.info(cancelOrderId);
 }
 
+export async function testOKEx_Spot(): Promise<void> {
+  console.info(await queryBalance('OKEx_Spot', 'ETH'));
+
+  const orderId = await placeOrder('OKEx_Spot', 'ETH_USDT', 299.99, 0.001001, true);
+  console.info(orderId);
+
+  console.info(await queryOrder('OKEx_Spot', 'ETH_USDT', orderId));
+
+  console.info(await cancelOrder('OKEx_Spot', 'ETH_USDT', orderId));
+
+  console.info(await queryOrder('OKEx_Spot', 'ETH_USDT', orderId));
+}
+
 export async function testWhaleEx(): Promise<void> {
   const orderId = await placeOrder('WhaleEx', 'EIDOS_EOS', 0.00121, 9.2644, false);
   console.info(orderId);
@@ -187,5 +209,5 @@ export async function testMXC(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testKraken();
+  await testOKEx_Spot();
 })();

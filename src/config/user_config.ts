@@ -19,6 +19,9 @@ export interface UserConfig {
   KRAKEN_PRIVATE_KEY?: string;
   MXCAccessKey?: string;
   MXCSecretKey?: string;
+  OKEX_SPOT_API_KEY?: string;
+  OKEX_SPOT_API_SECRET?: string;
+  OKEX_SPOT_API_PASSPHRASE?: string;
 }
 
 // Should be initialized by init().
