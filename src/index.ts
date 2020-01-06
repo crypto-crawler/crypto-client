@@ -3,6 +3,7 @@ import { isValidPrivate } from 'eosjs-ecc';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { UserConfig, USER_CONFIG } from './config';
 import * as Binance from './order/binance';
+import * as Bitfinex from './order/bitfinex';
 import * as Bitstamp from './order/bitstamp';
 import * as Coinbase from './order/coinbase';
 import * as Huobi from './order/huobi';
@@ -18,6 +19,7 @@ export { UserConfig } from './config';
 
 export const SUPPORTED_EXCHANGES = [
   'Binance',
+  'Bitfinex',
   'Bitstamp',
   'Coinbase',
   'Huobi',
@@ -45,6 +47,8 @@ export async function init({
   CB_ACCESS_PASSPHRASE = '',
   BINANCE_API_KEY = '',
   BINANCE_API_SECRET = '',
+  BITFINEX_API_KEY = '',
+  BITFINEX_API_SECRET = '',
   BITSTAMP_USER_ID = 0,
   BITSTAMP_API_KEY = '',
   BITSTAMP_API_SECRET = '',
@@ -81,6 +85,11 @@ export async function init({
     assert.ok(BINANCE_API_SECRET);
     USER_CONFIG.BINANCE_API_KEY = BINANCE_API_KEY;
     USER_CONFIG.BINANCE_API_SECRET = BINANCE_API_SECRET;
+  }
+  if (BITFINEX_API_KEY) {
+    assert.ok(BITFINEX_API_SECRET);
+    USER_CONFIG.BITFINEX_API_KEY = BITFINEX_API_KEY;
+    USER_CONFIG.BITFINEX_API_SECRET = BITFINEX_API_SECRET;
   }
   if (BITSTAMP_API_KEY) {
     assert.ok(BITSTAMP_API_SECRET);
@@ -195,6 +204,8 @@ export async function placeOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.placeOrder(pairInfo, price, quantity, sell);
+    case 'Bitfinex':
+      return Bitfinex.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
     case 'Bitstamp':
       return Bitstamp.placeOrder(pairInfo, price, quantity, sell);
     case 'Coinbase':
@@ -241,6 +252,8 @@ export async function cancelOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'Bitfinex':
+      return Bitfinex.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Bitstamp':
       return Bitstamp.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Coinbase':
@@ -286,6 +299,8 @@ export async function queryOrder(
   switch (exchange) {
     case 'Binance':
       return Binance.queryOrder(pairInfo, orderId_or_transactionId);
+    case 'Bitfinex':
+      return Bitfinex.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Bitstamp':
       return Bitstamp.queryOrder(pairInfo, orderId_or_transactionId);
     case 'Coinbase':
@@ -311,6 +326,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
   switch (exchange) {
     case 'Binance':
       return Binance.queryBalance(symbol);
+    case 'Bitfinex':
+      return Bitfinex.queryBalance(symbol);
     case 'Bitstamp':
       return Bitstamp.queryBalance(symbol);
     case 'Coinbase':

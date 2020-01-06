@@ -43,6 +43,12 @@ const { argv } = yargs.options({
   BINANCE_API_SECRET: {
     type: 'string',
   },
+  BITFINEX_API_KEY: {
+    type: 'string',
+  },
+  BITFINEX_API_SECRET: {
+    type: 'string',
+  },
   BITSTAMP_API_KEY: {
     type: 'string',
   },
@@ -95,6 +101,19 @@ export async function testBinance(): Promise<void> {
   console.info(await cancelOrder('Binance', 'EOS_USDT', orderId));
 
   console.info(await queryOrder('Binance', 'EOS_USDT', orderId));
+}
+
+export async function testBitfinex(): Promise<void> {
+  console.info(await queryBalance('Bitfinex', 'ETH'));
+
+  const orderId = await placeOrder('Bitfinex', 'ETH_USD', 241.11111, 0.04, true, '123456');
+  console.info(orderId);
+
+  console.info(await queryOrder('Bitfinex', 'ETH_USD', orderId));
+
+  console.info(await cancelOrder('Bitfinex', 'ETH_USD', orderId));
+
+  console.info(await queryOrder('Bitfinex', 'ETH_USD', orderId));
 }
 
 export async function testBitstamp(): Promise<void> {
@@ -209,5 +228,5 @@ export async function testMXC(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testOKEx_Spot();
+  await testBitfinex();
 })();

@@ -9,6 +9,8 @@ export interface UserConfig {
   CB_ACCESS_PASSPHRASE?: string;
   BINANCE_API_KEY?: string;
   BINANCE_API_SECRET?: string;
+  BITFINEX_API_KEY?: string;
+  BITFINEX_API_SECRET?: string;
   BITSTAMP_API_KEY?: string;
   BITSTAMP_API_SECRET?: string;
   BITSTAMP_USER_ID?: number;
