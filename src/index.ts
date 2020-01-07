@@ -332,6 +332,8 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
       return Bitstamp.queryBalance(symbol);
     case 'Coinbase':
       return Coinbase.queryBalance(symbol);
+    case 'Huobi':
+      return Huobi.queryBalance(symbol);
     case 'Kraken':
       return Kraken.queryBalance(symbol);
     case 'MXC':
