@@ -2,15 +2,15 @@ import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
 import { PairInfo } from 'exchange-info';
-import debug from '../util/debug';
 import { USER_CONFIG } from '../config';
-import { Params, sort } from '../util/whaleex_sign';
 import { convertPriceAndQuantityToStrings } from '../util';
+import debug from '../util/debug';
+import { Params, sort } from '../util/whaleex_sign';
 
 const API_BASE_URL = 'https://www.mxc.com';
 
 // Only the following pairs are tradable via API, see https://www.mxc.com/ucenter/api
-const SUPPORTED_PAIRS = [
+export const SUPPORTED_PAIRS = [
   'BTC_USDT',
   'BNB_USDT',
   'OMG_USDT',
