@@ -2,22 +2,9 @@
 /* eslint-disable no-console */
 import yargs from 'yargs';
 import { USER_CONFIG } from './config';
-import {
-  cancelOrder,
-  createOrder,
-  init,
-  placeOrder,
-  queryBalance,
-  queryOrder,
-  SUPPORTED_EXCHANGES,
-} from './index';
+import { cancelOrder, createOrder, init, placeOrder, queryBalance, queryOrder } from './index';
 
 const { argv } = yargs.options({
-  exchange: {
-    choices: SUPPORTED_EXCHANGES,
-    type: 'string',
-    demandOption: true,
-  },
   eosAccount: {
     type: 'string',
   },
