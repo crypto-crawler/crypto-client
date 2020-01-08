@@ -2,10 +2,10 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import { PairInfo } from 'exchange-info';
+import { USER_CONFIG } from '../config';
+import { convertPriceAndQuantityToStrings } from '../util';
 // import debug from '../util/debug';
 import { signData, signDataOrder, SymbolObj, WhaleExOrder } from '../util/whaleex_sign';
-import { convertPriceAndQuantityToStrings } from '../util';
-import { USER_CONFIG } from '../config';
 
 const URL_PREFIX = 'https://api.whaleex.com/BUSINESS';
 
@@ -129,7 +129,7 @@ export async function queryOrder(
   const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
   assert.equal(response.status, 200);
   if (response.data.returnCode === '0') {
-    return response.data;
+    return response.data.result;
   }
   return undefined;
 }
