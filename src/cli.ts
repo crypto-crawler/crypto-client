@@ -11,19 +11,6 @@ const { argv } = yargs.options({
   eosPrivateKey: {
     type: 'string',
   },
-  whaleExApiKey: {
-    type: 'string',
-  },
-
-  CB_ACCESS_KEY: {
-    type: 'string',
-  },
-  CB_ACCESS_SECRET: {
-    type: 'string',
-  },
-  CB_ACCESS_PASSPHRASE: {
-    type: 'string',
-  },
   BINANCE_API_KEY: {
     type: 'string',
   },
@@ -44,6 +31,15 @@ const { argv } = yargs.options({
   },
   BITSTAMP_USER_ID: {
     type: 'number',
+  },
+  CB_ACCESS_KEY: {
+    type: 'string',
+  },
+  CB_ACCESS_SECRET: {
+    type: 'string',
+  },
+  CB_ACCESS_PASSPHRASE: {
+    type: 'string',
   },
   HUOBI_ACCESS_KEY: {
     type: 'string',
@@ -73,6 +69,9 @@ const { argv } = yargs.options({
     type: 'string',
   },
   OKEX_SPOT_API_PASSPHRASE: {
+    type: 'string',
+  },
+  WHALEEX_API_KEY: {
     type: 'string',
   },
 });
@@ -215,5 +214,5 @@ export async function testMXC(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testBitfinex();
+  await testWhaleEx();
 })();

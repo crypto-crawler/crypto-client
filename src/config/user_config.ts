@@ -3,10 +3,6 @@ export interface UserConfig {
   eosPrivateKey?: string;
   eosApiEndpoints?: string[];
   ethPrivateKey?: string;
-  whaleExApiKey?: string;
-  CB_ACCESS_KEY?: string;
-  CB_ACCESS_SECRET?: string;
-  CB_ACCESS_PASSPHRASE?: string;
   BINANCE_API_KEY?: string;
   BINANCE_API_SECRET?: string;
   BITFINEX_API_KEY?: string;
@@ -14,6 +10,9 @@ export interface UserConfig {
   BITSTAMP_API_KEY?: string;
   BITSTAMP_API_SECRET?: string;
   BITSTAMP_USER_ID?: number;
+  CB_ACCESS_KEY?: string;
+  CB_ACCESS_SECRET?: string;
+  CB_ACCESS_PASSPHRASE?: string;
   HUOBI_ACCESS_KEY?: string;
   HUOBI_SECRET_KEY?: string;
   HUOBI_ACCOUNT_ID?: number;
@@ -24,6 +23,7 @@ export interface UserConfig {
   OKEX_SPOT_API_KEY?: string;
   OKEX_SPOT_API_SECRET?: string;
   OKEX_SPOT_API_PASSPHRASE?: string;
+  WHALEEX_API_KEY?: string;
 }
 
 // Should be initialized by init().

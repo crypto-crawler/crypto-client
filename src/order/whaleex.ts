@@ -55,7 +55,7 @@ const ID_STORE: { getId: () => Promise<string> } = {
 
 export async function initilize(apiKey: string): Promise<void> {
   assert.ok(apiKey);
-  USER_CONFIG.whaleExApiKey = apiKey;
+  USER_CONFIG.WHALEEX_API_KEY = apiKey;
   const idStore = await createIdStore();
   ID_STORE.getId = idStore.getId;
 }
@@ -67,7 +67,7 @@ export async function placeOrder(
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.whaleExApiKey, 'APIKey is empty');
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'APIKey is empty');
 
   const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
 
@@ -107,7 +107,7 @@ export async function placeOrder(
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
   assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.whaleExApiKey);
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY);
 
   const path = `/api/v1/order/orders/${orderId}/submitcancel`;
   const params = signData('POST', path);
@@ -122,7 +122,7 @@ export async function queryOrder(
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.whaleExApiKey);
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY);
 
   const path = `/api/v1/order/orders/${orderId}`;
   const params = signData('GET', path);

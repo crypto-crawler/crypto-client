@@ -1,10 +1,10 @@
 // forked from https://github.com/WhaleEx/API/blob/master/sample/nodejs/whaleex-sign.js
 import { strict as assert } from 'assert';
-import { privateToPublic, sign, signHash } from 'eosjs-ecc';
 import crypto from 'crypto';
 import { EOS_QUANTITY_PRECISION } from 'eos-utils';
+import { privateToPublic, sign, signHash } from 'eosjs-ecc';
 import Long from 'long';
-import { create, all } from 'mathjs';
+import { all, create } from 'mathjs';
 import { USER_CONFIG } from '../config';
 
 const math = create(all, {
@@ -17,7 +17,7 @@ const WHALEEX_EOS_ACCOUNT = 'whaleexchang';
 function defaultHandler(params: Params): Params {
   return {
     timestamp: Date.now(),
-    APIKey: USER_CONFIG.whaleExApiKey!,
+    APIKey: USER_CONFIG.WHALEEX_API_KEY!,
     pk: privateToPublic(USER_CONFIG.eosPrivateKey!),
     ...params,
   };
@@ -101,12 +101,12 @@ function multiply(m: number, n: number, decimal: number, ceil: boolean = false):
 
 export function getKeys() {
   assert.ok(USER_CONFIG.eosPrivateKey);
-  assert.ok(USER_CONFIG.whaleExApiKey);
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY);
 
   return {
     privateKey: USER_CONFIG.eosPrivateKey,
     publicKey: privateToPublic(USER_CONFIG.eosPrivateKey!),
-    APIKey: USER_CONFIG.whaleExApiKey,
+    APIKey: USER_CONFIG.WHALEEX_API_KEY,
   };
 }
 

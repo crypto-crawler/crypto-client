@@ -41,10 +41,6 @@ export async function init({
   eosAccount = '',
   eosPrivateKey = '',
   ethPrivateKey = '',
-  whaleExApiKey = '',
-  CB_ACCESS_KEY = '',
-  CB_ACCESS_SECRET = '',
-  CB_ACCESS_PASSPHRASE = '',
   BINANCE_API_KEY = '',
   BINANCE_API_SECRET = '',
   BITFINEX_API_KEY = '',
@@ -52,6 +48,9 @@ export async function init({
   BITSTAMP_USER_ID = 0,
   BITSTAMP_API_KEY = '',
   BITSTAMP_API_SECRET = '',
+  CB_ACCESS_KEY = '',
+  CB_ACCESS_SECRET = '',
+  CB_ACCESS_PASSPHRASE = '',
   HUOBI_ACCESS_KEY = '',
   HUOBI_SECRET_KEY = '',
   HUOBI_ACCOUNT_ID = 0,
@@ -62,6 +61,7 @@ export async function init({
   OKEX_SPOT_API_KEY = '',
   OKEX_SPOT_API_SECRET = '',
   OKEX_SPOT_API_PASSPHRASE = '',
+  WHALEEX_API_KEY = '',
 }: UserConfig): Promise<void> {
   if (eosAccount) {
     USER_CONFIG.eosAccount = eosAccount;
@@ -71,16 +71,6 @@ export async function init({
 
   if (ethPrivateKey) USER_CONFIG.ethPrivateKey = ethPrivateKey;
 
-  if (whaleExApiKey) {
-    await WhaleEx.initilize(whaleExApiKey);
-  }
-  if (CB_ACCESS_KEY) {
-    assert.ok(CB_ACCESS_SECRET);
-    assert.ok(CB_ACCESS_PASSPHRASE);
-    USER_CONFIG.CB_ACCESS_KEY = CB_ACCESS_KEY;
-    USER_CONFIG.CB_ACCESS_SECRET = CB_ACCESS_SECRET;
-    USER_CONFIG.CB_ACCESS_PASSPHRASE = CB_ACCESS_PASSPHRASE;
-  }
   if (BINANCE_API_KEY) {
     assert.ok(BINANCE_API_SECRET);
     USER_CONFIG.BINANCE_API_KEY = BINANCE_API_KEY;
@@ -96,6 +86,13 @@ export async function init({
     USER_CONFIG.BITSTAMP_API_KEY = BITSTAMP_API_KEY;
     USER_CONFIG.BITSTAMP_API_SECRET = BITSTAMP_API_SECRET;
     USER_CONFIG.BITSTAMP_USER_ID = BITSTAMP_USER_ID;
+  }
+  if (CB_ACCESS_KEY) {
+    assert.ok(CB_ACCESS_SECRET);
+    assert.ok(CB_ACCESS_PASSPHRASE);
+    USER_CONFIG.CB_ACCESS_KEY = CB_ACCESS_KEY;
+    USER_CONFIG.CB_ACCESS_SECRET = CB_ACCESS_SECRET;
+    USER_CONFIG.CB_ACCESS_PASSPHRASE = CB_ACCESS_PASSPHRASE;
   }
   if (HUOBI_ACCESS_KEY) {
     assert.ok(HUOBI_SECRET_KEY);
@@ -121,6 +118,9 @@ export async function init({
     USER_CONFIG.OKEX_SPOT_API_KEY = OKEX_SPOT_API_KEY!;
     USER_CONFIG.OKEX_SPOT_API_SECRET = OKEX_SPOT_API_SECRET!;
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE = OKEX_SPOT_API_PASSPHRASE!;
+  }
+  if (WHALEEX_API_KEY) {
+    await WhaleEx.initilize(WHALEEX_API_KEY);
   }
 }
 

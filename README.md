@@ -28,7 +28,15 @@ const CryptoOrder = require('crypto-order'); // eslint-disable-line import/no-un
 
 ## Supported Exchanges
 
+- Binance
+- Bitfinex
+- Bitstamp
+- Coinbase
+- Huobi
+- Kraken
+- MXC
 - Newdex
+- OKEx_Spot
 - WhaleEx
 
 ## Related Projects
