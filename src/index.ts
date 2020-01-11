@@ -161,7 +161,7 @@ export async function createOrder(
   checkExchangeAndPair(exchange, pair);
 
   if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
@@ -197,7 +197,7 @@ export async function placeOrder(
   checkExchangeAndPair(exchange, pair);
 
   if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
@@ -245,7 +245,7 @@ export async function cancelOrder(
   checkExchangeAndPair(exchange, pair);
 
   if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 
@@ -292,7 +292,7 @@ export async function queryOrder(
   checkExchangeAndPair(exchange, pair);
 
   if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange);
+    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
   const pairInfo = exchangeInfoCache[exchange].pairs[pair];
 

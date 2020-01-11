@@ -201,7 +201,7 @@ export function sort(params: Params): string {
   return sb.join('&');
 }
 
-export function signData(method: 'GET' | 'POST', path: string, params: Params = {}) {
+export function signData(method: 'GET' | 'POST', path: string, params: Params = {}): string {
   const { privateKey } = getKeys();
   // console.log("signData", method, path, params);
   const paramsStr = sort(getHandle(path)(params));
