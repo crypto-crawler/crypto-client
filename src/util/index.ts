@@ -1,6 +1,5 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
-import { getTokenInfo } from 'eos-token-info';
 import { PairInfo } from 'exchange-info';
 
 export type AsyncFunc = (...args: any[]) => Promise<any>;
@@ -82,13 +81,6 @@ export function validatePriceQuantity(
   quantity: string,
   quoteQuantity: string,
 ): boolean {
-  if (pairInfo.normalized_pair.endsWith('_EOS')) {
-    const baseTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[0]);
-    const quoteTokenInfo = getTokenInfo(pairInfo.normalized_pair.split('_')[1]);
-    assert.equal(calcPrecision(quantity), baseTokenInfo.decimals);
-    assert.equal(calcPrecision(quoteQuantity), quoteTokenInfo.decimals);
-  }
-
   assert.equal(calcPrecision(price), pairInfo.price_precision, "price_precision doesn't match");
   assert.equal(calcPrecision(quantity), pairInfo.base_precision, "base_precision doesn't match");
   assert.equal(
