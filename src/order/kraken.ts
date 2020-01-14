@@ -50,7 +50,11 @@ async function privateMethod(
 
   const response = await Axios.post(url, qs.stringify(params), { headers });
   assert.equal(response.status, 200);
-  return response.data;
+
+  if (response.data.error.length > 0) {
+    throw new Error(response.data.error);
+  }
+  return response.data.result;
 }
 
 export async function placeOrder(
@@ -83,7 +87,7 @@ export async function placeOrder(
   }
 
   const data = await privateMethod(path, params);
-  const txid = data.result.txid as string[];
+  const txid = data.txid as string[];
   assert.ok(txid.length > 0);
   return txid[0]; // TODO: handle txid.length > 1
 }
@@ -105,8 +109,8 @@ export async function cancelOrder(
     params.txid = parseInt(clientOrderId, 10);
   }
 
-  const data = (await privateMethod(path, params)) as { result: { count: number } };
-  return data.result.count > 0;
+  const data = (await privateMethod(path, params)) as { count: number };
+  return data.count > 0;
 }
 
 export async function queryOrder(
@@ -127,14 +131,14 @@ export async function queryOrder(
   }
 
   const data = await privateMethod(path, params);
-  return data.result[orderId];
+  return data[orderId];
 }
 
 export async function queryBalance(symbol: string): Promise<number> {
   assert.ok(symbol);
   const path = '/0/private/Balance';
 
-  const balances = (await privateMethod(path, { nonce: generateNonce() })).result as {
+  const balances = (await privateMethod(path, { nonce: generateNonce() })) as {
     [key: string]: string;
   };
 
