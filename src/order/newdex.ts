@@ -1,10 +1,12 @@
 import { strict as assert } from 'assert';
+import Axios from 'axios';
+import { createTransferAction, getCurrencyBalance, getTableRows, sendTransaction } from 'eos-utils';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
-import { getTableRows, getCurrencyBalance, createTransferAction, sendTransaction } from 'eos-utils';
-import { USER_CONFIG } from '../config';
-import { NewdexOrder, ActionExtended } from '../pojo';
+import https from 'https';
 import { Bloks } from '../blockchain';
+import { USER_CONFIG } from '../config';
+import { ActionExtended, NewdexOrder } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 export function createOrder(
@@ -141,6 +143,44 @@ export async function queryOrder(
     sell ? pairInfo.base_symbol.contract : pairInfo.quote_symbol.contract,
   );
   return order;
+}
+
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  });
+  const response = await Axios.get(
+    'https://www.api.bloks.io/account/cryptoforest?type=getAccountTokens&coreSymbol=EOS',
+    {
+      httpsAgent: agent,
+      timeout: 5000,
+      headers: {
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9',
+        Origin: 'https://bloks.io',
+        Referer: `https://bloks.io/account/${USER_CONFIG.eosAccount!}`,
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+      },
+    },
+  );
+  assert.equal(response.status, 200);
+
+  const arr = response.data.tokens as {
+    key: string;
+    currency: string;
+    amount: number;
+    contract: string;
+    decimals: string;
+    usd_value: number;
+  }[];
+
+  const result: { [key: string]: number } = {};
+  arr.forEach(x => {
+    result[x.currency] = x.amount;
+  });
+  return result;
 }
 
 export async function queryBalance(symbol: string): Promise<number> {

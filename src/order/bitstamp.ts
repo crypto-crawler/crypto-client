@@ -152,20 +152,11 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   assert.equal(response.status, 200);
 
   const result: { [key: string]: number } = {};
-  Object.keys(response.data).forEach(key => {
-    const value = response.data[key] as string;
-    result[key] = parseFloat(value);
-  });
+  Object.keys(response.data)
+    .filter(x => x.endsWith('_available'))
+    .forEach(key => {
+      const symbol = key.substring(0, key.indexOf('_available')).toUpperCase();
+      result[symbol] = parseFloat(response.data[key] as string);
+    });
   return result;
-}
-
-export async function queryBalance(symbol: string): Promise<number> {
-  assert.ok(symbol);
-  symbol = symbol.toLowerCase(); // eslint-disable-line no-param-reassign
-
-  const balances = await queryAllBalances();
-
-  const key = `${symbol}_available`;
-
-  return key in balances ? balances[key] : 0;
 }

@@ -81,6 +81,25 @@ export async function queryOrder(
   return data;
 }
 
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+  const authClient = createAuthenticatedClient();
+  const arr = (await authClient.spot().getAccounts()) as {
+    id: string;
+    currency: string;
+    balance: string;
+    available: string;
+    frozen: string;
+    hold: string;
+    holds: string;
+  }[];
+
+  const result: { [key: string]: number } = {};
+  arr.forEach(x => {
+    result[x.currency] = parseFloat(x.available);
+  });
+  return result;
+}
+
 export async function queryBalance(symbol: string): Promise<number> {
   const authClient = createAuthenticatedClient();
   const data = (await authClient.spot().getAccounts(symbol)) as {

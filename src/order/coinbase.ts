@@ -1,5 +1,5 @@
-import { AuthenticatedClient, LimitOrder } from 'coinbase-pro';
 import { strict as assert } from 'assert';
+import { AuthenticatedClient, LimitOrder } from 'coinbase-pro';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -72,13 +72,16 @@ export async function queryOrder(
   }
 }
 
-export async function queryBalance(symbol: string): Promise<number> {
-  assert.ok(symbol);
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const accounts = await client.getAccounts();
 
-  const arr = accounts.filter(x => x.currency === symbol);
+  const result: { [key: string]: number } = {};
 
-  return arr.length > 0 ? parseFloat(arr[0].available) : 0;
+  accounts.forEach(account => {
+    result[account.currency] = parseFloat(account.available);
+  });
+
+  return result;
 }

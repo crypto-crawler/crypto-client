@@ -78,16 +78,16 @@ export async function queryOrder(
   return arr[0];
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export async function queryBalance(symbol: string): Promise<number> {
-  assert.ok(symbol);
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
 
   const wallets = (await authClient.wallets()) as any[];
-  const filtered = wallets.filter(x => x.type === 'exchange' && x.currency === symbol);
+  const arr = wallets.filter(x => x.type === 'exchange');
 
-  if (filtered.length === 0) return 0;
+  const result: { [key: string]: number } = {};
+  arr.forEach(x => {
+    result[x.currency] = x.balance;
+  });
 
-  assert.equal(filtered.length, 1);
-  return filtered[0].balance;
+  return result;
 }

@@ -1,5 +1,5 @@
-import createClient, { Binance } from 'binance-api-node';
 import { strict as assert } from 'assert';
+import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -66,12 +66,15 @@ export async function queryOrder(
   return orderResult;
 }
 
-export async function queryBalance(symbol: string): Promise<number> {
-  assert.ok(symbol);
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const account = await client.accountInfo();
-  const arr = account.balances.filter(x => x.asset === symbol);
 
-  return arr.length > 0 ? parseFloat(arr[0].free) : 0;
+  const result: { [key: string]: number } = {};
+
+  account.balances.forEach(balance => {
+    result[balance.asset] = parseFloat(balance.free);
+  });
+  return result;
 }

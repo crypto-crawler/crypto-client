@@ -322,29 +322,39 @@ export async function queryOrder(
   }
 }
 
-export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
+export async function queryAllBalances(
+  exchange: SupportedExchange,
+): Promise<{ [key: string]: number }> {
   switch (exchange) {
     case 'Binance':
-      return Binance.queryBalance(symbol);
+      return Binance.queryAllBalances();
     case 'Bitfinex':
-      return Bitfinex.queryBalance(symbol);
+      return Bitfinex.queryAllBalances();
     case 'Bitstamp':
-      return Bitstamp.queryBalance(symbol);
+      return Bitstamp.queryAllBalances();
     case 'Coinbase':
-      return Coinbase.queryBalance(symbol);
+      return Coinbase.queryAllBalances();
     case 'Huobi':
-      return Huobi.queryBalance(symbol);
+      return Huobi.queryAllBalances();
     case 'Kraken':
-      return Kraken.queryBalance(symbol);
+      return Kraken.queryAllBalances();
     case 'MXC':
-      return MXC.queryBalance(symbol);
+      return MXC.queryAllBalances();
     case 'Newdex':
-      return Newdex.queryBalance(symbol);
+      return Newdex.queryAllBalances();
     case 'OKEx_Spot':
-      return OKEx_Spot.queryBalance(symbol);
+      return OKEx_Spot.queryAllBalances();
     case 'WhaleEx':
-      return WhaleEx.queryBalance(symbol);
+      return WhaleEx.queryAllBalances();
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
+}
+
+export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
+  if (exchange === 'Newdex') return Newdex.queryBalance(symbol);
+
+  const balances = await queryAllBalances(exchange);
+
+  return symbol in balances ? balances[symbol] : 0;
 }

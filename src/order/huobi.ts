@@ -122,29 +122,27 @@ export async function queryAccounts(): Promise<
   return response.data.data;
 }
 
-export async function queryAllBalances(): Promise<
-  { currency: string; type: 'trade' | 'frozen'; balance: string }[]
-> {
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const path = `/v1/account/accounts/${USER_CONFIG.HUOBI_ACCOUNT_ID!}/balance`;
   const fullUrl = signRequest('GET', path);
   const response = await Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } });
   assert.equal(response.status, 200);
   assert.equal(response.data.status, 'ok');
-  const result = response.data.data as {
+  const data = response.data.data as {
     id: number;
     type: 'spot' | 'margin' | 'otc' | 'point' | 'super-margin';
     state: 'working' | 'lock';
     list: { currency: string; type: 'trade' | 'frozen'; balance: string }[];
   };
-  assert.equal(result.id, USER_CONFIG.HUOBI_ACCOUNT_ID);
-  assert.equal(result.type, 'spot');
-  assert.equal(result.state, 'working');
-  result.list.filter(x => x.type === 'trade');
-  return result.list;
-}
+  assert.equal(data.id, USER_CONFIG.HUOBI_ACCOUNT_ID);
+  assert.equal(data.type, 'spot');
+  assert.equal(data.state, 'working');
 
-export async function queryBalance(symbol: string): Promise<number> {
-  const balances = await queryAllBalances();
-  const arr = balances.filter(x => x.type === 'trade' && x.currency === symbol.toLowerCase());
-  return arr.length === 1 ? parseFloat(arr[0].balance) : 0;
+  const result: { [key: string]: number } = {};
+  data.list
+    .filter(x => x.type === 'trade')
+    .forEach(x => {
+      result[x.currency.toUpperCase()] = parseFloat(x.balance);
+    });
+  return result;
 }

@@ -2,7 +2,15 @@
 /* eslint-disable no-console */
 import yargs from 'yargs';
 import { USER_CONFIG } from './config';
-import { cancelOrder, createOrder, init, placeOrder, queryBalance, queryOrder } from './index';
+import {
+  cancelOrder,
+  createOrder,
+  init,
+  placeOrder,
+  queryAllBalances,
+  queryBalance,
+  queryOrder,
+} from './index';
 
 const { argv } = yargs.options({
   eosAccount: {
@@ -207,6 +215,19 @@ export async function testMXC(): Promise<void> {
   console.info(await cancelOrder('MXC', 'EOS_USDT', orderId));
 
   console.info(await queryOrder('MXC', 'EOS_USDT', orderId));
+}
+
+export async function testAllBalances(): Promise<void> {
+  // console.info(await queryAllBalances('Binance'));
+  // console.info(await queryAllBalances('Bitfinex'));
+  // console.info(await queryAllBalances('Bitstamp'));
+  // console.info(await queryAllBalances('Coinbase'));
+  // console.info(await queryAllBalances('Huobi'));
+  // console.info(await queryAllBalances('Kraken'));
+  // console.info(await queryAllBalances('MXC'));
+  // console.info(await queryAllBalances('Newdex'));
+  // console.info(await queryAllBalances('OKEx_Spot'));
+  console.info(await queryAllBalances('WhaleEx'));
 }
 
 (async () => {

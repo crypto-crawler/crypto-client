@@ -134,16 +134,28 @@ export async function queryOrder(
   return data[orderId];
 }
 
-export async function queryBalance(symbol: string): Promise<number> {
-  assert.ok(symbol);
+/* eslint-disable no-param-reassign */
+function normalizeSymbol(symbol: string): string {
+  // https://support.kraken.com/hc/en-us/articles/360001185506-How-to-interpret-asset-codes
+  if (symbol.length === 4 && (symbol[0] === 'X' || symbol[0] === 'Z')) symbol = symbol.substring(1);
+  if (symbol === 'XBT') symbol = 'BTC';
+  if (symbol === 'XDG') symbol = 'DOGE';
+  return symbol;
+}
+/* eslint-enable no-param-reassign */
+
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const path = '/0/private/Balance';
 
   const balances = (await privateMethod(path, { nonce: generateNonce() })) as {
     [key: string]: string;
   };
 
-  // https://support.kraken.com/hc/en-us/articles/360001185506-How-to-interpret-asset-codes
-  const n = balances[symbol] || balances[`X${symbol}`] || balances[`Z${symbol}`];
+  const result: { [key: string]: number } = {};
+  Object.keys(balances).forEach(symbol => {
+    const symbolNormalized = normalizeSymbol(symbol);
+    result[symbolNormalized] = parseFloat(balances[symbol]);
+  });
 
-  return n ? parseFloat(n) : 0;
+  return result;
 }

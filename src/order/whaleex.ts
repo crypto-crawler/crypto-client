@@ -147,6 +147,39 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   return undefined;
 }
 
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+  const path = '/api/v1/assets';
+  const params = signData('GET', path);
+  const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
+  assert.equal(response.status, 200);
+
+  if (response.data.returnCode !== '0') {
+    return {};
+  }
+  const arr = response.data.result.list.content as {
+    currency: string;
+    currencyId: number;
+    baseChain: string;
+    totalAmount: string;
+    stakeAmount: string;
+    unStakingAmount: string;
+    availableAmount: string;
+    frozenAmount: string;
+    fixedAmount: string;
+    privatePlacement: string;
+    listed: boolean;
+    chainAmount: string;
+    timestamp: number;
+  }[];
+
+  const result: { [key: string]: number } = {};
+  arr.forEach(x => {
+    result[x.currency] = parseFloat(x.availableAmount);
+  });
+
+  return result;
+}
+
 export async function queryBalance(symbol: string): Promise<number> {
   const path = `/api/v1/asset/${symbol}`;
   const params = signData('GET', path);

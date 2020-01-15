@@ -170,7 +170,13 @@ async function getAccountInfo(): Promise<{
   return response.data;
 }
 
-export async function queryBalance(symbol: string): Promise<number> {
+export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const accountInfo = await getAccountInfo();
-  return symbol in accountInfo ? parseFloat(accountInfo[symbol].available) : 0;
+  const result: { [key: string]: number } = {};
+
+  Object.keys(accountInfo).forEach(symbol => {
+    result[symbol] = parseFloat(accountInfo[symbol].available);
+  });
+
+  return result;
 }
