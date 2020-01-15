@@ -113,7 +113,7 @@ export async function testBitfinex(): Promise<void> {
 export async function testBitstamp(): Promise<void> {
   console.info(await queryBalance('Bitstamp', 'ETH'));
 
-  const orderId = await placeOrder('Bitstamp', 'ETH_USD', 200.9, 0.5, true);
+  const orderId = await placeOrder('Bitstamp', 'ETH_USD', 400.9, 0.1, true);
   console.info(orderId);
 
   console.info(await queryOrder('Bitstamp', 'ETH_USD', orderId));
@@ -235,5 +235,5 @@ export async function testAllBalances(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testWhaleEx();
+  await testBitstamp();
 })();

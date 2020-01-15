@@ -85,6 +85,10 @@ export async function placeOrder(
   });
   assert.equal(response.status, 200);
 
+  if (response.data.status === 'error') {
+    throw new Error(response.data.reason.__all__[0] as string); // eslint-disable-line no-underscore-dangle
+  }
+
   return response.data.id;
 }
 
