@@ -52,7 +52,7 @@ async function privateMethod(
   assert.equal(response.status, 200);
 
   if (response.data.error.length > 0) {
-    throw new Error(response.data.error);
+    throw new Error((response.data.error as string[]).join('\n'));
   }
   return response.data.result;
 }
