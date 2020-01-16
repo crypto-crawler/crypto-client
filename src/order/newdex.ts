@@ -178,7 +178,8 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    result[x.currency] = x.amount;
+    const symbol = x.currency === 'KEY' ? 'MYKEY' : x.currency;
+    result[symbol] = x.amount;
   });
 
   result.EOS = await getCurrencyBalance(USER_CONFIG.eosAccount!, 'EOS');

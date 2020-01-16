@@ -174,7 +174,8 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    result[x.currency] = parseFloat(x.availableAmount);
+    const symbol = x.currency === 'KEY' ? 'MYKEY' : x.currency;
+    result[symbol] = parseFloat(x.availableAmount);
   });
 
   return result;
