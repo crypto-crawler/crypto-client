@@ -13,6 +13,8 @@ function createAuthenticatedClient(): any {
     USER_CONFIG.OKEX_SPOT_API_KEY!,
     USER_CONFIG.OKEX_SPOT_API_SECRET!,
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE!,
+    'https://www.okex.com',
+    6000,
   );
   return authClient;
 }
