@@ -86,6 +86,8 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
+    if (x.currency === 'HOT') x.currency = 'HYDRO'; // eslint-disable-line  no-param-reassign
+    if (x.currency === 'ORS') x.currency = 'ORSGROUP'; // eslint-disable-line  no-param-reassign
     result[x.currency] = x.balance;
   });
 

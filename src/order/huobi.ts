@@ -20,6 +20,7 @@ function signRequest(
   params.SignatureMethod = 'HmacSHA256';
   params.SignatureVersion = 2;
   params.AccessKeyId = USER_CONFIG.HUOBI_ACCESS_KEY!;
+  /* eslint-enable no-param-reassign */
 
   const query = Object.keys(params)
     .sort()
@@ -142,6 +143,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   data.list
     .filter(x => x.type === 'trade')
     .forEach(x => {
+      if (x.currency === 'hot') x.currency = 'Hydro'; // eslint-disable-line  no-param-reassign
       result[x.currency.toUpperCase()] = parseFloat(x.balance);
     });
   return result;
