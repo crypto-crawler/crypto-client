@@ -81,12 +81,20 @@ export function validatePriceQuantity(
   quantity: string,
   quoteQuantity: string,
 ): boolean {
-  assert.equal(calcPrecision(price), pairInfo.price_precision, "price_precision doesn't match");
-  assert.equal(calcPrecision(quantity), pairInfo.base_precision, "base_precision doesn't match");
+  assert.equal(
+    calcPrecision(price),
+    pairInfo.price_precision,
+    `${pairInfo.exchange} ${pairInfo.normalized_pair} price_precision doesn't match`,
+  );
+  assert.equal(
+    calcPrecision(quantity),
+    pairInfo.base_precision,
+    `${pairInfo.exchange} ${pairInfo.normalized_pair} base_precision doesn't match`,
+  );
   assert.equal(
     calcPrecision(quoteQuantity),
     pairInfo.quote_precision,
-    "quote_precision doesn't match",
+    `${pairInfo.exchange} ${pairInfo.normalized_pair} quote_precision doesn't match`,
   );
 
   assert.ok(pairInfo.min_base_quantity || pairInfo.min_quote_quantity);
