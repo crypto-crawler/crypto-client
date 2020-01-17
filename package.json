@@ -1,7 +1,7 @@
 {
-  "name": "crypto-order",
-  "version": "0.14.6",
-  "description": "A library to place and cancel orders at crypto exchanges.",
+  "name": "crypto-client",
+  "version": "0.14.7",
+  "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "src/index.ts",
@@ -21,12 +21,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/soulmachine/crypto-order.git"
+    "url": "git+https://github.com/soulmachine/crypto-client.git"
   },
   "keywords": [
-    "typescript",
     "blockchain",
-    "trade"
+    "trade",
+    "bitcoin",
+    "cryptocurrency"
   ],
   "engines": {
     "node": ">=10"
@@ -34,9 +35,9 @@
   "author": "soulmachine",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/soulmachine/crypto-order/issues"
+    "url": "https://github.com/soulmachine/crypto-client/issues"
   },
-  "homepage": "https://github.com/soulmachine/crypto-order#readme",
+  "homepage": "https://github.com/soulmachine/crypto-client#readme",
   "devDependencies": {
     "@types/assert": "^1.4.3",
     "@types/debug": "^4.1.5",
