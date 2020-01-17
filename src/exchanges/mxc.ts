@@ -61,22 +61,22 @@ export async function placeOrder(
   sell: boolean,
 ): Promise<string> {
   assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.MXCAccessKey);
-  assert.ok(USER_CONFIG.MXCSecretKey);
+  assert.ok(USER_CONFIG.MXC_ACCESS_KEY);
+  assert.ok(USER_CONFIG.MXC_SECRET_KEY);
 
   const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
 
   const path = '/open/api/v1/private/order';
 
   const params = {
-    api_key: USER_CONFIG.MXCAccessKey!,
+    api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
     market: pairInfo.raw_pair,
     price: priceStr,
     quantity: quantityStr,
     trade_type: sell ? 2 : 1,
   };
-  const [paramsText, signature] = sign(params, USER_CONFIG.MXCSecretKey!);
+  const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
 
   try {
     const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
@@ -98,12 +98,12 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   const path = '/open/api/v1/private/order';
 
   const params = {
-    api_key: USER_CONFIG.MXCAccessKey!,
+    api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
     market: pairInfo.raw_pair,
     trade_no: orderId,
   };
-  const [paramsText, signature] = sign(params, USER_CONFIG.MXCSecretKey!);
+  const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
 
   const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
   debug(requestUrl);
@@ -122,12 +122,12 @@ export async function queryOrder(
   const path = '/open/api/v1/private/order';
 
   const params: { [key: string]: any } = {
-    api_key: USER_CONFIG.MXCAccessKey!,
+    api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
     market: pairInfo.raw_pair,
     trade_no: orderId,
   };
-  const [paramsText, signature] = sign(params, USER_CONFIG.MXCSecretKey!);
+  const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
 
   const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
   debug(requestUrl);
@@ -151,16 +151,16 @@ export async function queryOrder(
 async function getAccountInfo(): Promise<{
   [key: string]: { frozen: string; available: string };
 }> {
-  assert.ok(USER_CONFIG.MXCAccessKey);
-  assert.ok(USER_CONFIG.MXCSecretKey);
+  assert.ok(USER_CONFIG.MXC_ACCESS_KEY);
+  assert.ok(USER_CONFIG.MXC_SECRET_KEY);
 
   const path = '/open/api/v1/private/account/info';
 
   const params = {
-    api_key: USER_CONFIG.MXCAccessKey!,
+    api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
   };
-  const [paramsText, signature] = sign(params, USER_CONFIG.MXCSecretKey!);
+  const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
 
   const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
   debug(requestUrl);

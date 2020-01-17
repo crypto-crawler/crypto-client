@@ -5,14 +5,14 @@ import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): AuthenticatedClient {
-  assert.ok(USER_CONFIG.CB_ACCESS_KEY);
-  assert.ok(USER_CONFIG.CB_ACCESS_SECRET);
-  assert.ok(USER_CONFIG.CB_ACCESS_PASSPHRASE);
+  assert.ok(USER_CONFIG.COINBASE_ACCESS_KEY);
+  assert.ok(USER_CONFIG.COINBASE_ACCESS_SECRET);
+  assert.ok(USER_CONFIG.COINBASE_ACCESS_PASSPHRASE);
 
   return new AuthenticatedClient(
-    USER_CONFIG.CB_ACCESS_KEY!,
-    USER_CONFIG.CB_ACCESS_SECRET!,
-    USER_CONFIG.CB_ACCESS_PASSPHRASE!,
+    USER_CONFIG.COINBASE_ACCESS_KEY!,
+    USER_CONFIG.COINBASE_ACCESS_SECRET!,
+    USER_CONFIG.COINBASE_ACCESS_PASSPHRASE!,
   );
 }
 
