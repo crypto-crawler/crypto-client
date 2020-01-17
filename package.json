@@ -24,10 +24,12 @@
     "url": "git+https://github.com/soulmachine/crypto-client.git"
   },
   "keywords": [
-    "blockchain",
-    "trade",
-    "bitcoin",
-    "cryptocurrency"
+    "Blockchain",
+    "Cryptocurrency",
+    "Trader",
+    "Bitcoin",
+    "EOS",
+    "Ethereum"
   ],
   "engines": {
     "node": ">=10"

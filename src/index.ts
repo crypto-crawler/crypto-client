@@ -374,5 +374,5 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
 
   const balances = await queryAllBalances(exchange);
 
-  return symbol in balances ? balances[symbol] : 0;
+  return balances[symbol] || 0;
 }
