@@ -325,30 +325,48 @@ export async function queryOrder(
 export async function queryAllBalances(
   exchange: SupportedExchange,
 ): Promise<{ [key: string]: number }> {
+  let result: { [key: string]: number } = {};
   switch (exchange) {
     case 'Binance':
-      return Binance.queryAllBalances();
+      result = await Binance.queryAllBalances();
+      break;
     case 'Bitfinex':
-      return Bitfinex.queryAllBalances();
+      result = await Bitfinex.queryAllBalances();
+      break;
     case 'Bitstamp':
-      return Bitstamp.queryAllBalances();
+      result = await Bitstamp.queryAllBalances();
+      break;
     case 'Coinbase':
-      return Coinbase.queryAllBalances();
+      result = await Coinbase.queryAllBalances();
+      break;
     case 'Huobi':
-      return Huobi.queryAllBalances();
+      result = await Huobi.queryAllBalances();
+      break;
     case 'Kraken':
-      return Kraken.queryAllBalances();
+      result = await Kraken.queryAllBalances();
+      break;
     case 'MXC':
-      return MXC.queryAllBalances();
+      result = await MXC.queryAllBalances();
+      break;
     case 'Newdex':
-      return Newdex.queryAllBalances();
+      result = await Newdex.queryAllBalances();
+      break;
     case 'OKEx_Spot':
-      return OKEx_Spot.queryAllBalances();
+      result = await OKEx_Spot.queryAllBalances();
+      break;
     case 'WhaleEx':
-      return WhaleEx.queryAllBalances();
+      result = await WhaleEx.queryAllBalances();
+      break;
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
+
+  // filter out zero balances
+  Object.keys(result).forEach(symbol => {
+    if (result[symbol] <= 0) delete result[symbol];
+  });
+
+  return result;
 }
 
 export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
