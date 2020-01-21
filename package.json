@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.14.9",
+  "version": "0.15.0",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -84,6 +84,7 @@
     "mathjs": "^6.5.0",
     "node-fetch": "^2.6.0",
     "okex-withdrawal-fee": "0.0.1",
+    "promise.any": "^2.0.1",
     "qs": "^6.9.1",
     "uuid": "^3.4.0",
     "yargs": "^15.1.0"

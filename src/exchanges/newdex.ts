@@ -1,6 +1,12 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
-import { createTransferAction, getCurrencyBalance, getTableRows, sendTransaction } from 'eos-utils';
+import {
+  createTransferAction,
+  EOS_API_ENDPOINTS,
+  getCurrencyBalance,
+  getTableRows,
+  sendTransaction,
+} from 'eos-utils';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
 import https from 'https';
@@ -8,6 +14,8 @@ import { Bloks } from '../blockchain';
 import { USER_CONFIG } from '../config';
 import { ActionExtended, NewdexOrder } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
+
+const promiseAny = require('promise.any');
 
 export function createOrder(
   pairInfo: PairInfo,
@@ -113,21 +121,35 @@ export async function queryOrder(
   transactionId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   const orderId = await Bloks.getOrderId(transactionId);
-  let response = await getTableRows({
-    code: 'newdexpublic',
-    scope: '...........u1',
-    table: 'sellorder',
-    lower_bound: orderId.order_id,
-    upper_bound: orderId.order_id + 1,
-  });
+  let response = await promiseAny(
+    EOS_API_ENDPOINTS.map(url =>
+      getTableRows(
+        {
+          code: 'newdexpublic',
+          scope: '...........u1',
+          table: 'sellorder',
+          lower_bound: orderId.order_id,
+          upper_bound: orderId.order_id + 1,
+        },
+        url,
+      ),
+    ),
+  );
   if (response.rows.length === 0) {
-    response = await getTableRows({
-      code: 'newdexpublic',
-      scope: '...........u1',
-      table: 'buyorder',
-      lower_bound: orderId.order_id,
-      upper_bound: orderId.order_id + 1,
-    });
+    response = await promiseAny(
+      EOS_API_ENDPOINTS.map(url =>
+        getTableRows(
+          {
+            code: 'newdexpublic',
+            scope: '...........u1',
+            table: 'buyorder',
+            lower_bound: orderId.order_id,
+            upper_bound: orderId.order_id + 1,
+          },
+          url,
+        ),
+      ),
+    );
   }
   assert.equal(response.more, false);
   if (response.rows.length === 0) return undefined;
@@ -182,10 +204,14 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
     result[symbol] = x.amount;
   });
 
-  result.EOS = await getCurrencyBalance(USER_CONFIG.eosAccount!, 'EOS');
+  result.EOS = await promiseAny(
+    EOS_API_ENDPOINTS.map(url => getCurrencyBalance(USER_CONFIG.eosAccount!, 'EOS', url)),
+  );
   return result;
 }
 
 export async function queryBalance(symbol: string): Promise<number> {
-  return getCurrencyBalance(USER_CONFIG.eosAccount!, symbol);
+  return promiseAny(
+    EOS_API_ENDPOINTS.map(url => getCurrencyBalance(USER_CONFIG.eosAccount!, symbol, url)),
+  );
 }
