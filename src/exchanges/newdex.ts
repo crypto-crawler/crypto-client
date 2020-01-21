@@ -52,7 +52,7 @@ export function createOrder(
     : createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
-        'EOS',
+        pairInfo.quote_symbol.sym.split(',')[1],
         quoteQuantityStr,
         JSON.stringify(memo),
       );
