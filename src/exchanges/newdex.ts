@@ -41,18 +41,22 @@ export function createOrder(
     ref: 'coinrace.com',
   };
 
+  const [baseSymbol, quoteSymbol] = pairInfo.normalized_pair.split('_');
+  assert.equal(baseSymbol, pairInfo.base_symbol.sym.split(',')[1]);
+  assert.equal(quoteSymbol, pairInfo.quote_symbol.sym.split(',')[1]);
+
   const action = sell
     ? createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
-        pairInfo.base_symbol.sym.split(',')[1],
+        baseSymbol,
         quantityStr,
         JSON.stringify(memo),
       )
     : createTransferAction(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
-        pairInfo.quote_symbol.sym.split(',')[1],
+        quoteSymbol,
         quoteQuantityStr,
         JSON.stringify(memo),
       );
