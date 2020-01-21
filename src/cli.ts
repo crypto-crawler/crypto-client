@@ -5,6 +5,8 @@ import { USER_CONFIG } from './config';
 import {
   cancelOrder,
   createOrder,
+  getDepositAddresses,
+  getWithdrawalFees,
   init,
   placeOrder,
   queryAllBalances,
@@ -230,10 +232,20 @@ export async function testAllBalances(): Promise<void> {
   console.info(await queryAllBalances('WhaleEx'));
 }
 
+export async function testGetDepositAddresses(): Promise<void> {
+  // console.info(await getDepositAddresses('Binance', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+  console.info(await getDepositAddresses('OKEx_Spot', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+}
+
+export async function testGetWithdrawlFees(): Promise<void> {
+  console.info(await getWithdrawalFees('Binance', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+  console.info(await getWithdrawalFees('OKEx_Spot', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+}
+
 (async () => {
   await init(argv);
 
   console.info(USER_CONFIG);
 
-  await testBitstamp();
+  await testGetDepositAddresses();
 })();

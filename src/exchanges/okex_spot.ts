@@ -1,7 +1,10 @@
 import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
-import { PairInfo } from 'exchange-info';
+import { ExchangeInfo, PairInfo } from 'exchange-info';
+import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
+import { DepositAddress } from '../pojo/deposit_address';
+import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): any {
@@ -115,4 +118,83 @@ export async function queryBalance(symbol: string): Promise<number> {
   };
 
   return parseFloat(data.available);
+}
+
+function handleUSDT(symbols: string[]): void {
+  if (!symbols.includes('USDT')) return;
+  symbols.splice(symbols.indexOf('USDT'), 1); // remove USDT
+  symbols.push('USDT-OMNI', 'USDT-ERC20', 'USDT-TRC20');
+}
+
+export async function getWithdrawalFees(
+  symbols: string[],
+): Promise<{ [key: string]: WithdrawalFee }> {
+  const result: { [key: string]: WithdrawalFee } = {};
+
+  handleUSDT(symbols);
+
+  const authClient = createAuthenticatedClient();
+  const arr = (await authClient.account().getWithdrawalFee()) as Array<{
+    min_fee: string;
+    currency: string;
+    max_fee: string;
+  }>;
+
+  arr
+    .filter(x => x.min_fee)
+    .forEach(x => {
+      assert.equal(parseFloat(x.min_fee), getWithdrawalFee(x.currency).withdrawal_fee);
+    });
+
+  arr
+    .filter(x => x.min_fee && symbols.includes(x.currency))
+    .forEach(x => {
+      const fee: WithdrawalFee = {
+        deposit_enabled: true,
+        withdraw_enabled: true,
+        withdrawal_fee: parseFloat(x.min_fee),
+        min_withdraw_amount: getWithdrawalFee(x.currency).min_withdraw_amount,
+      };
+
+      result[x.currency] = fee;
+    });
+
+  return result;
+}
+
+export async function getDepositAddresses(
+  symbols: string[],
+  exchangeInfo: ExchangeInfo,
+): Promise<{ [key: string]: DepositAddress }> {
+  const result: { [key: string]: DepositAddress } = {};
+
+  const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
+
+  const authClient = createAuthenticatedClient();
+
+  const requests = symbols
+    .filter(symbol => allSymbols.has(symbol))
+    .map(symbol => authClient.account().getAddress(symbol));
+
+  const arr = ((await Promise.all(requests)) as {
+    address: string;
+    currency: string;
+    to: number;
+    memo?: string;
+    tag?: string;
+  }[][]).flatMap(x => x);
+
+  arr
+    .filter(x => x.to === 1) // 1, spot; 6, fund
+    .forEach(x => {
+      let symbol = x.currency.toUpperCase();
+      if (symbol === 'USDT') symbol = 'USDT-OMNI';
+      result[symbol] = {
+        symbol,
+        address: x.address,
+        memo: x.memo || x.tag,
+      };
+    });
+
+  return result;
 }

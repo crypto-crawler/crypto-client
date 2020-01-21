@@ -14,6 +14,8 @@ import * as OKEx_Spot from './exchanges/okex_spot';
 import * as WhaleEx from './exchanges/whaleex';
 import { createOrder as createOrderWhaleEx } from './exchanges/whaleex_eos';
 import { ActionExtended } from './pojo';
+import { DepositAddress } from './pojo/deposit_address';
+import { WithdrawalFee } from './pojo/withdrawal_fee';
 
 export { UserConfig } from './config';
 
@@ -31,7 +33,7 @@ export const SUPPORTED_EXCHANGES = [
 ] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
 
-const exchangeInfoCache: { [key: string]: ExchangeInfo } = {};
+const EXCHANGE_INFO_CACHE: { [key: string]: ExchangeInfo } = {};
 
 /**
  * Initialize.
@@ -160,10 +162,10 @@ export async function createOrder(
 ): Promise<ActionExtended> {
   checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
+  if (!(exchange in EXCHANGE_INFO_CACHE)) {
+    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
-  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
 
   switch (exchange) {
     case 'Newdex':
@@ -196,10 +198,10 @@ export async function placeOrder(
 ): Promise<string> {
   checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
+  if (!(exchange in EXCHANGE_INFO_CACHE)) {
+    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
-  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -244,10 +246,10 @@ export async function cancelOrder(
   assert.ok(orderId_or_transactionId);
   checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
+  if (!(exchange in EXCHANGE_INFO_CACHE)) {
+    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
-  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -291,10 +293,10 @@ export async function queryOrder(
   assert.ok(orderId_or_transactionId);
   checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in exchangeInfoCache)) {
-    exchangeInfoCache[exchange] = await getExchangeInfo(exchange, 'Spot');
+  if (!(exchange in EXCHANGE_INFO_CACHE)) {
+    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
   }
-  const pairInfo = exchangeInfoCache[exchange].pairs[pair];
+  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -375,4 +377,59 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
   const balances = await queryAllBalances(exchange);
 
   return balances[symbol] || 0;
+}
+
+/**
+ * Get deposit addresses.
+ *
+ * @param exchangeName The exchange name
+ * @params symbols Symbols to retreive
+ * @returns symbol->DepositAddress
+ */
+export async function getDepositAddresses(
+  exchange: SupportedExchange,
+  symbols: string[],
+): Promise<{ [key: string]: DepositAddress }> {
+  assert.ok(exchange);
+  assert.ok(symbols);
+  if (symbols.length === 0) return {};
+
+  switch (exchange) {
+    case 'Binance':
+      return Binance.getDepositAddresses(symbols);
+    case 'OKEx_Spot': {
+      if (!(exchange in EXCHANGE_INFO_CACHE)) {
+        EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
+      }
+      return OKEx_Spot.getDepositAddresses(symbols, EXCHANGE_INFO_CACHE[exchange]);
+    }
+    default:
+      throw Error(`Unsupported exchange: ${exchange}`);
+  }
+}
+
+/**
+ *
+ * @param exchangeName The exchange name
+ * @params symbols Symbols to retreive
+ * @returns symbol->WithdrawalFee, false means all disabled, true means all  enabled  and free.
+ */
+export async function getWithdrawalFees(
+  exchange: SupportedExchange,
+  symbols: string[],
+): Promise<boolean | { [key: string]: WithdrawalFee }> {
+  assert.ok(exchange);
+  assert.ok(symbols);
+  if (symbols.length === 0) return {};
+
+  switch (exchange) {
+    case 'Binance':
+      return Binance.getWithdrawalFees(symbols);
+    case 'OKEx_Spot':
+      return OKEx_Spot.getWithdrawalFees(symbols);
+    case 'Newdex':
+      return true;
+    default:
+      throw Error(`Unsupported exchange: ${exchange}`);
+  }
 }

@@ -2,6 +2,8 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { DepositAddress } from '../pojo/deposit_address';
+import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): Binance {
@@ -76,5 +78,51 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   account.balances.forEach(balance => {
     result[balance.asset] = parseFloat(balance.free);
   });
+  return result;
+}
+
+export async function getWithdrawalFees(
+  symbols: string[],
+): Promise<{ [key: string]: WithdrawalFee }> {
+  const result: { [key: string]: WithdrawalFee } = {};
+
+  const client = createAuthenticatedClient();
+  const assetDetail = await client.assetDetail();
+  if (!assetDetail.success) return result;
+
+  symbols.forEach(symbol => {
+    const detail = assetDetail.assetDetail[symbol];
+    if (detail === undefined) return;
+
+    const fee: WithdrawalFee = {
+      deposit_enabled: detail.depositStatus,
+      withdraw_enabled: detail.withdrawStatus,
+      withdrawal_fee: detail.withdrawFee,
+      min_withdraw_amount: detail.minWithdrawAmount,
+    };
+    result[symbol] = fee;
+  });
+  return result;
+}
+
+export async function getDepositAddresses(
+  symbols: string[],
+): Promise<{ [key: string]: DepositAddress }> {
+  const result: { [key: string]: DepositAddress } = {};
+
+  const client = createAuthenticatedClient();
+  const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
+  const addresses = (await Promise.all(requests)).filter(x => x.success);
+
+  addresses
+    .filter(address => symbols.includes(address.asset))
+    .forEach(address => {
+      result[address.asset] = {
+        symbol: address.asset,
+        address: address.address,
+        memo: address.addressTag,
+      };
+    });
+
   return result;
 }
