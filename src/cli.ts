@@ -247,5 +247,5 @@ export async function testGetWithdrawlFees(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testGetDepositAddresses();
+  await testWhaleEx();
 })();

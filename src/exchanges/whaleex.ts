@@ -16,48 +16,31 @@ async function getGlobalIds(remark = '0'): Promise<{ remark: string; list: strin
   assert.equal(response.status, 200);
   assert.equal(response.data.returnCode, '0');
 
-  const tmp = response.data.result as { remark: string; list: string[] };
-  console.info(`Calling getGlobalIds(remark:${remark}), new remark=${tmp.remark}`); // eslint-disable-line no-console
-  return tmp;
+  return response.data.result as { remark: string; list: string[] };
 }
 
-/**
- * Get and cache global IDs.
- *
- * Usage:
- * const idStore = await createIdStore();
- * const id = await idStore.getId();
- */
-async function createIdStore(): Promise<{ getId: () => Promise<string> }> {
-  let { remark, list } = await getGlobalIds();
-  let lastTimestamp = Date.now();
-  return {
-    getId: async (): Promise<string> => {
-      const now = Date.now();
-      // IDs expire after 5 minutes
-      if (list.length === 0 || now - lastTimestamp >= 5 * 60 * 1000) {
-        const { remark: _remark, list: _ids } = await getGlobalIds(remark);
-        remark = _remark;
-        list = _ids;
-        lastTimestamp = now;
-      }
-      return list.pop()!;
-    },
-  };
-}
+const ID_CACHE = { remark: '0', list: [] as string[], lastTimestamp: Date.now() };
 
-const ID_STORE: { getId: () => Promise<string> } = {
-  getId: async (): Promise<string> => {
-    console.error('Please initilize ID_STORE'); // eslint-disable-line no-console
-    return '0';
-  },
-};
+async function getIdFromCache(): Promise<string> {
+  const now = Date.now();
+  // IDs expire after 5 minutes, so update them per 4 minutes
+  if (ID_CACHE.list.length === 0 || now - ID_CACHE.lastTimestamp >= 4 * 60 * 1000) {
+    const { remark, list } = await getGlobalIds();
+    ID_CACHE.remark = remark;
+    ID_CACHE.list = list;
+    ID_CACHE.lastTimestamp = now;
+  }
+  return ID_CACHE.list.pop()!;
+}
 
 export async function initilize(apiKey: string): Promise<void> {
   assert.ok(apiKey);
   USER_CONFIG.WHALEEX_API_KEY = apiKey;
-  const idStore = await createIdStore();
-  ID_STORE.getId = idStore.getId;
+
+  const { remark, list } = await getGlobalIds();
+  ID_CACHE.remark = remark;
+  ID_CACHE.list = list;
+  ID_CACHE.lastTimestamp = Date.now();
 }
 
 export async function placeOrder(
@@ -74,7 +57,7 @@ export async function placeOrder(
   const path = '/api/v1/order/orders/place';
 
   const order: WhaleExOrder = {
-    orderId: await ID_STORE.getId(),
+    orderId: await getIdFromCache(),
     amount: quantityStr,
     price: priceStr,
     symbol: pairInfo.raw_pair,
