@@ -115,6 +115,8 @@ export async function getDepositAddresses(
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
   const addresses = (await Promise.all(requests)).filter(x => x.success);
 
+  // TODO: handle USDT, USDT-ERC20, USDT-TRC20
+
   addresses
     .filter(address => symbols.includes(address.asset))
     .forEach(address => {

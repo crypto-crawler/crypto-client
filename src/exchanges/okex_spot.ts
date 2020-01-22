@@ -120,17 +120,15 @@ export async function queryBalance(symbol: string): Promise<number> {
   return parseFloat(data.available);
 }
 
-function handleUSDT(symbols: string[]): void {
-  if (!symbols.includes('USDT')) return;
-  symbols.push('USDT-ERC20', 'USDT-TRC20');
-}
-
 export async function getWithdrawalFees(
   symbols: string[],
 ): Promise<{ [key: string]: WithdrawalFee }> {
-  const result: { [key: string]: WithdrawalFee } = {};
+  if (symbols.includes('USDT')) {
+    symbols.splice(symbols.indexOf('USDT'), 1); // remove USDT
+    symbols.push('USDT-OMNI', 'USDT-ERC20', 'USDT-TRC20');
+  }
 
-  handleUSDT(symbols);
+  const result: { [key: string]: WithdrawalFee } = {};
 
   const authClient = createAuthenticatedClient();
   const arr = (await authClient.account().getWithdrawalFee()) as Array<{
@@ -138,6 +136,16 @@ export async function getWithdrawalFees(
     currency: string;
     max_fee: string;
   }>;
+
+  // Rename USDT to USDT-OMNI
+  arr
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+    });
+
+  // debug
+  // console.info(JSON.stringify(arr, undefined, 2));
 
   arr
     .filter(x => x.min_fee)
@@ -184,10 +192,14 @@ export async function getDepositAddresses(
     tag?: string;
   }[][]).flatMap(x => x);
 
+  // console.info(arr);
+
   arr
     .filter(x => x.to === 1) // 1, spot; 6, fund
     .forEach(x => {
-      const symbol = x.currency.toUpperCase();
+      let symbol = x.currency.toUpperCase();
+      if (symbol === 'USDT') symbol = 'USDT-OMNI';
+
       result[symbol] = {
         symbol,
         address: x.address,
