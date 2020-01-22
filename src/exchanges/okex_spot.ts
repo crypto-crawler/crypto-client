@@ -150,6 +150,7 @@ export async function getWithdrawalFees(
     .filter(x => x.min_fee && symbols.includes(x.currency))
     .forEach(x => {
       const fee: WithdrawalFee = {
+        symbol: x.currency,
         deposit_enabled: true,
         withdraw_enabled: true,
         withdrawal_fee: parseFloat(x.min_fee),

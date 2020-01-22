@@ -95,6 +95,7 @@ export async function getWithdrawalFees(
     if (detail === undefined) return;
 
     const fee: WithdrawalFee = {
+      symbol,
       deposit_enabled: detail.depositStatus,
       withdraw_enabled: detail.withdrawStatus,
       withdrawal_fee: detail.withdrawFee,

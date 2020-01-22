@@ -404,6 +404,8 @@ export async function getDepositAddresses(
       }
       return OKEx_Spot.getDepositAddresses(symbols, EXCHANGE_INFO_CACHE[exchange]);
     }
+    case 'Newdex':
+      return Newdex.getDepositAddresses(symbols);
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
@@ -418,7 +420,7 @@ export async function getDepositAddresses(
 export async function getWithdrawalFees(
   exchange: SupportedExchange,
   symbols: string[],
-): Promise<boolean | { [key: string]: WithdrawalFee }> {
+): Promise<{ [key: string]: WithdrawalFee }> {
   assert.ok(exchange);
   assert.ok(symbols);
   if (symbols.length === 0) return {};
@@ -429,7 +431,7 @@ export async function getWithdrawalFees(
     case 'OKEx_Spot':
       return OKEx_Spot.getWithdrawalFees(symbols);
     case 'Newdex':
-      return true;
+      return Newdex.getWithdrawalFees(symbols);
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }

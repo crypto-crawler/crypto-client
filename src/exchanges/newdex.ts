@@ -12,7 +12,7 @@ import { PairInfo } from 'exchange-info';
 import https from 'https';
 import { Bloks } from '../blockchain';
 import { USER_CONFIG } from '../config';
-import { ActionExtended, NewdexOrder } from '../pojo';
+import { ActionExtended, DepositAddress, NewdexOrder, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 const promiseAny = require('promise.any');
@@ -222,4 +222,33 @@ export async function queryBalance(symbol: string): Promise<number> {
   return promiseAny(
     EOS_API_ENDPOINTS.map(url => getCurrencyBalance(USER_CONFIG.eosAccount!, symbol, url)),
   );
+}
+
+export function getDepositAddresses(symbols: string[]): { [key: string]: DepositAddress } {
+  const result: { [key: string]: DepositAddress } = {};
+
+  symbols.forEach(symbol => {
+    result[symbol] = {
+      symbol,
+      address: USER_CONFIG.eosAccount!,
+    };
+  });
+
+  return result;
+}
+
+export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
+  const result: { [key: string]: WithdrawalFee } = {};
+
+  symbols.forEach(symbol => {
+    result[symbol] = {
+      symbol,
+      deposit_enabled: true,
+      withdraw_enabled: true,
+      withdrawal_fee: 0,
+      min_withdraw_amount: 0,
+    };
+  });
+
+  return result;
 }
