@@ -18,6 +18,7 @@ import { DepositAddress } from './pojo/deposit_address';
 import { WithdrawalFee } from './pojo/withdrawal_fee';
 
 export { UserConfig } from './config';
+export * from './pojo';
 
 export const SUPPORTED_EXCHANGES = [
   'Binance',
