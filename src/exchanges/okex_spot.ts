@@ -122,8 +122,7 @@ export async function queryBalance(symbol: string): Promise<number> {
 
 function handleUSDT(symbols: string[]): void {
   if (!symbols.includes('USDT')) return;
-  symbols.splice(symbols.indexOf('USDT'), 1); // remove USDT
-  symbols.push('USDT-OMNI', 'USDT-ERC20', 'USDT-TRC20');
+  symbols.push('USDT-ERC20', 'USDT-TRC20');
 }
 
 export async function getWithdrawalFees(
@@ -188,8 +187,7 @@ export async function getDepositAddresses(
   arr
     .filter(x => x.to === 1) // 1, spot; 6, fund
     .forEach(x => {
-      let symbol = x.currency.toUpperCase();
-      if (symbol === 'USDT') symbol = 'USDT-OMNI';
+      const symbol = x.currency.toUpperCase();
       result[symbol] = {
         symbol,
         address: x.address,
