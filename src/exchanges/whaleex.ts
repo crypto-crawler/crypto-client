@@ -25,7 +25,7 @@ async function getIdFromCache(): Promise<string> {
   const now = Date.now();
   // IDs expire after 5 minutes, so update them per 4 minutes
   if (ID_CACHE.list.length === 0 || now - ID_CACHE.lastTimestamp >= 4 * 60 * 1000) {
-    const { remark, list } = await getGlobalIds();
+    const { remark, list } = await getGlobalIds(ID_CACHE.remark);
     ID_CACHE.remark = remark;
     ID_CACHE.list = list;
     ID_CACHE.lastTimestamp = now;
@@ -37,7 +37,7 @@ export async function initilize(apiKey: string): Promise<void> {
   assert.ok(apiKey);
   USER_CONFIG.WHALEEX_API_KEY = apiKey;
 
-  const { remark, list } = await getGlobalIds();
+  const { remark, list } = await getGlobalIds(ID_CACHE.remark);
   ID_CACHE.remark = remark;
   ID_CACHE.list = list;
   ID_CACHE.lastTimestamp = Date.now();
