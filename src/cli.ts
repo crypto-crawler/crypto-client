@@ -162,6 +162,17 @@ export async function testNewdex(): Promise<void> {
   console.info(cancelOrderId);
 }
 
+export async function testNewdexMYKEY(): Promise<void> {
+  const placeOrderId = await placeOrder('Newdex', 'MYKEY_EOS', 0.34567, 0.5, true);
+  console.info(placeOrderId);
+
+  const orderInfo = await queryOrder('Newdex', 'MYKEY_EOS', placeOrderId);
+  console.info(orderInfo);
+
+  const cancelOrderId = await cancelOrder('Newdex', 'MYKEY_EOS', placeOrderId);
+  console.info(cancelOrderId);
+}
+
 export async function testOKEx_Spot(): Promise<void> {
   console.info(await queryBalance('OKEx_Spot', 'ETH'));
 
@@ -184,6 +195,17 @@ export async function testWhaleEx(): Promise<void> {
   console.info(await cancelOrder('WhaleEx', 'EIDOS_EOS', orderId));
 
   console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
+}
+
+export async function testWhaleExMYKEY(): Promise<void> {
+  const orderId = await placeOrder('WhaleEx', 'MYKEY_EOS', 0.345678, 0.5, true);
+  console.info(orderId);
+
+  console.info(await queryOrder('WhaleEx', 'MYKEY_EOS', orderId));
+
+  console.info(await cancelOrder('WhaleEx', 'MYKEY_EOS', orderId));
+
+  console.info(await queryOrder('WhaleEx', 'MYKEY_EOS', orderId));
 }
 
 export async function testWhaleExEos(): Promise<void> {
@@ -247,5 +269,5 @@ export async function testGetWithdrawlFees(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testWhaleEx();
+  await testNewdexMYKEY();
 })();

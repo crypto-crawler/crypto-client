@@ -63,8 +63,12 @@ export async function placeOrder(
     symbol: pairInfo.raw_pair,
     type: sell ? 'sell-limit' : 'buy-limit',
   };
+
+  let baseToken = pairInfo.normalized_pair.split('_')[0];
+  if (baseToken === 'MYKEY') baseToken = 'KEY';
+
   const symbolObj: SymbolObj = {
-    baseToken: pairInfo.normalized_pair.split('_')[0],
+    baseToken,
     quoteToken: pairInfo.normalized_pair.split('_')[1],
     basePrecision: pairInfo.base_precision,
     quotePrecision: pairInfo.quote_precision,

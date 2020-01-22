@@ -41,7 +41,11 @@ export function createOrder(
     ref: 'coinrace.com',
   };
 
-  const [baseSymbol, quoteSymbol] = pairInfo.normalized_pair.split('_');
+  let baseSymbol = pairInfo.normalized_pair.split('_')[0];
+  if (baseSymbol === 'MYKEY') {
+    baseSymbol = 'KEY';
+  }
+  const quoteSymbol = pairInfo.normalized_pair.split('_')[1];
   assert.equal(baseSymbol, pairInfo.base_symbol.sym.split(',')[1]);
   assert.equal(quoteSymbol, pairInfo.quote_symbol.sym.split(',')[1]);
 
