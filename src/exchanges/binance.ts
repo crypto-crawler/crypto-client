@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { DepositAddress } from '../pojo/deposit_address';
+import { CurrencyNetwork, DepositAddress } from '../pojo/deposit_address';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -115,16 +115,25 @@ export async function getDepositAddresses(
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
   const addresses = (await Promise.all(requests)).filter(x => x.success);
 
-  // TODO: handle USDT, USDT-ERC20, USDT-TRC20
+  // TODO: use sapi/v1/capital/deposit/address to get USDT-OMNI and USDT-TRC20
 
   addresses
     .filter(address => symbols.includes(address.asset))
     .forEach(address => {
-      result[address.asset] = {
-        symbol: address.asset,
+      // Rename USDT to USDT-ERC20
+      let symbol = address.asset;
+      if (symbol === 'USDT') symbol = 'USDT-ERC20';
+
+      result[symbol] = {
+        symbol,
         address: address.address,
         memo: address.addressTag,
       };
+
+      if (symbol.includes('-')) {
+        // eslint-disable-next-line prefer-destructuring
+        result[symbol].network = symbol.split('-')[1] as CurrencyNetwork;
+      }
     });
 
   return result;

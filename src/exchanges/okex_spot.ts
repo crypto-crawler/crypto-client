@@ -3,7 +3,7 @@ import { strict as assert } from 'assert';
 import { ExchangeInfo, PairInfo } from 'exchange-info';
 import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
-import { DepositAddress } from '../pojo/deposit_address';
+import { CurrencyNetwork, DepositAddress } from '../pojo/deposit_address';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -205,6 +205,11 @@ export async function getDepositAddresses(
         address: x.address,
         memo: x.memo || x.tag,
       };
+
+      if (symbol.includes('-')) {
+        // eslint-disable-next-line prefer-destructuring
+        result[symbol].network = symbol.split('-')[1] as CurrencyNetwork;
+      }
     });
 
   return result;
