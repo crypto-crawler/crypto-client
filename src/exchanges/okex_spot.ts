@@ -3,7 +3,7 @@ import { strict as assert } from 'assert';
 import { ExchangeInfo, PairInfo } from 'exchange-info';
 import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
-import { CurrencyNetwork, DepositAddress } from '../pojo/deposit_address';
+import { DepositAddress, SubType } from '../pojo/deposit_address';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -122,13 +122,14 @@ export async function queryBalance(symbol: string): Promise<number> {
 
 export async function getWithdrawalFees(
   symbols: string[],
-): Promise<{ [key: string]: WithdrawalFee }> {
+): Promise<{ [key: string]: WithdrawalFee[] }> {
   if (symbols.includes('USDT')) {
+    symbols = [...symbols]; // eslint-disable-line no-param-reassign
     symbols.splice(symbols.indexOf('USDT'), 1); // remove USDT
     symbols.push('USDT-OMNI', 'USDT-ERC20', 'USDT-TRC20');
   }
 
-  const result: { [key: string]: WithdrawalFee } = {};
+  const result: { [key: string]: WithdrawalFee[] } = {};
 
   const authClient = createAuthenticatedClient();
   const arr = (await authClient.account().getWithdrawalFee()) as Array<{
@@ -137,6 +138,8 @@ export async function getWithdrawalFees(
     max_fee: string;
   }>;
 
+  // console.info(JSON.stringify(arr, undefined, 2));
+
   // Rename USDT to USDT-OMNI
   arr
     .filter(x => x.currency === 'USDT')
@@ -144,27 +147,36 @@ export async function getWithdrawalFees(
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
-  // debug
-  // console.info(JSON.stringify(arr, undefined, 2));
-
-  arr
-    .filter(x => x.min_fee)
-    .forEach(x => {
-      assert.equal(parseFloat(x.min_fee), getWithdrawalFee(x.currency).withdrawal_fee);
-    });
-
   arr
     .filter(x => x.min_fee && symbols.includes(x.currency))
     .forEach(x => {
+      let symbol: string;
+      let subtype: string | undefined;
+
+      if (x.currency.includes('-')) {
+        const [symbol_, subtype_] = x.currency.split('-');
+        symbol = symbol_;
+        subtype = subtype_;
+      } else {
+        symbol = x.currency;
+      }
+
+      const withdrawalFee = getWithdrawalFee(symbol, subtype)!;
+      assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+
       const fee: WithdrawalFee = {
-        symbol: x.currency,
+        symbol,
         deposit_enabled: true,
         withdraw_enabled: true,
         withdrawal_fee: parseFloat(x.min_fee),
-        min_withdraw_amount: getWithdrawalFee(x.currency).min_withdraw_amount,
+        min_withdraw_amount: withdrawalFee.min_withdraw_amount,
       };
+      if (subtype) fee.subtype = subtype as SubType;
 
-      result[x.currency] = fee;
+      if (!(symbol in result)) {
+        result[symbol] = [];
+      }
+      result[symbol].push(fee);
     });
 
   return result;
@@ -173,8 +185,8 @@ export async function getWithdrawalFees(
 export async function getDepositAddresses(
   symbols: string[],
   exchangeInfo: ExchangeInfo,
-): Promise<{ [key: string]: DepositAddress }> {
-  const result: { [key: string]: DepositAddress } = {};
+): Promise<{ [key: string]: DepositAddress[] }> {
+  const result: { [key: string]: DepositAddress[] } = {};
 
   const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
 
@@ -192,24 +204,40 @@ export async function getDepositAddresses(
     tag?: string;
   }[][]).flatMap(x => x);
 
+  // Rename USDT to USDT-OMNI
+  arr
+    .filter(x => x.currency.toUpperCase() === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+    });
+
   // console.info(arr);
 
   arr
     .filter(x => x.to === 1) // 1, spot; 6, fund
     .forEach(x => {
-      let symbol = x.currency.toUpperCase();
-      if (symbol === 'USDT') symbol = 'USDT-OMNI';
+      let symbol: string;
+      let subtype: string | undefined;
 
-      result[symbol] = {
+      if (x.currency.includes('-')) {
+        const [symbol_, subtype_] = x.currency.split('-');
+        symbol = symbol_.toUpperCase();
+        subtype = subtype_.toUpperCase();
+      } else {
+        symbol = x.currency.toUpperCase();
+      }
+
+      const depositAddress: DepositAddress = {
         symbol,
         address: x.address,
         memo: x.memo || x.tag,
       };
+      if (subtype) depositAddress.subtype = subtype as SubType;
 
-      if (symbol.includes('-')) {
-        // eslint-disable-next-line prefer-destructuring
-        result[symbol].network = symbol.split('-')[1] as CurrencyNetwork;
+      if (!(symbol in result)) {
+        result[symbol] = [];
       }
+      result[symbol].push(depositAddress);
     });
 
   return result;

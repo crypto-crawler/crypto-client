@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { CurrencyNetwork, DepositAddress } from '../pojo/deposit_address';
+import { DepositAddress, SubType } from '../pojo/deposit_address';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -90,6 +90,8 @@ export async function getWithdrawalFees(
   const assetDetail = await client.assetDetail();
   if (!assetDetail.success) return result;
 
+  // console.info(assetDetail.assetDetail);
+
   symbols.forEach(symbol => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
@@ -101,6 +103,8 @@ export async function getWithdrawalFees(
       withdrawal_fee: detail.withdrawFee,
       min_withdraw_amount: detail.minWithdrawAmount,
     };
+    if (symbol === 'USDT') fee.subtype = 'ERC20';
+
     result[symbol] = fee;
   });
   return result;
@@ -108,8 +112,8 @@ export async function getWithdrawalFees(
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress }> {
-  const result: { [key: string]: DepositAddress } = {};
+): Promise<{ [key: string]: DepositAddress[] }> {
+  const result: { [key: string]: DepositAddress[] } = {};
 
   const client = createAuthenticatedClient();
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
@@ -120,20 +124,31 @@ export async function getDepositAddresses(
   addresses
     .filter(address => symbols.includes(address.asset))
     .forEach(address => {
-      // Rename USDT to USDT-ERC20
-      let symbol = address.asset;
-      if (symbol === 'USDT') symbol = 'USDT-ERC20';
+      let symbol: string;
+      let subtype: string | undefined;
 
-      result[symbol] = {
+      if (address.asset.includes('-')) {
+        const [symbol_, subtype_] = address.asset.split('-');
+        symbol = symbol_;
+        subtype = subtype_;
+      } else {
+        symbol = address.asset;
+      }
+
+      const depostAddress: DepositAddress = {
         symbol,
         address: address.address,
         memo: address.addressTag,
       };
-
-      if (symbol.includes('-')) {
-        // eslint-disable-next-line prefer-destructuring
-        result[symbol].network = symbol.split('-')[1] as CurrencyNetwork;
+      if (symbol === 'USDT') depostAddress.subtype = 'ERC20';
+      if (subtype) {
+        depostAddress.subtype = subtype as SubType;
       }
+
+      if (!(symbol in result)) {
+        result[symbol] = [];
+      }
+      result[symbol].push(depostAddress);
     });
 
   return result;

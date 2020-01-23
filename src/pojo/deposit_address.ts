@@ -1,9 +1,9 @@
-export declare const CURRENCY_NETWORKS: readonly ['ERC20', 'TRC20', 'OMNI', 'AAC', 'BEP2'];
-export declare type CurrencyNetwork = typeof CURRENCY_NETWORKS[number];
+export declare const SUB_TYPES: readonly ['ERC20', 'TRC20', 'OMNI', 'AAC', 'BEP2'];
+export declare type SubType = typeof SUB_TYPES[number];
 
 export interface DepositAddress {
   symbol: string;
   address: string;
   memo?: string;
-  network?: CurrencyNetwork; // e.g., USDT has three subtypes, default to OMNI
+  subtype?: SubType; // e.g., USDT has three subtypes
 }

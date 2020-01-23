@@ -255,13 +255,36 @@ export async function testAllBalances(): Promise<void> {
 }
 
 export async function testGetDepositAddresses(): Promise<void> {
-  // console.info(await getDepositAddresses('Binance', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
-  console.info(await getDepositAddresses('OKEx_Spot', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+  const symbols = ['BTC', 'ETH', 'EOS', 'USDT', 'XXX'];
+
+  console.info(await getDepositAddresses('Binance', symbols));
+
+  // const symbols = Array.from(
+  //   new Set(
+  //     Object.keys((await getExchangeInfo('OKEx_Spot', 'Spot')).pairs).flatMap(p => p.split('_')),
+  //   ),
+  // );
+
+  const okex = await getDepositAddresses('OKEx_Spot', symbols);
+  console.info(okex);
+
+  symbols.forEach(symbol => {
+    if (!(symbol in okex)) {
+      console.error(symbol);
+    }
+  });
+
+  console.info(await getDepositAddresses('Newdex', symbols));
 }
 
 export async function testGetWithdrawlFees(): Promise<void> {
-  console.info(await getWithdrawalFees('Binance', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
-  console.info(await getWithdrawalFees('OKEx_Spot', ['BTC', 'ETH', 'EOS', 'USDT', 'XXX']));
+  const symbols = ['BTC', 'ETH', 'EOS', 'USDT', 'XXX'];
+
+  console.info(await getWithdrawalFees('Binance', symbols));
+  console.info(await getWithdrawalFees('OKEx_Spot', symbols));
+  console.info(await getWithdrawalFees('Newdex', symbols));
+
+  console.info(symbols); // make sure symbols not changed
 }
 
 (async () => {
@@ -269,5 +292,5 @@ export async function testGetWithdrawlFees(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testNewdexMYKEY();
+  await testGetWithdrawlFees();
 })();

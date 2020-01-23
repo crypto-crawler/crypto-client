@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { getTokenInfo } from 'eos-token-info';
 import {
   createTransferAction,
   EOS_API_ENDPOINTS,
@@ -228,6 +229,8 @@ export function getDepositAddresses(symbols: string[]): { [key: string]: Deposit
   const result: { [key: string]: DepositAddress } = {};
 
   symbols.forEach(symbol => {
+    if (getTokenInfo(symbol) === undefined) return;
+
     result[symbol] = {
       symbol,
       address: USER_CONFIG.eosAccount!,
@@ -241,6 +244,8 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
   const result: { [key: string]: WithdrawalFee } = {};
 
   symbols.forEach(symbol => {
+    if (getTokenInfo(symbol) === undefined) return;
+
     result[symbol] = {
       symbol,
       deposit_enabled: true,

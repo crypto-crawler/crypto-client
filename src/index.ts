@@ -385,54 +385,88 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
  *
  * @param exchangeName The exchange name
  * @params symbols Symbols to retreive
- * @returns symbol->DepositAddress
+ * @returns symbol->DepositAddress | DepositAddress[]
  */
 export async function getDepositAddresses(
   exchange: SupportedExchange,
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress }> {
+): Promise<{ [key: string]: DepositAddress | DepositAddress[] }> {
   assert.ok(exchange);
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
+  let result: { [key: string]: DepositAddress | DepositAddress[] } = {};
+
   switch (exchange) {
     case 'Binance':
-      return Binance.getDepositAddresses(symbols);
+      result = await Binance.getDepositAddresses(symbols);
+      break;
     case 'OKEx_Spot': {
       if (!(exchange in EXCHANGE_INFO_CACHE)) {
         EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
       }
-      return OKEx_Spot.getDepositAddresses(symbols, EXCHANGE_INFO_CACHE[exchange]);
+      result = await OKEx_Spot.getDepositAddresses(symbols, EXCHANGE_INFO_CACHE[exchange]);
+      break;
     }
     case 'Newdex':
-      return Newdex.getDepositAddresses(symbols);
+      result = Newdex.getDepositAddresses(symbols);
+      break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
+
+  Object.keys(result).forEach(symbol => {
+    if (Array.isArray(result[symbol])) {
+      const arr = result[symbol] as DepositAddress[];
+      if (arr.length <= 0) {
+        delete result[symbol];
+      } else if (arr.length === 1) {
+        result[symbol] = arr[0]; // eslint-disable-line prefer-destructuring
+      }
+    }
+  });
+  return result;
 }
 
 /**
  *
  * @param exchangeName The exchange name
  * @params symbols Symbols to retreive
- * @returns symbol->WithdrawalFee, false means all disabled, true means all  enabled  and free.
+ * @returns symbol->WithdrawalFee | WithdrawalFee[]
  */
 export async function getWithdrawalFees(
   exchange: SupportedExchange,
   symbols: string[],
-): Promise<{ [key: string]: WithdrawalFee }> {
+): Promise<{ [key: string]: WithdrawalFee | WithdrawalFee[] }> {
   assert.ok(exchange);
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
+  let result: { [key: string]: WithdrawalFee | WithdrawalFee[] } = {};
+
   switch (exchange) {
     case 'Binance':
-      return Binance.getWithdrawalFees(symbols);
+      result = await Binance.getWithdrawalFees(symbols);
+      break;
     case 'OKEx_Spot':
-      return OKEx_Spot.getWithdrawalFees(symbols);
+      result = await OKEx_Spot.getWithdrawalFees(symbols);
+      break;
     case 'Newdex':
-      return Newdex.getWithdrawalFees(symbols);
+      result = Newdex.getWithdrawalFees(symbols);
+      break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
+
+  Object.keys(result).forEach(symbol => {
+    if (Array.isArray(result[symbol])) {
+      const arr = result[symbol] as WithdrawalFee[];
+      if (arr.length <= 0) {
+        delete result[symbol];
+      } else if (arr.length === 1) {
+        result[symbol] = arr[0]; // eslint-disable-line prefer-destructuring
+      }
+    }
+  });
+  return result;
 }
