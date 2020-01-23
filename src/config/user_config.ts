@@ -24,6 +24,7 @@ export interface UserConfig {
   OKEX_SPOT_API_SECRET?: string;
   OKEX_SPOT_API_PASSPHRASE?: string;
   WHALEEX_API_KEY?: string;
+  WHALEEX_USER_ID?: string;
 }
 
 // Should be initialized by init().

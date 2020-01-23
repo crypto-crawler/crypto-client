@@ -1,12 +1,15 @@
 // forked from https://github.com/WhaleEx/API/blob/master/sample/nodejs/whaleex-api.js
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { getTokenInfo } from 'eos-token-info';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
 // import debug from '../util/debug';
 import { signData, signDataOrder, SymbolObj, WhaleExOrder } from '../util/whaleex_sign';
 
+const WHALEEX_ACCOUNT = 'whaleextrust';
 const URL_PREFIX = 'https://api.whaleex.com/BUSINESS';
 
 async function getGlobalIds(remark = '0'): Promise<{ remark: string; list: string[] }> {
@@ -33,9 +36,11 @@ async function getIdFromCache(): Promise<string> {
   return ID_CACHE.list.pop()!;
 }
 
-export async function initilize(apiKey: string): Promise<void> {
+export async function initilize(apiKey: string, userId: string): Promise<void> {
   assert.ok(apiKey);
+  assert.ok(userId);
   USER_CONFIG.WHALEEX_API_KEY = apiKey;
+  USER_CONFIG.WHALEEX_USER_ID = userId;
 
   const { remark, list } = await getGlobalIds(ID_CACHE.remark);
   ID_CACHE.remark = remark;
@@ -182,4 +187,44 @@ export async function queryBalance(symbol: string): Promise<number> {
   const frozen = parseFloat(response.data.result.frozen);
   assert(total >= frozen);
   return total - frozen;
+}
+
+export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'WHALEEX_API_KEY is empty');
+  assert.ok(USER_CONFIG.WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
+
+  const result: { [key: string]: WithdrawalFee } = {};
+
+  symbols.forEach(symbol => {
+    if (getTokenInfo(symbol) === undefined) return;
+
+    result[symbol] = {
+      symbol,
+      deposit_enabled: true,
+      withdraw_enabled: true,
+      withdrawal_fee: 0,
+      min_withdraw_amount: 0,
+    };
+  });
+
+  return result;
+}
+
+export function getDepositAddresses(symbols: string[]): { [key: string]: DepositAddress } {
+  assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'WHALEEX_API_KEY is empty');
+  assert.ok(USER_CONFIG.WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
+
+  const result: { [key: string]: DepositAddress } = {};
+
+  symbols.forEach(symbol => {
+    if (getTokenInfo(symbol) === undefined) return;
+
+    result[symbol] = {
+      symbol,
+      address: WHALEEX_ACCOUNT,
+      memo: USER_CONFIG.WHALEEX_USER_ID,
+    };
+  });
+
+  return result;
 }

@@ -65,6 +65,7 @@ export async function init({
   OKEX_SPOT_API_SECRET = '',
   OKEX_SPOT_API_PASSPHRASE = '',
   WHALEEX_API_KEY = '',
+  WHALEEX_USER_ID = '',
 }: UserConfig): Promise<void> {
   if (eosAccount) {
     USER_CONFIG.eosAccount = eosAccount;
@@ -123,7 +124,8 @@ export async function init({
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE = OKEX_SPOT_API_PASSPHRASE!;
   }
   if (WHALEEX_API_KEY) {
-    await WhaleEx.initilize(WHALEEX_API_KEY);
+    assert.ok(WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
+    await WhaleEx.initilize(WHALEEX_API_KEY, WHALEEX_USER_ID);
   }
 }
 
@@ -411,6 +413,9 @@ export async function getDepositAddresses(
     case 'Newdex':
       result = Newdex.getDepositAddresses(symbols);
       break;
+    case 'WhaleEx':
+      result = WhaleEx.getDepositAddresses(symbols);
+      break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
@@ -453,6 +458,9 @@ export async function getWithdrawalFees(
       break;
     case 'Newdex':
       result = Newdex.getWithdrawalFees(symbols);
+      break;
+    case 'WhaleEx':
+      result = WhaleEx.getWithdrawalFees(symbols);
       break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
