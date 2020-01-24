@@ -205,6 +205,9 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
       withdrawal_fee: 0,
       min_withdraw_amount: 0,
     };
+    if (symbol === 'USDT') {
+      result[symbol].subtype = 'EOS';
+    }
   });
 
   return result;
@@ -224,6 +227,9 @@ export function getDepositAddresses(symbols: string[]): { [key: string]: Deposit
       address: WHALEEX_ACCOUNT,
       memo: USER_CONFIG.WHALEEX_USER_ID,
     };
+    if (symbol === 'USDT') {
+      result[symbol].subtype = 'EOS';
+    }
   });
 
   return result;
