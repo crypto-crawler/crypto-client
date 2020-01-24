@@ -230,8 +230,8 @@ export async function getDepositAddresses(
       const depositAddress: DepositAddress = {
         symbol,
         address: x.address,
-        memo: x.memo || x.tag,
       };
+      if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
       if (subtype) depositAddress.subtype = subtype as SubType;
 
       if (!(symbol in result)) {

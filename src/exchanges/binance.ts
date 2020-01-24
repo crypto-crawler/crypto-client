@@ -135,20 +135,18 @@ export async function getDepositAddresses(
         symbol = address.asset;
       }
 
-      const depostAddress: DepositAddress = {
+      const depositAddress: DepositAddress = {
         symbol,
         address: address.address,
-        memo: address.addressTag,
       };
-      if (symbol === 'USDT') depostAddress.subtype = 'ERC20';
-      if (subtype) {
-        depostAddress.subtype = subtype as SubType;
-      }
+      if (address.addressTag) depositAddress.memo = address.addressTag;
+      if (symbol === 'USDT') depositAddress.subtype = 'ERC20';
+      if (subtype) depositAddress.subtype = subtype as SubType;
 
       if (!(symbol in result)) {
         result[symbol] = [];
       }
-      result[symbol].push(depostAddress);
+      result[symbol].push(depositAddress);
     });
 
   return result;
