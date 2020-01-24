@@ -255,7 +255,7 @@ export async function testAllBalances(): Promise<void> {
 }
 
 export async function testGetDepositAddresses(): Promise<void> {
-  const symbols = ['BTC', 'EOS', 'ETH', 'USDT', 'XXX', 'YAS'];
+  const symbols = ['BTC', 'EOS', 'ETH', 'MYKEY', 'USDT', 'XXX', 'YAS'];
 
   console.info(await getDepositAddresses('Binance', symbols));
 
@@ -280,7 +280,7 @@ export async function testGetDepositAddresses(): Promise<void> {
 }
 
 export async function testGetWithdrawlFees(): Promise<void> {
-  const symbols = ['BTC', 'EOS', 'ETH', 'USDT', 'XXX', 'YAS'];
+  const symbols = ['BTC', 'EOS', 'ETH', 'MYKEY', 'USDT', 'XXX', 'YAS'];
 
   console.info(await getWithdrawalFees('Binance', symbols));
   console.info(await getWithdrawalFees('OKEx_Spot', symbols));

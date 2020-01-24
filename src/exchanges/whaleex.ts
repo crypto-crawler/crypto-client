@@ -196,7 +196,7 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
   const result: { [key: string]: WithdrawalFee } = {};
 
   symbols.forEach(symbol => {
-    if (getTokenInfo(symbol) === undefined) return;
+    if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {
       symbol,
@@ -220,7 +220,7 @@ export function getDepositAddresses(symbols: string[]): { [key: string]: Deposit
   const result: { [key: string]: DepositAddress } = {};
 
   symbols.forEach(symbol => {
-    if (getTokenInfo(symbol) === undefined) return;
+    if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {
       symbol,
