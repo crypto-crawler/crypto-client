@@ -75,7 +75,7 @@ export async function placeOrder(
   const path = '/0/private/AddOrder';
 
   const params: { nonce: number; [key: string]: string | number } = {
-    pair: pairInfo.altname,
+    pair: pairInfo.raw_pair,
     type: sell ? 'sell' : 'buy',
     ordertype: 'limit',
     price,

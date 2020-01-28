@@ -31,7 +31,7 @@ export async function placeOrder(
   const order: LimitOrder = {
     type: 'limit',
     side: sell ? 'sell' : 'buy',
-    product_id: pairInfo.id,
+    product_id: pairInfo.raw_pair,
     price: priceStr,
     size: quantityStr,
   };
@@ -61,7 +61,7 @@ export async function queryOrder(
   try {
     const orderInfo = await client.getOrder(orderId);
     assert.equal(orderInfo.id, orderId);
-    assert.equal(orderInfo.product_id, pairInfo.id);
+    assert.equal(orderInfo.product_id, pairInfo.raw_pair);
 
     return orderInfo;
   } catch (e) {

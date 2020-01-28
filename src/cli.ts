@@ -128,7 +128,7 @@ export async function testBitstamp(): Promise<void> {
 export async function testCoinbase(): Promise<void> {
   console.info(await queryBalance('Coinbase', 'BCH'));
 
-  const orderId = await placeOrder('Coinbase', 'BCH_USD', 607.48, 0.6731677072288, true);
+  const orderId = await placeOrder('Coinbase', 'BCH_USD', 3999.48, 0.1, true);
   console.info(orderId);
 
   console.info(await queryOrder('Coinbase', 'BCH_USD', orderId));
@@ -215,7 +215,7 @@ export async function testWhaleExEos(): Promise<void> {
   // console.info(txid);
 }
 
-export async function testKraken(): Promise<void> {
+export async function testKraken1(): Promise<void> {
   console.info(await queryBalance('Kraken', 'USD'));
 
   const orderId = await placeOrder('Kraken', 'EOS_USD', 1.6666, 3.11111111, false);
@@ -226,6 +226,19 @@ export async function testKraken(): Promise<void> {
   console.info(await cancelOrder('Kraken', 'EOS_USD', orderId));
 
   console.info(await queryOrder('Kraken', 'EOS_USD', orderId));
+}
+
+export async function testKraken(): Promise<void> {
+  console.info(await queryBalance('Kraken', 'USD'));
+
+  const orderId = await placeOrder('Kraken', 'BTC_USD', 1.6, 3.11111111, false);
+  console.info(orderId);
+
+  console.info(await queryOrder('Kraken', 'BTC_USD', orderId));
+
+  console.info(await cancelOrder('Kraken', 'BTC_USD', orderId));
+
+  console.info(await queryOrder('Kraken', 'BTC_USD', orderId));
 }
 
 export async function testMXC(): Promise<void> {
@@ -295,5 +308,5 @@ export async function testGetWithdrawlFees(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testGetWithdrawlFees();
+  await testKraken();
 })();
