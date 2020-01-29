@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.16.9",
+  "version": "0.17.0",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -76,7 +76,7 @@
     "binance-api-node": "^0.9.13",
     "coinbase-pro": "^0.9.0",
     "debug": "^4.1.1",
-    "eos-token-info": "0.0.8",
+    "eos-token-info": "0.1.0",
     "eos-utils": "0.1.6",
     "eosjs": "^20.0.3",
     "eosjs-ecc": "^4.0.7",
