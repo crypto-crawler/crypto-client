@@ -308,5 +308,5 @@ export async function testGetWithdrawlFees(): Promise<void> {
 
   console.info(USER_CONFIG);
 
-  await testKraken();
+  await testGetWithdrawlFees();
 })();
