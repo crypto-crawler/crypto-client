@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.17.5",
+  "version": "0.17.6",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -63,7 +63,7 @@
     "eslint-plugin-prettier": "^3.1.2",
     "jest": "^25.1.0",
     "prettier": "^1.19.1",
-    "ts-jest": "^25.0.0",
+    "ts-jest": "^25.1.0",
     "typescript": "^3.7.5"
   },
   "dependencies": {
