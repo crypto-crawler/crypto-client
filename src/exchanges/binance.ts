@@ -140,6 +140,7 @@ export async function getDepositAddresses(
         address: address.address,
       };
       if (address.addressTag) depositAddress.memo = address.addressTag;
+      if (symbol === 'CTXC') depositAddress.subtype = 'CTXC';
       if (symbol === 'USDT' || symbol === 'WTC') depositAddress.subtype = 'ERC20';
       if (subtype) depositAddress.subtype = subtype as SubType;
 
