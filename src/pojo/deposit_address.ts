@@ -1,4 +1,4 @@
-export declare const SUB_TYPES: readonly ['AAC', 'BEP2', 'EOS', 'ERC20', 'OMNI', 'TRC20'];
+export declare const SUB_TYPES: readonly ['AAC', 'BEP2', 'EOS', 'ERC20', 'OMNI', 'TRC20', 'WTC'];
 export declare type SubType = typeof SUB_TYPES[number];
 
 export interface DepositAddress {
