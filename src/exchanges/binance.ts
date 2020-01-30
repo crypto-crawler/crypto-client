@@ -103,7 +103,7 @@ export async function getWithdrawalFees(
       withdrawal_fee: detail.withdrawFee,
       min_withdraw_amount: detail.minWithdrawAmount,
     };
-    if (symbol === 'USDT') fee.subtype = 'ERC20';
+    if (symbol === 'USDT' || symbol === 'WTC') fee.subtype = 'ERC20';
 
     result[symbol] = fee;
   });
