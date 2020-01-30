@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { PairInfo } from 'exchange-info';
 import uuidv1 from 'uuid/v1';
 import { USER_CONFIG } from '../config';
+import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 const DOMAIN = 'www.bitstamp.net';
@@ -162,5 +163,96 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
       const symbol = key.substring(0, key.indexOf('_available')).toUpperCase();
       result[symbol] = parseFloat(response.data[key] as string);
     });
+  return result;
+}
+
+async function fetchDepositAddress(symbol: string): Promise<DepositAddress | undefined> {
+  const pathMap: { [key: string]: string } = {
+    BCH: '/api/v2/bch_address/',
+    BTC: '/api/bitcoin_deposit_address/',
+    ETH: '/api/v2/eth_address/',
+    LTC: '/api/v2/ltc_address/',
+    XRP: '/api/v2/xrp_address/',
+  };
+
+  if (!(symbol in pathMap)) return undefined;
+
+  const path = pathMap[symbol];
+
+  if (symbol === 'BTC') {
+    const nonce = Date.now();
+    const signature = sign_v1(
+      USER_CONFIG.BITSTAMP_API_KEY!,
+      USER_CONFIG.BITSTAMP_API_SECRET!,
+      USER_CONFIG.BITSTAMP_USER_ID!,
+      nonce,
+    );
+    const payload = `key=${USER_CONFIG.BITSTAMP_API_KEY!}&signature=${signature}&nonce=${nonce}`;
+
+    const response = await Axios.post(`https://${DOMAIN}${path}`, payload);
+    assert.equal(response.status, 200);
+
+    return { symbol, address: response.data };
+  }
+
+  const payload = '{}';
+  const headers = sign(
+    USER_CONFIG.BITSTAMP_API_KEY!,
+    USER_CONFIG.BITSTAMP_API_SECRET!,
+    'POST',
+    path,
+    payload,
+  );
+
+  const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
+    headers,
+  });
+  assert.equal(response.status, 200);
+
+  return { symbol, address: response.data.address };
+}
+
+export async function getDepositAddresses(
+  symbols: string[],
+): Promise<{ [key: string]: DepositAddress[] }> {
+  assert.ok(symbols.length);
+
+  const requests = symbols.map(symbol => fetchDepositAddress(symbol));
+  const arr = await Promise.all(requests);
+
+  const result: { [key: string]: DepositAddress[] } = {};
+  arr.forEach(address => {
+    if (address) {
+      result[address.symbol] = [address];
+    }
+  });
+
+  return result;
+}
+
+export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
+  assert.ok(symbols.length);
+
+  const data: { [key: string]: number } = {
+    BTC: 0.0005,
+    BCH: 0.0001,
+    LTC: 0.001,
+    ETH: 0.001,
+    XRP: 0.02,
+    USD: 25,
+    EUR: 0.9,
+  };
+
+  const result: { [key: string]: WithdrawalFee } = {};
+  Object.keys(data).forEach(symbol => {
+    result[symbol] = {
+      symbol,
+      deposit_enabled: true,
+      withdraw_enabled: true,
+      withdrawal_fee: data[symbol],
+      min_withdraw_amount: 0,
+    };
+  });
+
   return result;
 }

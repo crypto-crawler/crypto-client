@@ -406,6 +406,9 @@ export async function getDepositAddresses(
     case 'Bitfinex':
       result = await Bitfinex.getDepositAddresses(symbols);
       break;
+    case 'Bitstamp':
+      result = await Bitstamp.getDepositAddresses(symbols);
+      break;
     case 'OKEx_Spot': {
       if (!(exchange in EXCHANGE_INFO_CACHE)) {
         EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
@@ -458,6 +461,9 @@ export async function getWithdrawalFees(
       break;
     case 'Bitfinex':
       result = await Bitfinex.getWithdrawalFees(symbols);
+      break;
+    case 'Bitstamp':
+      result = Bitstamp.getWithdrawalFees(symbols);
       break;
     case 'OKEx_Spot':
       result = await OKEx_Spot.getWithdrawalFees(symbols);
