@@ -2,6 +2,7 @@ import { strict as assert } from 'assert';
 import { AuthenticatedClient, LimitOrder } from 'coinbase-pro';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): AuthenticatedClient {
@@ -81,6 +82,54 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   accounts.forEach(account => {
     result[account.currency] = parseFloat(account.available);
+  });
+
+  return result;
+}
+
+export async function getDepositAddresses(
+  symbols: string[],
+): Promise<{ [key: string]: DepositAddress }> {
+  assert.ok(symbols.length);
+
+  const client = createAuthenticatedClient();
+
+  const requests = symbols.map(symbol => (client as any).depositCrypto({ currency: symbol }));
+  const arr: string[] = (await Promise.all(requests)).map(x => x.address);
+  assert.equal(arr.length, symbols.length);
+
+  const result: { [key: string]: DepositAddress } = {};
+
+  for (let i = 0; i < symbols.length; i += 1) {
+    const symbol = symbols[i];
+    result[symbol] = {
+      symbol,
+      address: arr[i],
+    };
+  }
+
+  return result;
+}
+
+export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
+  assert.ok(symbols.length);
+
+  const data: { [key: string]: number } = {
+    EUR: 0.15,
+    USD: 25,
+  };
+  const result: { [key: string]: WithdrawalFee } = {};
+
+  symbols.forEach(symbol => {
+    const fee = data[symbol] || 0;
+
+    result[symbol] = {
+      symbol,
+      deposit_enabled: true,
+      withdraw_enabled: true,
+      withdrawal_fee: fee,
+      min_withdraw_amount: 0,
+    };
   });
 
   return result;

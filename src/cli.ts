@@ -274,6 +274,7 @@ export async function testGetDepositAddresses(): Promise<void> {
 
   console.info(await getDepositAddresses('Bitfinex', symbols));
   console.info(await getDepositAddresses('Bitstamp', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
+  console.info(await getDepositAddresses('Coinbase', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
 
   // const symbols = Array.from(
   //   new Set(
@@ -301,6 +302,9 @@ export async function testGetWithdrawlFees(): Promise<void> {
   console.info(await getWithdrawalFees('Binance', symbols));
   console.info(await getWithdrawalFees('Bitfinex', symbols));
   console.info(await getWithdrawalFees('Bitstamp', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
+  console.info(
+    await getWithdrawalFees('Coinbase', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP', 'USD', 'EUR']),
+  );
   console.info(await getWithdrawalFees('OKEx_Spot', symbols));
   console.info(await getWithdrawalFees('Newdex', symbols));
   console.info(await getWithdrawalFees('WhaleEx', symbols));
