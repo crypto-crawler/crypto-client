@@ -13,6 +13,9 @@ export declare type SubType = typeof SUB_TYPES[number];
 export interface DepositAddress {
   symbol: string;
   address: string;
+  fee?: number;
+  max_deposit_amount?: number;
+  min_deposit_amount?: number;
   memo?: string;
   subtype?: SubType; // e.g., USDT has three subtypes
 }

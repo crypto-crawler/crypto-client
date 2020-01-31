@@ -412,6 +412,9 @@ export async function getDepositAddresses(
     case 'Coinbase':
       result = await Coinbase.getDepositAddresses(symbols);
       break;
+    case 'Kraken':
+      result = await Kraken.getDepositAddresses(symbols);
+      break;
     case 'OKEx_Spot': {
       if (!(exchange in EXCHANGE_INFO_CACHE)) {
         EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');

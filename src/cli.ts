@@ -13,6 +13,7 @@ import {
   queryBalance,
   queryOrder,
 } from './index';
+import { FIAT_SYMBOLS } from './util';
 
 const { argv } = yargs.options({
   eosAccount: {
@@ -312,10 +313,55 @@ export async function testGetWithdrawlFees(): Promise<void> {
   console.info(symbols); // make sure symbols not changed
 }
 
+export async function testKrakenReadonly(): Promise<void> {
+  const symbols = [
+    'ADA',
+    'BTC',
+    'ETH',
+    'EUR',
+    'USD',
+    'ALGO',
+    'ATOM',
+    'BAT',
+    'BCH',
+    'CAD',
+    'CHF',
+    'DAI',
+    'GBP',
+    'JPY',
+    'USDC',
+    'USDT',
+    'DASH',
+    'DOGE',
+    'EOS',
+    'ETC',
+    'GNO',
+    'ICX',
+    'LINK',
+    'LSK',
+    'LTC',
+    'MLN',
+    'NANO',
+    'OMG',
+    'PAXG',
+    'QTUM',
+    'REP',
+    'SC',
+    'WAVES',
+    'XLM',
+    'XMR',
+    'XRP',
+    'XTZ',
+    'ZEC',
+  ].filter(symbol => !FIAT_SYMBOLS.includes(symbol));
+
+  console.info(await getDepositAddresses('Kraken', symbols));
+}
+
 (async () => {
   await init(argv);
 
   console.info(USER_CONFIG);
 
-  await testGetWithdrawlFees();
+  await testKrakenReadonly();
 })();

@@ -2,7 +2,13 @@ import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
 import { PairInfo } from 'exchange-info';
 
+export const FIAT_SYMBOLS = ['CAD', 'CHF', 'EUR', 'GBP', 'JPY', 'USD'];
+
 export type AsyncFunc = (...args: any[]) => Promise<any>;
+
+export async function sleep(ms: number): Promise<any> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // See https://stackoverflow.com/a/29837695/381712
 // Decorator for function is not supported in TypeScript,
