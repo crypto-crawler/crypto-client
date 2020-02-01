@@ -132,7 +132,42 @@ export async function getWithdrawalFees(
   const result: { [key: string]: WithdrawalFee[] } = {};
 
   const authClient = createAuthenticatedClient();
-  const arr = (await authClient.account().getWithdrawalFee()) as Array<{
+
+  const currencies = (await await authClient.account().getCurrencies()) as ReadonlyArray<{
+    name: string;
+    currency: string;
+    can_deposit: '0' | '1';
+    can_withdraw: '0' | '1';
+    min_withdrawal?: string;
+  }>;
+  // Rename USDT to USDT-OMNI
+  currencies
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+    });
+  // console.info(JSON.stringify(currencies, undefined, 2));
+
+  const currencyMap: {
+    [key: string]: {
+      symbol: string;
+      deposit_enabled: boolean;
+      withdraw_enabled: boolean;
+      min_withdraw_amount?: number;
+    };
+  } = {};
+  currencies.forEach(x => {
+    currencyMap[x.currency] = {
+      symbol: x.currency,
+      deposit_enabled: x.can_deposit === '1',
+      withdraw_enabled: x.can_withdraw === '1',
+    };
+    if (x.min_withdrawal) {
+      currencyMap[x.currency].min_withdraw_amount = parseFloat(x.min_withdrawal);
+    }
+  });
+
+  const arr = (await authClient.account().getWithdrawalFee()) as ReadonlyArray<{
     min_fee: string;
     currency: string;
     max_fee: string;
@@ -161,13 +196,15 @@ export async function getWithdrawalFees(
         symbol = x.currency;
       }
 
+      const currencyInfo = currencyMap[x.currency];
+
       const withdrawalFee = getWithdrawalFee(symbol, subtype)!;
       assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
 
       const fee: WithdrawalFee = {
         symbol,
-        deposit_enabled: true,
-        withdraw_enabled: true,
+        deposit_enabled: currencyInfo ? currencyInfo.deposit_enabled : false,
+        withdraw_enabled: currencyInfo ? currencyInfo.withdraw_enabled : false,
         withdrawal_fee: parseFloat(x.min_fee),
         min_withdraw_amount: withdrawalFee.min_withdraw_amount,
       };
