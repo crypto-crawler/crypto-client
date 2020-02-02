@@ -26,8 +26,8 @@ const ID_CACHE = { remark: '0', list: [] as string[], lastTimestamp: Date.now() 
 
 async function getIdFromCache(): Promise<string> {
   const now = Date.now();
-  // IDs expire after 5 minutes, so update them per 4 minutes
-  if (ID_CACHE.list.length === 0 || now - ID_CACHE.lastTimestamp >= 4 * 60 * 1000) {
+  // IDs expire after 5 minutes, so update them per 3 minutes
+  if (ID_CACHE.list.length === 0 || now - ID_CACHE.lastTimestamp >= 3 * 60 * 1000) {
     const { remark, list } = await getGlobalIds(ID_CACHE.remark);
     ID_CACHE.remark = remark;
     ID_CACHE.list = list;
