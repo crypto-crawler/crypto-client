@@ -176,13 +176,15 @@ async function getDepositMethod(
   );
 
   if (symbol === 'DOGE') symbol = 'XDG'; // eslint-disable-line no-param-reassign
-  if (symbol === 'USDT')
+  if (symbol === 'USDT') {
+    // see https://support.kraken.com/hc/en-us/requests/2732113
     return {
-      method: 'USDT',
+      method: 'Tether USD',
       limit: false,
       fee: '0.00000000',
       'gen-address': true,
     };
+  }
 
   const path = '/0/private/DepositMethods';
 
@@ -212,8 +214,6 @@ export async function getDepositAddress(
     !FIAT_SYMBOLS.includes(symbol),
     `Fiat currency ${symbol} is not supported, only cryptocurrencies are supported`,
   );
-
-  if (symbol === 'USDT') return undefined; // TODO: Fix USDT
 
   const depositMethod = await getDepositMethod(symbol);
 
