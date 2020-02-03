@@ -129,19 +129,21 @@ export async function init({
   }
 }
 
-function checkExchangeAndPair(exchange: SupportedExchange, pair: string): boolean {
-  assert.ok(exchange);
-  assert.ok(SUPPORTED_EXCHANGES.includes(exchange), `Unknown exchange: ${exchange}`);
-  assert.ok(pair);
-  assert.equal(pair.split('_').length, 2);
-  if (['Newdex', 'WhaleEx'].includes(exchange)) {
-    const quoteCurrency = pair.split('_')[1];
-    if (quoteCurrency === 'EOS') {
-      assert.strictEqual(USER_CONFIG.eosAccount!.length > 0, true);
-      assert.strictEqual(USER_CONFIG.eosPrivateKey!.length > 0, true);
+async function getExchangeInfoAndUpdateCache(
+  exchange: string | ExchangeInfo,
+): Promise<ExchangeInfo> {
+  if (typeof exchange === 'string') {
+    if (!(exchange in EXCHANGE_INFO_CACHE)) {
+      EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange as SupportedExchange, 'Spot');
     }
+    return EXCHANGE_INFO_CACHE[exchange];
   }
-  return true;
+  if (typeof exchange === 'object') {
+    const exchangeInfo = exchange as ExchangeInfo;
+    EXCHANGE_INFO_CACHE[exchangeInfo.name] = exchangeInfo;
+    return exchangeInfo;
+  }
+  throw new Error(`Illegal exchange: ${exchange}`);
 }
 
 /**
@@ -157,18 +159,14 @@ function checkExchangeAndPair(exchange: SupportedExchange, pair: string): boolea
  * @returns ActionExtended
  */
 export async function createOrder(
-  exchange: 'Newdex' | 'WhaleEx',
+  exchange: SupportedExchange | ExchangeInfo,
   pair: string,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<ActionExtended> {
-  checkExchangeAndPair(exchange, pair);
-
-  if (!(exchange in EXCHANGE_INFO_CACHE)) {
-    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
-  }
-  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+  const pairInfo = exchangeInfo.pairs[pair];
 
   switch (exchange) {
     case 'Newdex':
@@ -192,19 +190,15 @@ export async function createOrder(
  * @returns transaction_id for dex, or order_id for central
  */
 export async function placeOrder(
-  exchange: SupportedExchange,
+  exchange: SupportedExchange | ExchangeInfo,
   pair: string,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string> {
-  checkExchangeAndPair(exchange, pair);
-
-  if (!(exchange in EXCHANGE_INFO_CACHE)) {
-    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
-  }
-  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+  const pairInfo = exchangeInfo.pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -242,17 +236,14 @@ export async function placeOrder(
  * @returns boolean if central, transaction_id if dex
  */
 export async function cancelOrder(
-  exchange: SupportedExchange,
+  exchange: SupportedExchange | ExchangeInfo,
   pair: string,
   orderId_or_transactionId: string,
 ): Promise<boolean | string> {
   assert.ok(orderId_or_transactionId);
-  checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in EXCHANGE_INFO_CACHE)) {
-    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
-  }
-  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+  const pairInfo = exchangeInfo.pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -289,17 +280,14 @@ export async function cancelOrder(
  * @returns The order information
  */
 export async function queryOrder(
-  exchange: SupportedExchange,
+  exchange: SupportedExchange | ExchangeInfo,
   pair: string,
   orderId_or_transactionId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   assert.ok(orderId_or_transactionId);
-  checkExchangeAndPair(exchange, pair);
 
-  if (!(exchange in EXCHANGE_INFO_CACHE)) {
-    EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
-  }
-  const pairInfo = EXCHANGE_INFO_CACHE[exchange].pairs[pair];
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+  const pairInfo = exchangeInfo.pairs[pair];
 
   switch (exchange) {
     case 'Binance':
@@ -390,16 +378,17 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
  * @returns symbol->DepositAddress | DepositAddress[]
  */
 export async function getDepositAddresses(
-  exchange: SupportedExchange,
+  exchange: SupportedExchange | ExchangeInfo,
   symbols: string[],
 ): Promise<{ [key: string]: DepositAddress | DepositAddress[] }> {
-  assert.ok(exchange);
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+
   let result: { [key: string]: DepositAddress | DepositAddress[] } = {};
 
-  switch (exchange) {
+  switch (exchangeInfo.name) {
     case 'Binance':
       result = await Binance.getDepositAddresses(symbols);
       break;
@@ -416,10 +405,7 @@ export async function getDepositAddresses(
       result = await Kraken.getDepositAddresses(symbols);
       break;
     case 'OKEx_Spot': {
-      if (!(exchange in EXCHANGE_INFO_CACHE)) {
-        EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange, 'Spot');
-      }
-      result = await OKEx_Spot.getDepositAddresses(symbols, EXCHANGE_INFO_CACHE[exchange]);
+      result = await OKEx_Spot.getDepositAddresses(symbols, exchangeInfo);
       break;
     }
     case 'Newdex':

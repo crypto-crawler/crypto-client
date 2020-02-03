@@ -56,6 +56,8 @@ export async function placeOrder(
 ): Promise<string> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'APIKey is empty');
+  assert.ok(USER_CONFIG.eosAccount);
+  assert.ok(USER_CONFIG.eosPrivateKey);
 
   const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
 
@@ -100,6 +102,8 @@ export async function placeOrder(
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.WHALEEX_API_KEY);
+  assert.ok(USER_CONFIG.eosAccount);
+  assert.ok(USER_CONFIG.eosPrivateKey);
 
   const path = `/api/v1/order/orders/${orderId}/submitcancel`;
   const params = signData('POST', path);

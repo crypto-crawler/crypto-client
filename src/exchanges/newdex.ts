@@ -80,6 +80,7 @@ export async function placeOrder(
 ): Promise<string> {
   assert.ok(pairInfo);
   assert.ok(USER_CONFIG.eosAccount);
+  assert.ok(USER_CONFIG.eosPrivateKey);
 
   const actionExt = createOrder(pairInfo, price, quantity, sell);
   const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!);
@@ -93,6 +94,7 @@ export async function cancelOrder(
   assert.ok(pairInfo);
   assert.ok(transactionId);
   assert.ok(USER_CONFIG.eosAccount);
+  assert.ok(USER_CONFIG.eosPrivateKey);
 
   const orderId = await Bloks.getOrderId(transactionId);
 
