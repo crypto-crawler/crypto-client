@@ -124,6 +124,7 @@ async function fetchDepositAddress(
       address: data.notifyInfo[4],
     };
   } catch (e) {
+    // console.info(`${symbol}, ${e.message}`);
     if (!(symbol in mapping)) return undefined;
 
     try {

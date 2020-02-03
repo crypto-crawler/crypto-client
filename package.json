@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -54,6 +54,7 @@
     "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
+    "dotenv": "^8.2.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.10.0",
@@ -62,6 +63,7 @@
     "eslint-plugin-markdown": "^1.0.1",
     "eslint-plugin-prettier": "^3.1.2",
     "jest": "^25.1.0",
+    "jest-each": "^25.1.0",
     "prettier": "^1.19.1",
     "ts-jest": "^25.1.0",
     "typescript": "^3.7.5"

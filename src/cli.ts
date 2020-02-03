@@ -2,18 +2,7 @@
 /* eslint-disable no-console */
 import yargs from 'yargs';
 import { USER_CONFIG } from './config';
-import {
-  cancelOrder,
-  createOrder,
-  getDepositAddresses,
-  getWithdrawalFees,
-  init,
-  placeOrder,
-  queryAllBalances,
-  queryBalance,
-  queryOrder,
-} from './index';
-import { FIAT_SYMBOLS } from './util';
+import { cancelOrder, createOrder, init, placeOrder, queryBalance, queryOrder } from './index';
 
 const { argv } = yargs.options({
   eosAccount: {
@@ -255,113 +244,10 @@ export async function testMXC(): Promise<void> {
   console.info(await queryOrder('MXC', 'EOS_USDT', orderId));
 }
 
-export async function testAllBalances(): Promise<void> {
-  // console.info(await queryAllBalances('Binance'));
-  // console.info(await queryAllBalances('Bitfinex'));
-  // console.info(await queryAllBalances('Bitstamp'));
-  // console.info(await queryAllBalances('Coinbase'));
-  // console.info(await queryAllBalances('Huobi'));
-  // console.info(await queryAllBalances('Kraken'));
-  // console.info(await queryAllBalances('MXC'));
-  // console.info(await queryAllBalances('Newdex'));
-  // console.info(await queryAllBalances('OKEx_Spot'));
-  console.info(await queryAllBalances('WhaleEx'));
-}
-
-export async function testGetDepositAddresses(): Promise<void> {
-  const symbols = ['BTC', 'EOS', 'ETH', 'MYKEY', 'USDT', 'XXX', 'YAS'];
-
-  console.info(await getDepositAddresses('Binance', symbols));
-
-  console.info(await getDepositAddresses('Bitfinex', symbols));
-  console.info(await getDepositAddresses('Bitstamp', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
-  console.info(await getDepositAddresses('Coinbase', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
-
-  // const symbols = Array.from(
-  //   new Set(
-  //     Object.keys((await getExchangeInfo('OKEx_Spot', 'Spot')).pairs).flatMap(p => p.split('_')),
-  //   ),
-  // );
-
-  const okex = await getDepositAddresses('OKEx_Spot', symbols);
-  console.info(okex);
-
-  symbols.forEach(symbol => {
-    if (!(symbol in okex)) {
-      console.error(symbol);
-    }
-  });
-
-  console.info(await getDepositAddresses('Newdex', symbols));
-
-  console.info(await getDepositAddresses('WhaleEx', symbols));
-}
-
-export async function testGetWithdrawlFees(): Promise<void> {
-  const symbols = ['BTC', 'EOS', 'ETH', 'MYKEY', 'USDT', 'XXX', 'YAS'];
-
-  console.info(await getWithdrawalFees('Binance', symbols));
-  console.info(await getWithdrawalFees('Bitfinex', symbols));
-  console.info(await getWithdrawalFees('Bitstamp', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']));
-  console.info(
-    await getWithdrawalFees('Coinbase', ['BCH', 'BTC', 'ETH', 'LTC', 'XRP', 'USD', 'EUR']),
-  );
-  console.info(await getWithdrawalFees('OKEx_Spot', symbols));
-  console.info(await getWithdrawalFees('Newdex', symbols));
-  console.info(await getWithdrawalFees('WhaleEx', symbols));
-
-  console.info(symbols); // make sure symbols not changed
-}
-
-export async function testKrakenReadonly(): Promise<void> {
-  const symbols = [
-    'ADA',
-    'BTC',
-    'ETH',
-    'EUR',
-    'USD',
-    'ALGO',
-    'ATOM',
-    'BAT',
-    'BCH',
-    'CAD',
-    'CHF',
-    'DAI',
-    'GBP',
-    'JPY',
-    'USDC',
-    'USDT',
-    'DASH',
-    'DOGE',
-    'EOS',
-    'ETC',
-    'GNO',
-    'ICX',
-    'LINK',
-    'LSK',
-    'LTC',
-    'MLN',
-    'NANO',
-    'OMG',
-    'PAXG',
-    'QTUM',
-    'REP',
-    'SC',
-    'WAVES',
-    'XLM',
-    'XMR',
-    'XRP',
-    'XTZ',
-    'ZEC',
-  ].filter(symbol => !FIAT_SYMBOLS.includes(symbol));
-
-  console.info(await getDepositAddresses('Kraken', symbols));
-}
-
 (async () => {
   await init(argv);
 
   console.info(USER_CONFIG);
 
-  await testKrakenReadonly();
+  await testKraken();
 })();
