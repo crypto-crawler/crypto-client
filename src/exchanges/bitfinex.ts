@@ -111,6 +111,14 @@ async function fetchDepositAddress(
       opRenew: 0,
     });
 
+    if (symbol === 'EOS') {
+      return {
+        symbol,
+        address: data.notifyInfo[5],
+        memo: data.notifyInfo[4],
+      };
+    }
+
     return {
       symbol,
       address: data.notifyInfo[4],
