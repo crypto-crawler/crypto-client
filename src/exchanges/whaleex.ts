@@ -1,6 +1,7 @@
 // forked from https://github.com/WhaleEx/API/blob/master/sample/nodejs/whaleex-api.js
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { normalizeSymbol } from 'crypto-pair';
 import { getTokenInfo } from 'eos-token-info';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
@@ -170,7 +171,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    const symbol = x.currency === 'KEY' ? 'MYKEY' : x.currency;
+    const symbol = normalizeSymbol(x.currency, 'WhaleEx');
     result[symbol] = parseFloat(x.availableAmount);
   });
 

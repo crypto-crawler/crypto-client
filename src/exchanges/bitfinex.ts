@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import Axios from 'axios';
+import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
@@ -88,92 +88,77 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    if (x.currency === 'HOT') x.currency = 'HYDRO'; // eslint-disable-line  no-param-reassign
-    if (x.currency === 'ORS') x.currency = 'ORSGROUP'; // eslint-disable-line  no-param-reassign
-    result[x.currency] = x.balance;
+    const pair = normalizeSymbol(x.currency, 'Bitfinex');
+    result[pair] = x.balance;
   });
 
   return result;
 }
 
-async function fetchDepositAddress(
-  symbol: string,
-  mapping: { [key: string]: string },
-): Promise<DepositAddress | undefined> {
-  assert.ok(mapping);
-
-  const client = createAuthenticatedClient();
-
+export async function fetchDepositAddress(
+  symbolOrLabel: string,
+): Promise<{ address: string; memo?: string } | Error> {
   try {
+    const client = createAuthenticatedClient();
     const data = await client.getDepositAddress({
       wallet: 'exchange',
-      method: symbol,
+      method: symbolOrLabel,
       opRenew: 0,
     });
 
-    if (symbol === 'EOS') {
+    if (symbolOrLabel === 'EOS') {
       return {
-        symbol,
         address: data.notifyInfo[5],
         memo: data.notifyInfo[4],
       };
     }
 
     return {
-      symbol,
       address: data.notifyInfo[4],
     };
   } catch (e) {
-    // console.info(`${symbol}, ${e.message}`);
-    if (!(symbol in mapping)) return undefined;
-
-    try {
-      const data = await client.getDepositAddress({
-        wallet: 'exchange',
-        method: mapping[symbol],
-        opRenew: 0,
-      });
-      return {
-        symbol,
-        address: data.notifyInfo[4],
-      };
-    } catch (ex) {
-      return undefined;
-    }
+    return e;
   }
 }
 
-async function fetchMapping(): Promise<{ [key: string]: string }> {
-  const response = await Axios.get('https://api.bitfinex.com/v2/conf/pub:map:currency:label');
-  assert.equal(response.status, 200);
-  const arr2D = response.data[0] as string[][];
-
-  const mapping: { [key: string]: string } = {};
-  arr2D.forEach(arr => {
-    assert.equal(arr.length, 2);
-    const [key, value] = arr;
-    mapping[key] = value;
-  });
-
-  return mapping;
-}
+// The following symbols use label to get deposit addresses.
+const SYMBOL_LABEL_MAP: { [key: string]: string } = {
+  AVT: 'Aventus',
+  BTC: 'Bitcoin',
+  DASH: 'Dash',
+  EDO: 'Eidoo',
+  ETH: 'Ethereum',
+  GNT: 'Golem',
+  IOTA: 'Iota',
+  LTC: 'Litecoin',
+  OMG: 'OmiseGO',
+  ORSGROUP: 'ORS',
+  QTUM: 'Qtum',
+  SAN: 'Santiment',
+  SNT: 'Status',
+  XMR: 'Monero',
+  XRP: 'Ripple',
+  ZEC: 'Zcash',
+};
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress[] }> {
+): Promise<{ [key: string]: DepositAddress }> {
   assert.ok(symbols.length);
 
-  const mapping = await fetchMapping();
+  const result: { [key: string]: DepositAddress } = {};
+  for (let i = 0; i < symbols.length; i += 1) {
+    const symbol = symbols[i];
 
-  const requests = symbols.map(symbol => fetchDepositAddress(symbol, mapping));
-  const arr = await Promise.all(requests);
+    const symbolOrLabel = symbol in SYMBOL_LABEL_MAP ? SYMBOL_LABEL_MAP[symbol] : symbol;
 
-  const result: { [key: string]: DepositAddress[] } = {};
-  arr.forEach(address => {
-    if (address) {
-      result[address.symbol] = [address];
+    // eslint-disable-next-line no-await-in-loop
+    const address = await fetchDepositAddress(symbolOrLabel);
+
+    if (!(address instanceof Error)) {
+      result[symbol] = { symbol, ...address };
     }
-  });
+  }
 
   return result;
 }
@@ -185,6 +170,11 @@ export async function getWithdrawalFees(
 
   const client = createAuthenticatedClient();
   const data = (await client.accountFees()) as { withdraw: { [key: string]: string } };
+
+  Object.keys(data.withdraw).forEach(rawSymbol => {
+    const normalizedSymbol = normalizeSymbol(rawSymbol, 'Bitfinex');
+    data.withdraw[normalizedSymbol] = data.withdraw[rawSymbol];
+  });
 
   const result: { [key: string]: WithdrawalFee } = {};
   symbols.forEach(symbol => {

@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { normalizeSymbol } from 'crypto-pair';
 import { getTokenInfo } from 'eos-token-info';
 import {
   createTransferAction,
@@ -211,7 +212,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    const symbol = x.currency === 'KEY' ? 'MYKEY' : x.currency;
+    const symbol = normalizeSymbol(x.currency, 'Newdex');
     result[symbol] = x.amount;
   });
 

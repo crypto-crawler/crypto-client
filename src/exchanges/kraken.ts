@@ -1,6 +1,7 @@
 import assert from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
+import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import qs from 'qs';
 import { USER_CONFIG } from '../config';
@@ -135,16 +136,6 @@ export async function queryOrder(
   return data[orderId];
 }
 
-/* eslint-disable no-param-reassign */
-function normalizeSymbol(symbol: string): string {
-  // https://support.kraken.com/hc/en-us/articles/360001185506-How-to-interpret-asset-codes
-  if (symbol.length === 4 && (symbol[0] === 'X' || symbol[0] === 'Z')) symbol = symbol.substring(1);
-  if (symbol === 'XBT') symbol = 'BTC';
-  if (symbol === 'XDG') symbol = 'DOGE';
-  return symbol;
-}
-/* eslint-enable no-param-reassign */
-
 export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const path = '/0/private/Balance';
 
@@ -154,7 +145,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   Object.keys(balances).forEach(symbol => {
-    const symbolNormalized = normalizeSymbol(symbol);
+    const symbolNormalized = normalizeSymbol(symbol, 'Kraken');
     result[symbolNormalized] = parseFloat(balances[symbol]);
   });
 

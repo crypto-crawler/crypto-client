@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
+import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -143,8 +144,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   data.list
     .filter(x => x.type === 'trade')
     .forEach(x => {
-      if (x.currency === 'hot') x.currency = 'Hydro'; // eslint-disable-line  no-param-reassign
-      result[x.currency.toUpperCase()] = parseFloat(x.balance);
+      result[normalizeSymbol(x.currency, 'Huobi')] = parseFloat(x.balance);
     });
   return result;
 }

@@ -8,7 +8,7 @@ beforeAll(async () => {
 });
 
 each(['Binance', 'Bitfinex', 'OKEx_Spot']).test(
-  'getDepositAddresses(Binance, Bitfinex, OKEx_Spot)',
+  'getWithdrawalFees(Binance, Bitfinex, OKEx_Spot)',
   async (exchange: SupportedExchange) => {
     const symbols = ['BTC', 'EOS', 'ETH', 'XXX'];
 
@@ -24,7 +24,7 @@ each(['Binance', 'Bitfinex', 'OKEx_Spot']).test(
   },
 );
 
-test("getDepositAddresses('Bitstamp')", async () => {
+test("getWithdrawalFees('Bitstamp')", async () => {
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
 
   const addresses = await getWithdrawalFees('Bitstamp', symbols);
@@ -34,7 +34,7 @@ test("getDepositAddresses('Bitstamp')", async () => {
   });
 });
 
-test("getDepositAddresses('Coinbase')", async () => {
+test("getWithdrawalFees('Coinbase')", async () => {
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP', 'USD', 'EUR'];
 
   const addresses = await getWithdrawalFees('Coinbase', symbols);
@@ -45,7 +45,7 @@ test("getDepositAddresses('Coinbase')", async () => {
 });
 
 each(['Newdex', 'WhaleEx']).test(
-  'getDepositAddresses(Newdex, WhaleEx)',
+  'getWithdrawalFees(Newdex, WhaleEx)',
   async (exchange: SupportedExchange) => {
     const symbols = ['EIDOS', 'EOS', 'MYKEY', 'USDT', 'XXX', 'YAS'];
 

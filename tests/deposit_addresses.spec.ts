@@ -5,10 +5,11 @@ import readUserConfig from './user_config';
 beforeAll(async () => {
   const userConfig = readUserConfig();
   await init(userConfig);
+  jest.setTimeout(50 * 1000);
 });
 
 each(['Binance', 'OKEx_Spot']).test(
-  'getDepositAddresses(Binance, Bitfinex, OKEx_Spot)',
+  'getDepositAddresses(Binance, OKEx_Spot)',
   async (exchange: SupportedExchange) => {
     const symbols = ['BTC', 'EOS', 'ETH', 'USDT', 'XXX'];
 
@@ -18,25 +19,11 @@ each(['Binance', 'OKEx_Spot']).test(
     expect(addresses).toHaveProperty('BTC');
     expect(addresses).toHaveProperty('EOS');
     expect(addresses).toHaveProperty('ETH');
-    // expect(addresses).toHaveProperty('USDT'); // TODO: add USDT for Bitfinex
+    expect(addresses).toHaveProperty('USDT');
     expect(addresses).not.toHaveProperty('XXX');
     /* eslint-enable jest/no-standalone-expect */
   },
 );
-
-test("getDepositAddresses('Bitfinex')", async () => {
-  const symbols = ['BTC', 'EOS', 'ETH', 'XXX'];
-
-  const addresses = await getDepositAddresses('Bitfinex', symbols);
-
-  /* eslint-disable jest/no-standalone-expect */
-  expect(addresses).toHaveProperty('BTC');
-  expect(addresses).toHaveProperty('EOS');
-  expect(addresses).toHaveProperty('ETH');
-  // expect(addresses).toHaveProperty('USDT'); // TODO: add USDT for Bitfinex
-  expect(addresses).not.toHaveProperty('XXX');
-  /* eslint-enable jest/no-standalone-expect */
-});
 
 each(['Bitstamp', 'Coinbase']).test(
   'getDepositAddresses(Bitstamp, Coinbase)',
