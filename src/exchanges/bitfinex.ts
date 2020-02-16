@@ -80,11 +80,11 @@ export async function queryOrder(
   return arr[0];
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
 
   const wallets = (await authClient.wallets()) as any[];
-  const arr = wallets.filter(x => x.type === 'exchange');
+  const arr = wallets.filter(x => !all && x.type === 'exchange');
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {

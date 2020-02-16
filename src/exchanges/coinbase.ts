@@ -73,7 +73,7 @@ export async function queryOrder(
   }
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const accounts = await client.getAccounts();
@@ -81,7 +81,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const result: { [key: string]: number } = {};
 
   accounts.forEach(account => {
-    result[account.currency] = parseFloat(account.available);
+    result[account.currency] = parseFloat(all ? account.balance : account.available);
   });
 
   return result;

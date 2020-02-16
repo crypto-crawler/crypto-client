@@ -68,7 +68,7 @@ export async function queryOrder(
   return orderResult;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const account = await client.accountInfo();
@@ -76,7 +76,9 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const result: { [key: string]: number } = {};
 
   account.balances.forEach(balance => {
-    result[balance.asset] = parseFloat(balance.free);
+    result[balance.asset] = all
+      ? parseFloat(balance.free) + parseFloat(balance.locked)
+      : parseFloat(balance.free);
   });
   return result;
 }

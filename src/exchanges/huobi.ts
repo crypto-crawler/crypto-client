@@ -124,7 +124,7 @@ export async function queryAccounts(): Promise<
   return response.data.data;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const path = `/v1/account/accounts/${USER_CONFIG.HUOBI_ACCOUNT_ID!}/balance`;
   const fullUrl = signRequest('GET', path);
   const response = await Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } });
@@ -142,7 +142,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   data.list
-    .filter(x => x.type === 'trade')
+    .filter(x => !all && x.type === 'trade')
     .forEach(x => {
       result[normalizeSymbol(x.currency, 'Huobi')] = parseFloat(x.balance);
     });

@@ -144,7 +144,7 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   return undefined;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const path = '/api/v1/assets';
   const params = signData('GET', path);
   const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
@@ -172,7 +172,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
     const symbol = normalizeSymbol(x.currency, 'WhaleEx');
-    result[symbol] = parseFloat(x.availableAmount);
+    result[symbol] = all ? parseFloat(x.totalAmount) : parseFloat(x.availableAmount);
   });
 
   return result;

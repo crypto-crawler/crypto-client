@@ -170,12 +170,14 @@ async function getAccountInfo(): Promise<{
   return response.data;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const accountInfo = await getAccountInfo();
   const result: { [key: string]: number } = {};
 
   Object.keys(accountInfo).forEach(symbol => {
-    result[symbol] = parseFloat(accountInfo[symbol].available);
+    result[symbol] = all
+      ? parseFloat(accountInfo[symbol].available) + parseFloat(accountInfo[symbol].frozen)
+      : parseFloat(accountInfo[symbol].available);
   });
 
   return result;

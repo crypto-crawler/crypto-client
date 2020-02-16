@@ -139,7 +139,7 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return response.data.id.toString() === orderId;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const path = '/api/v2/balance/';
 
   const payload = '{}';
@@ -158,9 +158,11 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   Object.keys(response.data)
-    .filter(x => x.endsWith('_available'))
+    .filter(x =>
+      all ? x.endsWith('_available') || x.endsWith('_reserved') : x.endsWith('_available'),
+    )
     .forEach(key => {
-      const symbol = key.substring(0, key.indexOf('_available')).toUpperCase();
+      const symbol = key.substring(0, key.indexOf('_')).toUpperCase();
       result[symbol] = parseFloat(response.data[key] as string);
     });
   return result;

@@ -316,40 +316,47 @@ export async function queryOrder(
   }
 }
 
+/**
+ * Get all balances of an exchange.
+ *
+ * @param exchange The exchange name
+ * @param all Only used for debugging. False, get only available balances; True, get all including free and locked balances. Default to false.
+ */
 export async function queryAllBalances(
   exchange: SupportedExchange,
+  all: boolean = false,
 ): Promise<{ [key: string]: number }> {
   let result: { [key: string]: number } = {};
   switch (exchange) {
     case 'Binance':
-      result = await Binance.queryAllBalances();
+      result = await Binance.queryAllBalances(all);
       break;
     case 'Bitfinex':
-      result = await Bitfinex.queryAllBalances();
+      result = await Bitfinex.queryAllBalances(all);
       break;
     case 'Bitstamp':
-      result = await Bitstamp.queryAllBalances();
+      result = await Bitstamp.queryAllBalances(all);
       break;
     case 'Coinbase':
-      result = await Coinbase.queryAllBalances();
+      result = await Coinbase.queryAllBalances(all);
       break;
     case 'Huobi':
-      result = await Huobi.queryAllBalances();
+      result = await Huobi.queryAllBalances(all);
       break;
     case 'Kraken':
       result = await Kraken.queryAllBalances();
       break;
     case 'MXC':
-      result = await MXC.queryAllBalances();
+      result = await MXC.queryAllBalances(all);
       break;
     case 'Newdex':
       result = await Newdex.queryAllBalances();
       break;
     case 'OKEx_Spot':
-      result = await OKEx_Spot.queryAllBalances();
+      result = await OKEx_Spot.queryAllBalances(all);
       break;
     case 'WhaleEx':
-      result = await WhaleEx.queryAllBalances();
+      result = await WhaleEx.queryAllBalances(all);
       break;
     default:
       throw Error(`Unknown exchange: ${exchange}`);

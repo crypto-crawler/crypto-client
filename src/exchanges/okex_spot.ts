@@ -86,7 +86,7 @@ export async function queryOrder(
   return data;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
   const arr = (await authClient.spot().getAccounts()) as {
     id: string;
@@ -100,7 +100,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
   const result: { [key: string]: number } = {};
   arr.forEach(x => {
-    result[x.currency] = parseFloat(x.available);
+    result[x.currency] = all ? parseFloat(x.balance) : parseFloat(x.available);
   });
   return result;
 }
