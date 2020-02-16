@@ -199,6 +199,7 @@ export async function placeOrder(
 ): Promise<string> {
   const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
   const pairInfo = exchangeInfo.pairs[pair];
+  assert.ok(pairInfo, `${exchange} does NOT have pair ${pair}`);
 
   switch (exchange) {
     case 'Binance':
