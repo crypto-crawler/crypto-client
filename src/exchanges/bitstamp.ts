@@ -249,8 +249,6 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
   Object.keys(data).forEach(symbol => {
     result[symbol] = {
       symbol,
-      deposit_enabled: true,
-      withdraw_enabled: true,
       withdrawal_fee: data[symbol],
       min_withdraw_amount: 0,
     };

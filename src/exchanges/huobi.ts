@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { SymbolStatus } from '../pojo/symbol_status';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
@@ -146,5 +147,88 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
     .forEach(x => {
       result[normalizeSymbol(x.currency, 'Huobi')] = parseFloat(x.balance);
     });
+  return result;
+}
+
+export async function fetchCurrencies(): Promise<{
+  [key: string]: SymbolStatus | { [key: string]: SymbolStatus };
+}> {
+  const path = '/v2/reference/currencies';
+
+  const response = await Axios.get(`${API_ENDPOINT}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.data.code, 200);
+
+  const arr = response.data.data as {
+    currency: string;
+    instStatus: 'normal' | 'delisted';
+    chains: {
+      chain: string;
+      baseChain: string;
+      baseChainProtocol: string;
+      isDynamic: boolean;
+      depositStatus: 'allowed' | 'prohibited';
+      maxTransactFeeWithdraw: string;
+      maxWithdrawAmt: string;
+      minDepositAmt: string;
+      minTransactFeeWithdraw: string;
+      minWithdrawAmt: string;
+      numOfConfirmations: number;
+      numOfFastConfirmations: 999;
+      withdrawFeeType: 'fixed' | 'circulated';
+      withdrawPrecision: 5;
+      withdrawQuotaPerDay: string;
+      withdrawQuotaPerYear: string;
+      withdrawQuotaTotal: string;
+      withdrawStatus: 'allowed' | 'prohibited';
+    }[];
+  }[];
+
+  const result: { [key: string]: SymbolStatus | { [key: string]: SymbolStatus } } = {};
+  arr.forEach(x => {
+    const trading = x.instStatus === 'normal';
+    const symbol = normalizeSymbol(x.currency, 'Huobi');
+    result[symbol] = {};
+
+    if (x.chains.length === 0) {
+      result[symbol] = {
+        symbol,
+        trading,
+        deposit_enabled: false,
+        withdrawal_enabled: false,
+      };
+    } else if (x.chains.length === 1) {
+      result[symbol] = {
+        symbol,
+        trading,
+        deposit_enabled: x.chains[0].depositStatus === 'allowed',
+        withdrawal_enabled: x.chains[0].withdrawStatus === 'allowed',
+      };
+    } else {
+      const tmp = result[symbol] as { [key: string]: SymbolStatus };
+
+      x.chains.forEach(y => {
+        let chain: string;
+        if (symbol === 'USDT') {
+          if (y.chain === 'trc20usdt') chain = 'TRC20';
+          else if (y.chain === 'usdterc20') chain = 'ERC20';
+          else chain = 'OMNI';
+        } else {
+          chain = y.chain.toUpperCase() === symbol ? symbol : y.chain;
+        }
+
+        tmp[chain] = {
+          symbol,
+          trading,
+          deposit_enabled: y.depositStatus === 'allowed',
+          withdrawal_enabled: y.withdrawStatus === 'allowed',
+          chain,
+        };
+      });
+    }
+  });
   return result;
 }

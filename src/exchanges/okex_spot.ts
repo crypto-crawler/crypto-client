@@ -4,6 +4,7 @@ import { ExchangeInfo, PairInfo } from 'exchange-info';
 import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, SubType } from '../pojo/deposit_address';
+import { SymbolStatus } from '../pojo/symbol_status';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -151,16 +152,12 @@ export async function getWithdrawalFees(
   const currencyMap: {
     [key: string]: {
       symbol: string;
-      deposit_enabled: boolean;
-      withdraw_enabled: boolean;
       min_withdraw_amount?: number;
     };
   } = {};
   currencies.forEach(x => {
     currencyMap[x.currency] = {
       symbol: x.currency,
-      deposit_enabled: x.can_deposit === '1',
-      withdraw_enabled: x.can_withdraw === '1',
     };
     if (x.min_withdrawal) {
       currencyMap[x.currency].min_withdraw_amount = parseFloat(x.min_withdrawal);
@@ -196,15 +193,11 @@ export async function getWithdrawalFees(
         symbol = x.currency;
       }
 
-      const currencyInfo = currencyMap[x.currency];
-
       const withdrawalFee = getWithdrawalFee(symbol, subtype)!;
       assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
 
       const fee: WithdrawalFee = {
         symbol,
-        deposit_enabled: currencyInfo ? currencyInfo.deposit_enabled : false,
-        withdraw_enabled: currencyInfo ? currencyInfo.withdraw_enabled : false,
         withdrawal_fee: parseFloat(x.min_fee),
         min_withdraw_amount: withdrawalFee.min_withdraw_amount,
       };
@@ -276,6 +269,31 @@ export async function getDepositAddresses(
       }
       result[symbol].push(depositAddress);
     });
+
+  return result;
+}
+
+export async function fetchCurrencies(): Promise<{ [key: string]: SymbolStatus }> {
+  const authClient = createAuthenticatedClient();
+
+  const arr = (await authClient.account().getCurrencies()) as ReadonlyArray<{
+    name: string;
+    currency: string;
+    can_withdraw: string;
+    can_deposit: string;
+    min_withdrawal: string;
+  }>;
+
+  const result: { [key: string]: SymbolStatus } = {};
+
+  arr.forEach(x => {
+    result[x.currency] = {
+      symbol: x.currency,
+      trading: true,
+      deposit_enabled: x.can_deposit === '1',
+      withdrawal_enabled: x.can_withdraw === '1',
+    };
+  });
 
   return result;
 }

@@ -15,6 +15,7 @@ import * as WhaleEx from './exchanges/whaleex';
 import { createOrder as createOrderWhaleEx } from './exchanges/whaleex_eos';
 import { ActionExtended } from './pojo';
 import { DepositAddress } from './pojo/deposit_address';
+import { SymbolStatus } from './pojo/symbol_status';
 import { WithdrawalFee } from './pojo/withdrawal_fee';
 
 export { UserConfig } from './config';
@@ -492,4 +493,33 @@ export async function getWithdrawalFees(
     }
   });
   return result;
+}
+
+/**
+ * Fetch deposit and withdrawal statuses.
+ *
+ * Similar to fetchCurrencies() of ccxt.
+ *
+ * @param exchange The exchange name
+ * @param symbols Currencies' names
+ * @returns symbol -> chain -> SymbolStatus or symbol -> SymbolStatus
+ */
+export async function fetchCurrencies(
+  exchange: SupportedExchange,
+  symbols: string[],
+): Promise<{ [key: string]: SymbolStatus | { [key: string]: SymbolStatus } }> {
+  assert.ok(exchange);
+  assert.ok(Array.isArray(symbols));
+  assert.ok(symbols.length);
+
+  switch (exchange) {
+    case 'Binance':
+      return Binance.fetchCurrencies();
+    case 'Huobi':
+      return Huobi.fetchCurrencies();
+    case 'OKEx_Spot':
+      return OKEx_Spot.fetchCurrencies();
+    default:
+      throw Error(`Unsupported exchange: ${exchange}`);
+  }
 }

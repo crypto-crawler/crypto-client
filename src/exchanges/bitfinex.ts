@@ -182,8 +182,6 @@ export async function getWithdrawalFees(
 
     result[symbol] = {
       symbol,
-      deposit_enabled: true,
-      withdraw_enabled: true,
       withdrawal_fee: parseFloat(data.withdraw[symbol]),
       min_withdraw_amount: 0,
     };

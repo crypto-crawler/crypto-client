@@ -205,8 +205,6 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
 
     result[symbol] = {
       symbol,
-      deposit_enabled: true,
-      withdraw_enabled: true,
       withdrawal_fee: 0,
       min_withdraw_amount: 0,
     };

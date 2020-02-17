@@ -3,6 +3,7 @@ import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress } from '../pojo/deposit_address';
+import { SymbolStatus } from '../pojo/symbol_status';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -100,8 +101,6 @@ export async function getWithdrawalFees(
 
     const fee: WithdrawalFee = {
       symbol,
-      deposit_enabled: detail.depositStatus,
-      withdraw_enabled: detail.withdrawStatus,
       withdrawal_fee: detail.withdrawFee,
       min_withdraw_amount: detail.minWithdrawAmount,
     };
@@ -151,6 +150,30 @@ export async function getDepositAddresses(
     });
 
   if (!includeETH) delete result.ETH;
+
+  return result;
+}
+
+export async function fetchCurrencies(): Promise<{ [key: string]: SymbolStatus }> {
+  const result: { [key: string]: SymbolStatus } = {};
+
+  const client = createAuthenticatedClient();
+  const assetDetail = await client.assetDetail();
+  if (!assetDetail.success) return result;
+
+  // console.info(assetDetail.assetDetail);
+
+  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+    const detail = assetDetail.assetDetail[symbol];
+    if (detail === undefined) return;
+
+    result[symbol] = {
+      symbol,
+      trading: true,
+      deposit_enabled: detail.depositStatus,
+      withdrawal_enabled: detail.withdrawStatus,
+    };
+  });
 
   return result;
 }
