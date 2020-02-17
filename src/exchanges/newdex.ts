@@ -238,6 +238,7 @@ export function getDepositAddresses(symbols: string[]): { [key: string]: Deposit
       symbol,
       address: USER_CONFIG.eosAccount!,
     };
+    if (symbol === 'USDT') result[symbol].subtype = 'EOS';
   });
 
   return result;
