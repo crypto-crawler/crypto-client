@@ -501,16 +501,12 @@ export async function getWithdrawalFees(
  * Similar to fetchCurrencies() of ccxt.
  *
  * @param exchange The exchange name
- * @param symbols Currencies' names
  * @returns symbol -> chain -> SymbolStatus or symbol -> SymbolStatus
  */
 export async function fetchCurrencies(
   exchange: SupportedExchange,
-  symbols: string[],
 ): Promise<{ [key: string]: SymbolStatus | { [key: string]: SymbolStatus } }> {
   assert.ok(exchange);
-  assert.ok(Array.isArray(symbols));
-  assert.ok(symbols.length);
 
   switch (exchange) {
     case 'Binance':
