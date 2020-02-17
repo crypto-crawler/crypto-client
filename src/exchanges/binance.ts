@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { DepositAddress, SubType } from '../pojo/deposit_address';
+import { DepositAddress } from '../pojo/deposit_address';
 import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -115,42 +115,40 @@ export async function getWithdrawalFees(
 export async function getDepositAddresses(
   symbols: string[],
 ): Promise<{ [key: string]: DepositAddress[] }> {
-  const result: { [key: string]: DepositAddress[] } = {};
+  const includeETH = symbols.includes('ETH');
+  if (!includeETH) symbols.push('ETH');
 
   const client = createAuthenticatedClient();
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
   const addresses = (await Promise.all(requests)).filter(x => x.success);
 
+  const ethAddress = addresses.filter(address => address.asset === 'ETH')[0].address;
+  assert.ok(ethAddress);
+
   // TODO: use sapi/v1/capital/deposit/address to get USDT-OMNI and USDT-TRC20
 
+  const result: { [key: string]: DepositAddress[] } = {};
   addresses
     .filter(address => symbols.includes(address.asset))
     .forEach(address => {
-      let symbol: string;
-      let subtype: string | undefined;
-
-      if (address.asset.includes('-')) {
-        const [symbol_, subtype_] = address.asset.split('-');
-        symbol = symbol_;
-        subtype = subtype_;
-      } else {
-        symbol = address.asset;
-      }
+      const symbol = address.asset;
 
       const depositAddress: DepositAddress = {
         symbol,
         address: address.address,
       };
       if (address.addressTag) depositAddress.memo = address.addressTag;
-      if (symbol === 'CTXC') depositAddress.subtype = 'CTXC';
-      if (symbol === 'USDT' || symbol === 'WTC') depositAddress.subtype = 'ERC20';
-      if (subtype) depositAddress.subtype = subtype as SubType;
+      if (address.address === ethAddress && symbol !== 'ETH') {
+        depositAddress.subtype = 'ERC20';
+      }
 
       if (!(symbol in result)) {
         result[symbol] = [];
       }
       result[symbol].push(depositAddress);
     });
+
+  if (!includeETH) delete result.ETH;
 
   return result;
 }
