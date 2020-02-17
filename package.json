@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.19.3",
+  "version": "0.19.4",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -86,7 +86,7 @@
     "eos-utils": "0.1.8",
     "eosjs": "^20.0.3",
     "eosjs-ecc": "^4.0.7",
-    "exchange-info": "^1.5.9",
+    "exchange-info": "^1.6.0",
     "long": "^4.0.0",
     "mathjs": "^6.6.0",
     "node-fetch": "^2.6.0",
