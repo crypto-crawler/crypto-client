@@ -141,6 +141,8 @@ export async function getDepositAddresses(
       if (address.address === ethAddress && symbol !== 'ETH') {
         depositAddress.subtype = 'ERC20';
       }
+      if (symbol === 'WTC') depositAddress.subtype = 'WTC';
+      if (symbol === 'CTXC') depositAddress.subtype = 'CTXC';
 
       if (!(symbol in result)) {
         result[symbol] = [];
