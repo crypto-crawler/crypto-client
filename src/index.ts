@@ -14,8 +14,8 @@ import * as OKEx_Spot from './exchanges/okex_spot';
 import * as WhaleEx from './exchanges/whaleex';
 import { createOrder as createOrderWhaleEx } from './exchanges/whaleex_eos';
 import { ActionExtended } from './pojo';
+import { Currency } from './pojo/currency';
 import { DepositAddress } from './pojo/deposit_address';
-import { SymbolStatus } from './pojo/symbol_status';
 import { WithdrawalFee } from './pojo/withdrawal_fee';
 
 export { UserConfig } from './config';
@@ -457,9 +457,6 @@ export async function getWithdrawalFees(
   let result: { [key: string]: WithdrawalFee | WithdrawalFee[] } = {};
 
   switch (exchange) {
-    case 'Binance':
-      result = await Binance.getWithdrawalFees(symbols);
-      break;
     case 'Bitfinex':
       result = await Bitfinex.getWithdrawalFees(symbols);
       break;
@@ -468,9 +465,6 @@ export async function getWithdrawalFees(
       break;
     case 'Coinbase':
       result = Coinbase.getWithdrawalFees(symbols);
-      break;
-    case 'OKEx_Spot':
-      result = await OKEx_Spot.getWithdrawalFees(symbols);
       break;
     case 'Newdex':
       result = Newdex.getWithdrawalFees(symbols);
@@ -505,7 +499,7 @@ export async function getWithdrawalFees(
  */
 export async function fetchCurrencies(
   exchange: SupportedExchange,
-): Promise<{ [key: string]: SymbolStatus | { [key: string]: SymbolStatus } }> {
+): Promise<{ [key: string]: Currency }> {
   assert.ok(exchange);
 
   switch (exchange) {

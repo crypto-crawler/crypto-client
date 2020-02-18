@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { SymbolStatus } from '../pojo/symbol_status';
+import { Currency } from '../pojo/currency';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
@@ -151,7 +151,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
 }
 
 export async function fetchCurrencies(): Promise<{
-  [key: string]: SymbolStatus | { [key: string]: SymbolStatus };
+  [key: string]: Currency;
 }> {
   const path = '/v2/reference/currencies';
 
@@ -174,11 +174,12 @@ export async function fetchCurrencies(): Promise<{
       maxTransactFeeWithdraw: string;
       maxWithdrawAmt: string;
       minDepositAmt: string;
-      minTransactFeeWithdraw: string;
       minWithdrawAmt: string;
       numOfConfirmations: number;
       numOfFastConfirmations: 999;
       withdrawFeeType: 'fixed' | 'circulated';
+      transactFeeWithdraw?: string;
+      minTransactFeeWithdraw?: string;
       withdrawPrecision: 5;
       withdrawQuotaPerDay: string;
       withdrawQuotaPerYear: string;
@@ -187,48 +188,34 @@ export async function fetchCurrencies(): Promise<{
     }[];
   }[];
 
-  const result: { [key: string]: SymbolStatus | { [key: string]: SymbolStatus } } = {};
+  const result: { [key: string]: Currency } = {};
   arr.forEach(x => {
     const trading = x.instStatus === 'normal';
     const symbol = normalizeSymbol(x.currency, 'Huobi');
-    result[symbol] = {};
+    result[symbol] = { symbol, trading, deposit: {}, withdrawal: {} };
 
-    if (x.chains.length === 0) {
-      result[symbol] = {
-        symbol,
-        trading,
-        deposit_enabled: false,
-        withdrawal_enabled: false,
+    x.chains.forEach(y => {
+      let platform: string;
+      if (symbol === 'USDT') {
+        if (y.chain === 'trc20usdt') platform = 'TRON';
+        else if (y.chain === 'usdterc20') platform = 'Ethereum';
+        else platform = 'Omni';
+      } else {
+        platform = y.chain.toUpperCase() === symbol ? symbol : y.chain;
+      }
+
+      result[symbol].deposit[platform] = {
+        platform,
+        enabled: y.depositStatus === 'allowed',
+        min: parseFloat(y.minDepositAmt),
       };
-    } else if (x.chains.length === 1) {
-      result[symbol] = {
-        symbol,
-        trading,
-        deposit_enabled: x.chains[0].depositStatus === 'allowed',
-        withdrawal_enabled: x.chains[0].withdrawStatus === 'allowed',
+      result[symbol].withdrawal[platform] = {
+        platform,
+        enabled: y.withdrawStatus === 'allowed',
+        fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
+        min: parseFloat(y.minWithdrawAmt),
       };
-    } else {
-      const tmp = result[symbol] as { [key: string]: SymbolStatus };
-
-      x.chains.forEach(y => {
-        let chain: string;
-        if (symbol === 'USDT') {
-          if (y.chain === 'trc20usdt') chain = 'TRC20';
-          else if (y.chain === 'usdterc20') chain = 'ERC20';
-          else chain = 'OMNI';
-        } else {
-          chain = y.chain.toUpperCase() === symbol ? symbol : y.chain;
-        }
-
-        tmp[chain] = {
-          symbol,
-          trading,
-          deposit_enabled: y.depositStatus === 'allowed',
-          withdrawal_enabled: y.withdrawStatus === 'allowed',
-          chain,
-        };
-      });
-    }
+    });
   });
   return result;
 }

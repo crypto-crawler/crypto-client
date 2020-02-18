@@ -47,4 +47,5 @@ const CryptoClient = require('crypto-client'); // eslint-disable-line import/no-
 
 ## Related Projects
 
-- [crypto-crawler](https://www.npmjs.com/package/crypto-crawler), crawl orderbook and trade messages from crypto exchanges.
+- [crypto-bbo](https://www.npmjs.com/package/crypto-bbo), crawl BBO messages from cryptocurrency exchanges.
+- [crypto-crawler](https://www.npmjs.com/package/crypto-crawler), crawl orderbook and trade messages from cryptocurrency exchanges.

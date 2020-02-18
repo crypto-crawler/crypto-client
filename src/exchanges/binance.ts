@@ -2,9 +2,8 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
-import { SymbolStatus } from '../pojo/symbol_status';
-import { WithdrawalFee } from '../pojo/withdrawal_fee';
 import { convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): Binance {
@@ -84,33 +83,6 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   return result;
 }
 
-export async function getWithdrawalFees(
-  symbols: string[],
-): Promise<{ [key: string]: WithdrawalFee }> {
-  const result: { [key: string]: WithdrawalFee } = {};
-
-  const client = createAuthenticatedClient();
-  const assetDetail = await client.assetDetail();
-  if (!assetDetail.success) return result;
-
-  // console.info(assetDetail.assetDetail);
-
-  symbols.forEach(symbol => {
-    const detail = assetDetail.assetDetail[symbol];
-    if (detail === undefined) return;
-
-    const fee: WithdrawalFee = {
-      symbol,
-      withdrawal_fee: detail.withdrawFee,
-      min_withdraw_amount: detail.minWithdrawAmount,
-    };
-    if (symbol === 'USDT' || symbol === 'WTC') fee.subtype = 'ERC20';
-
-    result[symbol] = fee;
-  });
-  return result;
-}
-
 export async function getDepositAddresses(
   symbols: string[],
 ): Promise<{ [key: string]: DepositAddress[] }> {
@@ -135,13 +107,15 @@ export async function getDepositAddresses(
       const depositAddress: DepositAddress = {
         symbol,
         address: address.address,
+        platform: symbol,
       };
       if (address.addressTag) depositAddress.memo = address.addressTag;
       if (address.address === ethAddress && symbol !== 'ETH') {
-        depositAddress.subtype = 'ERC20';
+        depositAddress.platform = 'ERC20';
       }
-      if (symbol === 'WTC') depositAddress.subtype = 'WTC';
-      if (symbol === 'CTXC') depositAddress.subtype = 'CTXC';
+      if (symbol === 'WTC') depositAddress.platform = 'WTC';
+      if (symbol === 'CTXC') depositAddress.platform = 'CTXC';
+      if (['GTO', 'MITH', 'ONE'].includes(symbol)) depositAddress.platform = 'BEP2';
 
       if (!(symbol in result)) {
         result[symbol] = [];
@@ -154,24 +128,39 @@ export async function getDepositAddresses(
   return result;
 }
 
-export async function fetchCurrencies(): Promise<{ [key: string]: SymbolStatus }> {
-  const result: { [key: string]: SymbolStatus } = {};
+export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
+  const result: { [key: string]: Currency } = {};
 
   const client = createAuthenticatedClient();
   const assetDetail = await client.assetDetail();
   if (!assetDetail.success) return result;
 
-  // console.info(assetDetail.assetDetail);
+  // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
 
   Object.keys(assetDetail.assetDetail).forEach(symbol => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
 
+    let platform = symbol;
+    if (symbol === 'WTC') platform = 'Ethereum';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
+
     result[symbol] = {
       symbol,
       trading: true,
-      deposit_enabled: detail.depositStatus,
-      withdrawal_enabled: detail.withdrawStatus,
+      deposit: {},
+      withdrawal: {},
+    };
+    result[symbol].deposit[platform] = {
+      platform,
+      enabled: detail.depositStatus,
+    };
+
+    result[symbol].withdrawal[platform] = {
+      platform,
+      enabled: detail.withdrawStatus,
+      fee: detail.withdrawFee,
+      min: detail.minWithdrawAmount,
     };
   });
 
