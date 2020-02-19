@@ -22,7 +22,8 @@ test("getDepositAddresses('Bitfinex')", async () => {
   expect(addresses).not.toHaveProperty('XXX');
 });
 
-test('fetchDepositAddress()', async () => {
+// eslint-disable-next-line jest/no-disabled-tests
+test.skip('fetchDepositAddress()', async () => {
   const response = await Axios.get('https://api.bitfinex.com/v2/conf/pub:map:currency:label');
   expect(response.status).toEqual(200);
 
@@ -37,18 +38,18 @@ test('fetchDepositAddress()', async () => {
     let address = await fetchDepositAddress(label); // eslint-disable-line no-await-in-loop
     if (!(address instanceof Error)) {
       labels.push([symbol, label]);
-    }
-
-    address = await fetchDepositAddress(symbol); // eslint-disable-line no-await-in-loop
-    if (!(address instanceof Error)) {
-      symbols.push([symbol, label]);
     } else {
-      errors.push([symbol, label, address.message]);
+      address = await fetchDepositAddress(symbol); // eslint-disable-line no-await-in-loop
+      if (!(address instanceof Error)) {
+        symbols.push([symbol, label]);
+      } else {
+        errors.push([symbol, label, address.message]);
+      }
     }
   }
-  console.info(symbols);
-  console.info(labels);
-  console.info(errors);
+  console.info(symbols); // eslint-disable-line no-console
+  console.info(labels); // eslint-disable-line no-console
+  console.info(errors); // eslint-disable-line no-console
 
   const symbolLabelMap: { [key: string]: string } = {};
   labels.forEach(x => {
@@ -58,5 +59,5 @@ test('fetchDepositAddress()', async () => {
       symbolLabelMap[normalizedSymbol] = label;
     }
   });
-  console.info(symbolLabelMap);
+  console.info(symbolLabelMap); // eslint-disable-line no-console
 });

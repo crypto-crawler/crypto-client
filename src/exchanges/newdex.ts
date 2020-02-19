@@ -228,17 +228,20 @@ export async function queryBalance(symbol: string): Promise<number> {
   );
 }
 
-export function getDepositAddresses(symbols: string[]): { [key: string]: DepositAddress } {
-  const result: { [key: string]: DepositAddress } = {};
+export function getDepositAddresses(
+  symbols: string[],
+): { [key: string]: { [key: string]: DepositAddress } } {
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   symbols.forEach(symbol => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
-    result[symbol] = {
+    result[symbol] = {};
+    result[symbol].EOS = {
       symbol,
+      platform: 'EOS',
       address: USER_CONFIG.eosAccount!,
     };
-    if (symbol === 'USDT') result[symbol].subtype = 'EOS';
   });
 
   return result;
@@ -252,6 +255,7 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
 
     result[symbol] = {
       symbol,
+      platform: 'EOS',
       withdrawal_fee: 0,
       min_withdraw_amount: 0,
     };

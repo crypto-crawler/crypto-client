@@ -85,9 +85,8 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress[] }> {
-  const includeETH = symbols.includes('ETH');
-  if (!includeETH) symbols.push('ETH');
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
+  if (!symbols.includes('ETH')) symbols.push('ETH');
 
   const client = createAuthenticatedClient();
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
@@ -98,32 +97,30 @@ export async function getDepositAddresses(
 
   // TODO: use sapi/v1/capital/deposit/address to get USDT-OMNI and USDT-TRC20
 
-  const result: { [key: string]: DepositAddress[] } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   addresses
     .filter(address => symbols.includes(address.asset))
     .forEach(address => {
       const symbol = address.asset;
+      if (!(symbol in result)) result[symbol] = {};
+
+      let platform = symbol;
+      if (address.address === ethAddress) {
+        platform = 'Ethereum';
+      }
+      if (symbol === 'WTC') platform = 'WTC';
+      if (symbol === 'CTXC') platform = 'CTXC';
+      if (['GTO', 'MITH', 'ONE'].includes(symbol)) platform = 'Binance Coin';
 
       const depositAddress: DepositAddress = {
         symbol,
+        platform,
         address: address.address,
-        platform: symbol,
       };
       if (address.addressTag) depositAddress.memo = address.addressTag;
-      if (address.address === ethAddress && symbol !== 'ETH') {
-        depositAddress.platform = 'ERC20';
-      }
-      if (symbol === 'WTC') depositAddress.platform = 'WTC';
-      if (symbol === 'CTXC') depositAddress.platform = 'CTXC';
-      if (['GTO', 'MITH', 'ONE'].includes(symbol)) depositAddress.platform = 'BEP2';
 
-      if (!(symbol in result)) {
-        result[symbol] = [];
-      }
-      result[symbol].push(depositAddress);
+      result[symbol][platform] = depositAddress;
     });
-
-  if (!includeETH) delete result.ETH;
 
   return result;
 }
@@ -143,7 +140,7 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
     let platform = symbol;
     if (symbol === 'WTC') platform = 'Ethereum';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'Binance Coin';
 
     result[symbol] = {
       symbol,

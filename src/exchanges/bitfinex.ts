@@ -143,10 +143,10 @@ const SYMBOL_LABEL_MAP: { [key: string]: string } = {
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress }> {
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
 
-  const result: { [key: string]: DepositAddress } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
 
@@ -156,7 +156,8 @@ export async function getDepositAddresses(
     const address = await fetchDepositAddress(symbolOrLabel);
 
     if (!(address instanceof Error)) {
-      result[symbol] = { symbol, ...address };
+      if (!(symbol in result)) result[symbol] = {};
+      result[symbol][symbol] = { symbol, platform: symbol, ...address };
     }
   }
 
@@ -182,6 +183,7 @@ export async function getWithdrawalFees(
 
     result[symbol] = {
       symbol,
+      platform: symbol,
       withdrawal_fee: parseFloat(data.withdraw[symbol]),
       min_withdraw_amount: 0,
     };

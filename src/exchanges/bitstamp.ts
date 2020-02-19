@@ -194,7 +194,7 @@ async function fetchDepositAddress(symbol: string): Promise<DepositAddress | und
     const response = await Axios.post(`https://${DOMAIN}${path}`, payload);
     assert.equal(response.status, 200);
 
-    return { symbol, address: response.data };
+    return { symbol, platform: symbol, address: response.data };
   }
 
   const payload = '{}';
@@ -211,21 +211,23 @@ async function fetchDepositAddress(symbol: string): Promise<DepositAddress | und
   });
   assert.equal(response.status, 200);
 
-  return { symbol, address: response.data.address };
+  return { symbol, platform: symbol, address: response.data.address };
 }
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress[] }> {
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
 
   const requests = symbols.map(symbol => fetchDepositAddress(symbol));
   const arr = await Promise.all(requests);
 
-  const result: { [key: string]: DepositAddress[] } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   arr.forEach(address => {
     if (address) {
-      result[address.symbol] = [address];
+      if (!(address.symbol in result)) result[address.symbol] = {};
+
+      result[address.symbol][address.symbol] = address;
     }
   });
 
@@ -249,6 +251,7 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
   Object.keys(data).forEach(symbol => {
     result[symbol] = {
       symbol,
+      platform: symbol,
       withdrawal_fee: data[symbol],
       min_withdraw_amount: 0,
     };

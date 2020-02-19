@@ -89,7 +89,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress }> {
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
 
   const client = createAuthenticatedClient();
@@ -98,12 +98,15 @@ export async function getDepositAddresses(
   const arr: string[] = (await Promise.all(requests)).map(x => x.address);
   assert.equal(arr.length, symbols.length);
 
-  const result: { [key: string]: DepositAddress } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
-    result[symbol] = {
+    if (!(symbol in result)) result[symbol] = {};
+
+    result[symbol][symbol] = {
       symbol,
+      platform: symbol,
       address: arr[i],
     };
   }
@@ -125,6 +128,7 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
 
     result[symbol] = {
       symbol,
+      platform: symbol,
       withdrawal_fee: fee,
       min_withdraw_amount: 0,
     };

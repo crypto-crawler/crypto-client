@@ -7,22 +7,19 @@ beforeAll(async () => {
   await init(userConfig);
 });
 
-each(['Binance', 'Bitfinex', 'OKEx_Spot']).test(
-  'getWithdrawalFees(Binance, Bitfinex, OKEx_Spot)',
-  async (exchange: SupportedExchange) => {
-    const symbols = ['BTC', 'EOS', 'ETH', 'XXX'];
+test("getWithdrawalFees('Bitfinex')", async () => {
+  const symbols = ['BTC', 'EOS', 'ETH', 'XXX'];
 
-    const addresses = await getWithdrawalFees(exchange, symbols);
+  const addresses = await getWithdrawalFees('Bitfinex', symbols);
 
-    /* eslint-disable jest/no-standalone-expect */
-    expect(addresses).toHaveProperty('BTC');
-    expect(addresses).toHaveProperty('EOS');
-    expect(addresses).toHaveProperty('ETH');
-    // expect(addresses).toHaveProperty('USDT'); // TODO: add USDT for Bitfinex
-    expect(addresses).not.toHaveProperty('XXX');
-    /* eslint-enable jest/no-standalone-expect */
-  },
-);
+  /* eslint-disable jest/no-standalone-expect */
+  expect(addresses).toHaveProperty('BTC');
+  expect(addresses).toHaveProperty('EOS');
+  expect(addresses).toHaveProperty('ETH');
+  // expect(addresses).toHaveProperty('USDT'); // TODO: add USDT for Bitfinex
+  expect(addresses).not.toHaveProperty('XXX');
+  /* eslint-enable jest/no-standalone-expect */
+});
 
 test("getWithdrawalFees('Bitstamp')", async () => {
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];

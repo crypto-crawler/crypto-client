@@ -1,21 +1,9 @@
-export declare const SUB_TYPES: readonly [
-  'AAC',
-  'BEP2',
-  'CTXC',
-  'EOS',
-  'ERC20',
-  'OMNI',
-  'TRC20',
-  'WTC',
-];
-export declare type SubType = typeof SUB_TYPES[number];
-
 export interface DepositAddress {
   symbol: string;
+  platform: string; // e.g., USDT has Omni, Ethereum, TRON and EOS
   address: string;
+  memo?: string;
   fee?: number;
   max_deposit_amount?: number;
   min_deposit_amount?: number;
-  memo?: string;
-  subtype?: SubType; // e.g., USDT has three subtypes
 }

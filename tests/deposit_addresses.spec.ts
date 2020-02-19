@@ -8,35 +8,65 @@ beforeAll(async () => {
   jest.setTimeout(50 * 1000);
 });
 
-each(['Binance', 'OKEx_Spot']).test(
-  'getDepositAddresses(Binance, OKEx_Spot)',
-  async (exchange: SupportedExchange) => {
-    const symbols = ['BTC', 'EOS', 'ETH', 'USDT', 'XXX'];
+test("getDepositAddresses('Binance')", async () => {
+  const symbols = ['BTC', 'EOS', 'ETH', 'TRX', 'USDT', 'XXX'];
 
-    const addresses = await getDepositAddresses(exchange, symbols);
+  const addresses = await getDepositAddresses('Binance', symbols);
 
-    /* eslint-disable jest/no-standalone-expect */
-    expect(addresses).toHaveProperty('BTC');
-    expect(addresses).toHaveProperty('EOS');
-    expect(addresses).toHaveProperty('ETH');
-    expect(addresses).toHaveProperty('USDT');
-    expect(addresses).not.toHaveProperty('XXX');
-    /* eslint-enable jest/no-standalone-expect */
-  },
-);
-
-each(['Bitstamp', 'Coinbase']).test(
-  'getDepositAddresses(Bitstamp, Coinbase)',
-  async (exchange: SupportedExchange) => {
-    const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
-
-    const addresses = await getDepositAddresses(exchange, symbols);
-
-    symbols.forEach(symbol => {
-      expect(addresses).toHaveProperty(symbol); // eslint-disable-line jest/no-standalone-expect
+  symbols
+    .filter(x => x !== 'XXX')
+    .forEach(symbol => {
+      expect(addresses).toHaveProperty(symbol);
     });
-  },
-);
+
+  symbols
+    .filter(x => x === 'USDT')
+    .forEach(symbol => {
+      expect(addresses[symbol]).toHaveProperty('Ethereum');
+    });
+
+  expect(addresses).not.toHaveProperty('XXX');
+});
+
+test("getDepositAddresses('Bitstamp')", async () => {
+  const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
+
+  const addresses = await getDepositAddresses('Bitstamp', symbols);
+
+  symbols.forEach(symbol => {
+    expect(addresses).toHaveProperty(symbol);
+  });
+});
+
+test("getDepositAddresses('Coinbase')", async () => {
+  const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
+
+  const addresses = await getDepositAddresses('Coinbase', symbols);
+
+  symbols.forEach(symbol => {
+    expect(addresses).toHaveProperty(symbol);
+  });
+});
+
+test("getDepositAddresses('OKEx_Spot')", async () => {
+  const symbols = ['BTC', 'EOS', 'ETH', 'TRX', 'USDT', 'XXX'];
+
+  const addresses = await getDepositAddresses('OKEx_Spot', symbols);
+
+  symbols
+    .filter(x => x !== 'XXX')
+    .forEach(symbol => {
+      expect(addresses).toHaveProperty(symbol);
+    });
+
+  symbols
+    .filter(x => x === 'USDT')
+    .forEach(symbol => {
+      expect(addresses[symbol]).toHaveProperty('Omni');
+    });
+
+  expect(addresses).not.toHaveProperty('XXX');
+});
 
 each(['Newdex', 'WhaleEx']).test(
   'getDepositAddresses(Newdex, WhaleEx)',

@@ -384,60 +384,37 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
  *
  * @param exchangeName The exchange name
  * @params symbols Symbols to retreive
- * @returns symbol->DepositAddress | DepositAddress[]
+ * @returns symbol->platform->DepositAddress
  */
 export async function getDepositAddresses(
   exchange: SupportedExchange | ExchangeInfo,
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress | DepositAddress[] }> {
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
   const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
 
-  let result: { [key: string]: DepositAddress | DepositAddress[] } = {};
-
   switch (exchangeInfo.name) {
     case 'Binance':
-      result = await Binance.getDepositAddresses(symbols);
-      break;
+      return Binance.getDepositAddresses(symbols);
     case 'Bitfinex':
-      result = await Bitfinex.getDepositAddresses(symbols);
-      break;
+      return Bitfinex.getDepositAddresses(symbols);
     case 'Bitstamp':
-      result = await Bitstamp.getDepositAddresses(symbols);
-      break;
+      return Bitstamp.getDepositAddresses(symbols);
     case 'Coinbase':
-      result = await Coinbase.getDepositAddresses(symbols);
-      break;
+      return Coinbase.getDepositAddresses(symbols);
     case 'Kraken':
-      result = await Kraken.getDepositAddresses(symbols);
-      break;
-    case 'OKEx_Spot': {
-      result = await OKEx_Spot.getDepositAddresses(symbols, exchangeInfo);
-      break;
-    }
+      return Kraken.getDepositAddresses(symbols);
+    case 'OKEx_Spot':
+      return OKEx_Spot.getDepositAddresses(symbols, exchangeInfo);
     case 'Newdex':
-      result = Newdex.getDepositAddresses(symbols);
-      break;
+      return Newdex.getDepositAddresses(symbols);
     case 'WhaleEx':
-      result = WhaleEx.getDepositAddresses(symbols);
-      break;
+      return WhaleEx.getDepositAddresses(symbols);
     default:
-      throw Error(`Unsupported exchange: ${exchange}`);
+      throw Error(`Unsupported exchange: ${exchangeInfo.name}`);
   }
-
-  Object.keys(result).forEach(symbol => {
-    if (Array.isArray(result[symbol])) {
-      const arr = result[symbol] as DepositAddress[];
-      if (arr.length <= 0) {
-        delete result[symbol];
-      } else if (arr.length === 1) {
-        result[symbol] = arr[0]; // eslint-disable-line prefer-destructuring
-      }
-    }
-  });
-  return result;
 }
 
 /**

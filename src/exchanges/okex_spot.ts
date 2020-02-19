@@ -121,17 +121,16 @@ export async function queryBalance(symbol: string): Promise<number> {
 }
 
 function parseCurrency(currency: string): [string, string] {
-  currency = currency.toUpperCase(); // eslint-disable-line no-param-reassign
   let symbol: string;
   let platform: string;
 
   if (currency.includes('-')) {
     const [symbol_, platform_] = currency.split('-');
-    symbol = symbol_;
+    symbol = symbol_.toUpperCase();
     platform = platform_;
   } else {
-    symbol = currency;
-    platform = currency;
+    symbol = currency.toUpperCase();
+    platform = symbol;
   }
   return [symbol, platform];
 }
@@ -139,8 +138,8 @@ function parseCurrency(currency: string): [string, string] {
 export async function getDepositAddresses(
   symbols: string[],
   exchangeInfo: ExchangeInfo,
-): Promise<{ [key: string]: DepositAddress[] }> {
-  const result: { [key: string]: DepositAddress[] } = {};
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
 
@@ -158,11 +157,11 @@ export async function getDepositAddresses(
     tag?: string;
   }[][]).flatMap(x => x);
 
-  // Rename USDT to USDT-OMNI
+  // Rename USDT to USDT-Omni
   arr
     .filter(x => x.currency.toUpperCase() === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(arr);
@@ -171,6 +170,7 @@ export async function getDepositAddresses(
     .filter(x => x.to === 1) // 1, spot; 6, fund
     .forEach(x => {
       const [symbol, platform] = parseCurrency(x.currency);
+      if (!(symbol in result)) result[symbol] = {};
 
       const depositAddress: DepositAddress = {
         symbol,
@@ -179,10 +179,7 @@ export async function getDepositAddresses(
       };
       if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
 
-      if (!(symbol in result)) {
-        result[symbol] = [];
-      }
-      result[symbol].push(depositAddress);
+      result[symbol][platform] = depositAddress;
     });
 
   return result;
@@ -200,11 +197,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     can_withdraw: '0' | '1';
     min_withdrawal?: string;
   }>;
-  // Rename USDT to USDT-OMNI
+  // Rename USDT to USDT-Omni
   currencies
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
 
@@ -236,11 +233,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
   // console.info(JSON.stringify(withdrawalFees, undefined, 2));
 
-  // Rename USDT to USDT-OMNI
+  // Rename USDT to USDT-Omni
   withdrawalFees
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
 
   withdrawalFees
@@ -250,8 +247,9 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
       const withdrawalFee = getWithdrawalFee(
         symbol,
-        x.currency.includes('-') ? platform : undefined,
+        x.currency.includes('-') ? platform.toUpperCase() : undefined,
       )!;
+      if (withdrawalFee === undefined) console.error(x);
       assert.ok(withdrawalFee);
       assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
 
@@ -295,11 +293,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     tag?: string;
   }[][]).flatMap(x => x);
 
-  // Rename USDT to USDT-OMNI
+  // Rename USDT to USDT-Omni
   depositAddresses
     .filter(x => x.currency.toUpperCase() === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(depositAddresses);

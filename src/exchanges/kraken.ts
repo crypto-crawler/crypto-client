@@ -228,9 +228,10 @@ export async function getDepositAddress(
 
   const result: DepositAddress = {
     symbol,
+    platform: symbol,
     address: address.address,
   };
-  if (symbol === 'USDT') result.subtype = 'OMNI';
+  if (symbol === 'USDT') result.platform = 'Omni';
   if (address.memo) result.memo = address.memo;
   if (parseFloat(depositMethod.fee) > 0) result.fee = parseFloat(depositMethod.fee);
   if (typeof depositMethod.limit === 'string')
@@ -241,24 +242,26 @@ export async function getDepositAddress(
 
 export async function getDepositAddresses(
   symbols: string[],
-): Promise<{ [key: string]: DepositAddress }> {
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
   symbols = symbols.filter(symbol => !FIAT_SYMBOLS.includes(symbol)); // eslint-disable-line no-param-reassign
 
-  const result: { [key: string]: DepositAddress } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
+    if (!(symbol in result)) result[symbol] = {};
+
     const data = await getDepositAddress(symbol); // eslint-disable-line no-await-in-loop
     await sleep(3000); // eslint-disable-line no-await-in-loop
     if (data) {
-      result[symbol] = data;
+      result[symbol][symbol] = data;
     } else {
       // generate new address
       const newAddress = await getDepositAddress(symbol, true); // eslint-disable-line no-await-in-loop
       await sleep(3000); // eslint-disable-line no-await-in-loop
       if (newAddress) {
-        result[symbol] = newAddress;
+        result[symbol][symbol] = newAddress;
       }
     }
   }

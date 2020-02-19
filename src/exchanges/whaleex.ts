@@ -205,34 +205,33 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
 
     result[symbol] = {
       symbol,
+      platform: 'EOS',
       withdrawal_fee: 0,
       min_withdraw_amount: 0,
     };
-    if (symbol === 'USDT') {
-      result[symbol].subtype = 'EOS';
-    }
   });
 
   return result;
 }
 
-export function getDepositAddresses(symbols: string[]): { [key: string]: DepositAddress } {
+export function getDepositAddresses(
+  symbols: string[],
+): { [key: string]: { [key: string]: DepositAddress } } {
   assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'WHALEEX_API_KEY is empty');
   assert.ok(USER_CONFIG.WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
 
-  const result: { [key: string]: DepositAddress } = {};
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   symbols.forEach(symbol => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
-    result[symbol] = {
+    result[symbol] = {};
+    result[symbol].EOS = {
       symbol,
+      platform: 'EOS',
       address: WHALEEX_ACCOUNT,
       memo: USER_CONFIG.WHALEEX_USER_ID,
     };
-    if (symbol === 'USDT') {
-      result[symbol].subtype = 'EOS';
-    }
   });
 
   return result;
