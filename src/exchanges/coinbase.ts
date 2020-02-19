@@ -94,21 +94,23 @@ export async function getDepositAddresses(
 
   const client = createAuthenticatedClient();
 
-  const requests = symbols.map(symbol => (client as any).depositCrypto({ currency: symbol }));
-  const arr: string[] = (await Promise.all(requests)).map(x => x.address);
-  assert.equal(arr.length, symbols.length);
-
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
     if (!(symbol in result)) result[symbol] = {};
 
+    // eslint-disable-next-line no-await-in-loop
+    const { address_info } = (await (client as any).depositCrypto({ currency: symbol })) as {
+      address_info: { address: string; destination_tag?: string };
+    };
+
     result[symbol][symbol] = {
       symbol,
       platform: symbol,
-      address: arr[i],
+      address: address_info.address,
     };
+    if (address_info.destination_tag) result[symbol][symbol].memo = address_info.destination_tag;
   }
 
   return result;
