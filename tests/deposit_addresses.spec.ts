@@ -39,7 +39,7 @@ test("getDepositAddresses('Bitstamp')", async () => {
 });
 
 test("getDepositAddresses('Coinbase')", async () => {
-  const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
+  const symbols = ['BCH', 'BTC', 'EOS', 'ETH', 'LTC', 'XRP'];
 
   const addresses = await getDepositAddresses('Coinbase', symbols);
 
