@@ -16,8 +16,6 @@ function createAuthenticatedClient(): any {
     USER_CONFIG.OKEX_SPOT_API_KEY!,
     USER_CONFIG.OKEX_SPOT_API_SECRET!,
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE!,
-    'https://www.okex.com',
-    6000,
   );
   return authClient;
 }
@@ -132,6 +130,11 @@ function parseCurrency(currency: string): [string, string] {
     symbol = currency.toUpperCase();
     platform = symbol;
   }
+
+  // Rename to CoinMarketCap compatible platform
+  if (platform === 'ERC20') platform = 'Ethereum';
+  else if (platform === 'TRC20') platform = 'TRON';
+
   return [symbol, platform];
 }
 
@@ -240,6 +243,7 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
 
+  // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
   withdrawalFees
     .filter(x => x.min_fee)
     .forEach(x => {
@@ -247,7 +251,7 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
       const withdrawalFee = getWithdrawalFee(
         symbol,
-        x.currency.includes('-') ? platform.toUpperCase() : undefined,
+        x.currency.includes('-') ? platform : undefined,
       )!;
       if (withdrawalFee === undefined) console.error(x);
       assert.ok(withdrawalFee);
@@ -293,14 +297,18 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     tag?: string;
   }[][]).flatMap(x => x);
 
+  depositAddresses.forEach(x => {
+    x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
+  });
   // Rename USDT to USDT-Omni
   depositAddresses
-    .filter(x => x.currency.toUpperCase() === 'USDT')
+    .filter(x => x.currency === 'USDT')
     .forEach(x => {
       x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(depositAddresses);
+  // console.info(depositAddresses.filter(x => x.currency.includes('-')).map(x => x.currency));
 
   depositAddresses.forEach(x => {
     const [symbol, platform] = parseCurrency(x.currency);
@@ -310,14 +318,18 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
     if (platform in currency.deposit) {
       if (x.currency in currencyMap) {
-        assert.ok(currencyMap[x.currency].can_deposit);
+        // if (!currencyMap[x.currency].can_deposit) console.error(x);
+        // Exception: ACE can_deposit is false but it is in depositAddresses
+        // assert.ok(currencyMap[x.currency].can_deposit);
+      } else {
+        currency.deposit[platform].enabled = true;
       }
+    } else {
+      currency.deposit[platform] = {
+        platform,
+        enabled: true,
+      };
     }
-
-    currency.deposit[platform] = {
-      platform,
-      enabled: true,
-    };
   });
   return result;
 }
