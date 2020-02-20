@@ -3,6 +3,7 @@ import { strict as assert } from 'assert';
 import { ExchangeInfo, PairInfo } from 'exchange-info';
 import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
+import { WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -183,6 +184,98 @@ export async function getDepositAddresses(
       if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
 
       result[symbol][platform] = depositAddress;
+    });
+
+  return result;
+}
+
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
+
+  const authClient = createAuthenticatedClient();
+
+  const currencies = (await await authClient.account().getCurrencies()) as ReadonlyArray<{
+    name: string;
+    currency: string;
+    can_deposit: '0' | '1';
+    can_withdraw: '0' | '1';
+    min_withdrawal?: string;
+  }>;
+  // Rename USDT to USDT-Omni
+  currencies
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+    });
+  // console.info(JSON.stringify(currencies, undefined, 2));
+
+  // Usded for validation
+  const currencyMap: {
+    [key: string]: {
+      symbol: string;
+      can_deposit: boolean;
+      can_withdraw: boolean;
+      min_withdraw_amount?: number;
+    };
+  } = {};
+  currencies.forEach(x => {
+    currencyMap[x.currency] = {
+      symbol: x.currency,
+      can_deposit: x.can_deposit === '1',
+      can_withdraw: x.can_withdraw === '1',
+    };
+    if (x.min_withdrawal) {
+      currencyMap[x.currency].min_withdraw_amount = parseFloat(x.min_withdrawal);
+    }
+  });
+
+  const withdrawalFees = (await authClient.account().getWithdrawalFee()) as ReadonlyArray<{
+    min_fee: string;
+    currency: string;
+    max_fee: string;
+  }>;
+
+  // console.info(JSON.stringify(withdrawalFees, undefined, 2));
+
+  // Rename USDT to USDT-Omni
+  withdrawalFees
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+    });
+
+  // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
+  withdrawalFees
+    .filter(x => x.min_fee)
+    .forEach(x => {
+      const [symbol, platform] = parseCurrency(x.currency);
+      if (!(symbol in result)) result[symbol] = {};
+
+      const withdrawalFee = getWithdrawalFee(
+        symbol,
+        x.currency.includes('-') ? platform : undefined,
+      )!;
+      if (withdrawalFee === undefined) console.error(x);
+      assert.ok(withdrawalFee);
+      assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+
+      // Some coins like USDT-TRC20 don't have min_withdraw_amount in getCurrencies()
+      if (x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]) {
+        assert.equal(
+          withdrawalFee.min_withdraw_amount,
+          currencyMap[x.currency].min_withdraw_amount,
+        );
+        assert.ok(currencyMap[x.currency].can_withdraw);
+      }
+
+      result[symbol][platform] = {
+        symbol,
+        platform,
+        fee: parseFloat(x.min_fee),
+        min: withdrawalFee.min_withdraw_amount,
+      };
     });
 
   return result;

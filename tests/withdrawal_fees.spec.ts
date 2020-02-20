@@ -36,9 +36,8 @@ test("getWithdrawalFees('Coinbase')", async () => {
 
   const addresses = await getWithdrawalFees('Coinbase', symbols);
 
-  symbols.forEach(symbol => {
-    expect(addresses).toHaveProperty(symbol);
-  });
+  expect(addresses).toHaveProperty('USD');
+  expect(addresses).toHaveProperty('EUR');
 });
 
 each(['Newdex', 'WhaleEx']).test(

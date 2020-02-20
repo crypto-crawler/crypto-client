@@ -247,17 +247,20 @@ export function getDepositAddresses(
   return result;
 }
 
-export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
-  const result: { [key: string]: WithdrawalFee } = {};
+export function getWithdrawalFees(
+  symbols: string[],
+): { [key: string]: { [key: string]: WithdrawalFee } } {
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
   symbols.forEach(symbol => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
-    result[symbol] = {
+    result[symbol] = {};
+    result[symbol].EOS = {
       symbol,
       platform: 'EOS',
-      withdrawal_fee: 0,
-      min_withdraw_amount: 0,
+      fee: 0,
+      min: 0,
     };
   });
 

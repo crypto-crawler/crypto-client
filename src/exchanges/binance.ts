@@ -2,6 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -121,6 +122,38 @@ export async function getDepositAddresses(
 
       result[symbol][platform] = depositAddress;
     });
+
+  return result;
+}
+
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
+
+  const client = createAuthenticatedClient();
+  const assetDetail = await client.assetDetail();
+  if (!assetDetail.success) return result;
+
+  // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
+
+  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+    const detail = assetDetail.assetDetail[symbol];
+    if (detail === undefined) return;
+
+    let platform = symbol;
+    if (symbol === 'WTC') platform = 'Ethereum';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'Binance Coin';
+
+    if (!(symbol in result)) result[symbol] = {};
+
+    result[symbol][platform] = {
+      symbol,
+      platform,
+      fee: detail.withdrawFee,
+      min: detail.minWithdrawAmount,
+    };
+  });
 
   return result;
 }

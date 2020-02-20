@@ -164,11 +164,9 @@ export async function getDepositAddresses(
   return result;
 }
 
-export async function getWithdrawalFees(
-  symbols: string[],
-): Promise<{ [key: string]: WithdrawalFee }> {
-  assert.ok(symbols.length);
-
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
   const client = createAuthenticatedClient();
   const data = (await client.accountFees()) as { withdraw: { [key: string]: string } };
 
@@ -177,15 +175,16 @@ export async function getWithdrawalFees(
     data.withdraw[normalizedSymbol] = data.withdraw[rawSymbol];
   });
 
-  const result: { [key: string]: WithdrawalFee } = {};
-  symbols.forEach(symbol => {
-    if (!(symbol in data.withdraw)) return;
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
+  Object.keys(data.withdraw).forEach(rawSymbol => {
+    const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
+    if (!(symbol in result)) result[symbol] = {};
 
-    result[symbol] = {
+    result[symbol][symbol] = {
       symbol,
       platform: symbol,
-      withdrawal_fee: parseFloat(data.withdraw[symbol]),
-      min_withdraw_amount: 0,
+      fee: parseFloat(data.withdraw[symbol]),
+      min: 0,
     };
   });
 

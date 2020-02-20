@@ -421,49 +421,36 @@ export async function getDepositAddresses(
  *
  * @param exchangeName The exchange name
  * @params symbols Symbols to retreive
- * @returns symbol->WithdrawalFee | WithdrawalFee[]
+ * @returns symbol->platform -> WithdrawalFee
  */
 export async function getWithdrawalFees(
   exchange: SupportedExchange,
   symbols: string[],
-): Promise<{ [key: string]: WithdrawalFee | WithdrawalFee[] }> {
+): Promise<{ [key: string]: { [key: string]: WithdrawalFee } }> {
   assert.ok(exchange);
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
-  let result: { [key: string]: WithdrawalFee | WithdrawalFee[] } = {};
-
   switch (exchange) {
+    case 'Binance':
+      return Binance.getWithdrawalFees();
     case 'Bitfinex':
-      result = await Bitfinex.getWithdrawalFees(symbols);
-      break;
+      return Bitfinex.getWithdrawalFees();
     case 'Bitstamp':
-      result = Bitstamp.getWithdrawalFees(symbols);
-      break;
+      return Bitstamp.getWithdrawalFees();
     case 'Coinbase':
-      result = Coinbase.getWithdrawalFees(symbols);
-      break;
+      return Coinbase.getWithdrawalFees();
+    case 'Huobi':
+      return Huobi.getWithdrawalFees();
     case 'Newdex':
-      result = Newdex.getWithdrawalFees(symbols);
-      break;
+      return Newdex.getWithdrawalFees(symbols);
+    case 'OKEx_Spot':
+      return OKEx_Spot.getWithdrawalFees();
     case 'WhaleEx':
-      result = WhaleEx.getWithdrawalFees(symbols);
-      break;
+      return WhaleEx.getWithdrawalFees(symbols);
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
-
-  Object.keys(result).forEach(symbol => {
-    if (Array.isArray(result[symbol])) {
-      const arr = result[symbol] as WithdrawalFee[];
-      if (arr.length <= 0) {
-        delete result[symbol];
-      } else if (arr.length === 1) {
-        result[symbol] = arr[0]; // eslint-disable-line prefer-destructuring
-      }
-    }
-  });
-  return result;
 }
 
 /**

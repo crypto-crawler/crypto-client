@@ -234,9 +234,7 @@ export async function getDepositAddresses(
   return result;
 }
 
-export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
-  assert.ok(symbols.length);
-
+export function getWithdrawalFees(): { [key: string]: { [key: string]: WithdrawalFee } } {
   const data: { [key: string]: number } = {
     BTC: 0.0005,
     BCH: 0.0001,
@@ -247,13 +245,15 @@ export function getWithdrawalFees(symbols: string[]): { [key: string]: Withdrawa
     EUR: 0.9,
   };
 
-  const result: { [key: string]: WithdrawalFee } = {};
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
   Object.keys(data).forEach(symbol => {
-    result[symbol] = {
+    result[symbol] = {};
+
+    result[symbol][symbol] = {
       symbol,
       platform: symbol,
-      withdrawal_fee: data[symbol],
-      min_withdraw_amount: 0,
+      fee: data[symbol],
+      min: 0,
     };
   });
 

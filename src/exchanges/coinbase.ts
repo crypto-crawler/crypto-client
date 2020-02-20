@@ -116,23 +116,22 @@ export async function getDepositAddresses(
   return result;
 }
 
-export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
-  assert.ok(symbols.length);
-
+export function getWithdrawalFees(): { [key: string]: { [key: string]: WithdrawalFee } } {
   const data: { [key: string]: number } = {
     EUR: 0.15,
     USD: 25,
   };
-  const result: { [key: string]: WithdrawalFee } = {};
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
-  symbols.forEach(symbol => {
+  Object.keys(data).forEach(symbol => {
     const fee = data[symbol] || 0;
 
-    result[symbol] = {
+    result[symbol] = {};
+    result[symbol][symbol] = {
       symbol,
       platform: symbol,
-      withdrawal_fee: fee,
-      min_withdraw_amount: 0,
+      fee,
+      min: 0,
     };
   });
 

@@ -194,20 +194,20 @@ export async function queryBalance(symbol: string): Promise<number> {
   return total - frozen;
 }
 
-export function getWithdrawalFees(symbols: string[]): { [key: string]: WithdrawalFee } {
-  assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'WHALEEX_API_KEY is empty');
-  assert.ok(USER_CONFIG.WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
-
-  const result: { [key: string]: WithdrawalFee } = {};
+export function getWithdrawalFees(
+  symbols: string[],
+): { [key: string]: { [key: string]: WithdrawalFee } } {
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
   symbols.forEach(symbol => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
-    result[symbol] = {
+    result[symbol] = {};
+    result[symbol].EOS = {
       symbol,
       platform: 'EOS',
-      withdrawal_fee: 0,
-      min_withdraw_amount: 0,
+      fee: 0,
+      min: 0,
     };
   });
 

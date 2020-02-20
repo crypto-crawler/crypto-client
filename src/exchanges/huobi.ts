@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
+import { WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { convertPriceAndQuantityToStrings } from '../util';
 
@@ -147,6 +148,70 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
     .forEach(x => {
       result[normalizeSymbol(x.currency, 'Huobi')] = parseFloat(x.balance);
     });
+  return result;
+}
+
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
+  const path = '/v2/reference/currencies';
+
+  const response = await Axios.get(`${API_ENDPOINT}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.data.code, 200);
+
+  const arr = response.data.data as {
+    currency: string;
+    instStatus: 'normal' | 'delisted';
+    chains: {
+      chain: string;
+      baseChain: string;
+      baseChainProtocol: string;
+      isDynamic: boolean;
+      depositStatus: 'allowed' | 'prohibited';
+      maxTransactFeeWithdraw: string;
+      maxWithdrawAmt: string;
+      minDepositAmt: string;
+      minWithdrawAmt: string;
+      numOfConfirmations: number;
+      numOfFastConfirmations: 999;
+      withdrawFeeType: 'fixed' | 'circulated';
+      transactFeeWithdraw?: string;
+      minTransactFeeWithdraw?: string;
+      withdrawPrecision: 5;
+      withdrawQuotaPerDay: string;
+      withdrawQuotaPerYear: string;
+      withdrawQuotaTotal: string;
+      withdrawStatus: 'allowed' | 'prohibited';
+    }[];
+  }[];
+
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
+  arr.forEach(x => {
+    const symbol = normalizeSymbol(x.currency, 'Huobi');
+    if (!(symbol in result)) result[symbol] = {};
+
+    x.chains.forEach(y => {
+      let platform: string;
+      if (symbol === 'USDT') {
+        if (y.chain === 'trc20usdt') platform = 'TRON';
+        else if (y.chain === 'usdterc20') platform = 'Ethereum';
+        else platform = 'Omni';
+      } else {
+        platform = y.chain.toUpperCase() === symbol ? symbol : y.chain;
+      }
+
+      result[symbol][platform] = {
+        symbol,
+        platform,
+        fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
+        min: parseFloat(y.minWithdrawAmt),
+      };
+    });
+  });
   return result;
 }
 
