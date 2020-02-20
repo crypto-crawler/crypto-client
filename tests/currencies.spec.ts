@@ -155,7 +155,9 @@ test("fetchCurrencies('Huobi')", async () => {
   const currencies = await fetchCurrencies('Huobi');
 
   const blacklist = [
+    'BCD',
     'BNB',
+    'DGB',
     'LEO',
     'HEDG',
     'MIOTA',
@@ -198,6 +200,7 @@ test("fetchCurrencies('OKEx_Spot')", async () => {
   const currencies = await fetchCurrencies('OKEx_Spot');
 
   const blacklist = [
+    'ADA',
     'BNB',
     'XMR',
     'HT',

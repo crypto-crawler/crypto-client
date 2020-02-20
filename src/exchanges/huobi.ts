@@ -190,28 +190,23 @@ export async function getWithdrawalFees(): Promise<{
   }[];
 
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
-  arr.forEach(x => {
-    const symbol = normalizeSymbol(x.currency, 'Huobi');
-    if (!(symbol in result)) result[symbol] = {};
+  arr
+    .filter(x => x.chains.length > 0)
+    .forEach(x => {
+      const symbol = normalizeSymbol(x.currency, 'Huobi');
+      if (!(symbol in result)) result[symbol] = {};
 
-    x.chains.forEach(y => {
-      let platform: string;
-      if (symbol === 'USDT') {
-        if (y.chain === 'trc20usdt') platform = 'TRC20';
-        else if (y.chain === 'usdterc20') platform = 'ERC20';
-        else platform = 'OMNI';
-      } else {
-        platform = y.chain.toUpperCase() === symbol ? symbol : y.chain;
-      }
+      x.chains.forEach(y => {
+        const platform = y.baseChainProtocol || symbol;
 
-      result[symbol][platform] = {
-        symbol,
-        platform,
-        fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
-        min: parseFloat(y.minWithdrawAmt),
-      };
+        result[symbol][platform] = {
+          symbol,
+          platform,
+          fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
+          min: parseFloat(y.minWithdrawAmt),
+        };
+      });
     });
-  });
   return result;
 }
 
@@ -254,34 +249,29 @@ export async function fetchCurrencies(): Promise<{
   }[];
 
   const result: { [key: string]: Currency } = {};
-  arr.forEach(x => {
-    const trading = x.instStatus === 'normal';
-    const symbol = normalizeSymbol(x.currency, 'Huobi');
-    result[symbol] = { symbol, trading, deposit: {}, withdrawal: {} };
+  arr
+    .filter(x => x.chains.length > 0)
+    .forEach(x => {
+      const trading = x.instStatus === 'normal';
+      const symbol = normalizeSymbol(x.currency, 'Huobi');
+      result[symbol] = { symbol, trading, deposit: {}, withdrawal: {} };
 
-    x.chains.forEach(y => {
-      let platform: string;
-      if (symbol === 'USDT') {
-        if (y.chain === 'trc20usdt') platform = 'TRC20';
-        else if (y.chain === 'usdterc20') platform = 'ERC20';
-        else platform = 'OMNI';
-      } else {
-        platform = y.chain.toUpperCase() === symbol ? symbol : y.chain;
-      }
+      x.chains.forEach(y => {
+        const platform = y.baseChainProtocol || symbol;
 
-      result[symbol].deposit[platform] = {
-        platform,
-        enabled: y.depositStatus === 'allowed',
-        min: parseFloat(y.minDepositAmt),
-      };
-      result[symbol].withdrawal[platform] = {
-        platform,
-        enabled: y.withdrawStatus === 'allowed',
-        fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
-        min: parseFloat(y.minWithdrawAmt),
-      };
+        result[symbol].deposit[platform] = {
+          platform,
+          enabled: y.depositStatus === 'allowed',
+          min: parseFloat(y.minDepositAmt),
+        };
+        result[symbol].withdrawal[platform] = {
+          platform,
+          enabled: y.withdrawStatus === 'allowed',
+          fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
+          min: parseFloat(y.minWithdrawAmt),
+        };
+      });
     });
-  });
   return result;
 }
 

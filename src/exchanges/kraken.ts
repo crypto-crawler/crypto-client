@@ -231,7 +231,7 @@ export async function getDepositAddress(
     platform: symbol,
     address: address.address,
   };
-  if (symbol === 'USDT') result.platform = 'Omni';
+  if (symbol === 'USDT') result.platform = 'OMNI';
   if (address.memo) result.memo = address.memo;
   if (parseFloat(depositMethod.fee) > 0) result.fee = parseFloat(depositMethod.fee);
   if (typeof depositMethod.limit === 'string')
