@@ -211,7 +211,46 @@ export function getWithdrawalFees(
     };
   });
 
-  return result;
+  const config: { [key: string]: { [key: string]: WithdrawalFee } } = {
+    EOS: {
+      EOS: {
+        symbol: 'EOS',
+        platform: 'EOS',
+        fee: 0,
+        min: 0,
+      },
+    },
+    ETH: {
+      ETH: {
+        symbol: 'ETH',
+        platform: 'ETH',
+        fee: 0.005,
+        min: 0,
+      },
+    },
+    USDT: {
+      ERC20: {
+        symbol: 'USDT',
+        platform: 'ERC20',
+        fee: 1,
+        min: 0,
+      },
+      EOS: {
+        symbol: 'USDT',
+        platform: 'EOS',
+        fee: 0,
+        min: 0,
+      },
+      OMNI: {
+        symbol: 'USDT',
+        platform: 'OMNI',
+        fee: 0,
+        min: 0,
+      },
+    },
+  };
+
+  return Object.assign(result, config);
 }
 
 export function getDepositAddresses(

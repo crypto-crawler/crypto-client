@@ -8,9 +8,7 @@ beforeAll(async () => {
 });
 
 test("getWithdrawalFees('Bitfinex')", async () => {
-  const symbols = ['BTC', 'EOS', 'ETH', 'XXX'];
-
-  const addresses = await getWithdrawalFees('Bitfinex', symbols);
+  const addresses = await getWithdrawalFees('Bitfinex');
 
   /* eslint-disable jest/no-standalone-expect */
   expect(addresses).toHaveProperty('BTC');
@@ -24,7 +22,7 @@ test("getWithdrawalFees('Bitfinex')", async () => {
 test("getWithdrawalFees('Bitstamp')", async () => {
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
 
-  const addresses = await getWithdrawalFees('Bitstamp', symbols);
+  const addresses = await getWithdrawalFees('Bitstamp');
 
   symbols.forEach(symbol => {
     expect(addresses).toHaveProperty(symbol);
@@ -32,9 +30,7 @@ test("getWithdrawalFees('Bitstamp')", async () => {
 });
 
 test("getWithdrawalFees('Coinbase')", async () => {
-  const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP', 'USD', 'EUR'];
-
-  const addresses = await getWithdrawalFees('Coinbase', symbols);
+  const addresses = await getWithdrawalFees('Coinbase');
 
   expect(addresses).toHaveProperty('USD');
   expect(addresses).toHaveProperty('EUR');

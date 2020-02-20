@@ -253,29 +253,55 @@ export async function getWithdrawalFees(): Promise<{
       const withdrawalFee = getWithdrawalFee(
         symbol,
         x.currency.includes('-') ? platform : undefined,
-      )!;
+      );
       if (withdrawalFee === undefined) console.error(x);
-      assert.ok(withdrawalFee);
-      assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+
+      if (withdrawalFee !== undefined) {
+        assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+      }
 
       // Some coins like USDT-TRC20 don't have min_withdraw_amount in getCurrencies()
       if (x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]) {
-        assert.equal(
-          withdrawalFee.min_withdraw_amount,
-          currencyMap[x.currency].min_withdraw_amount,
-        );
         assert.ok(currencyMap[x.currency].can_withdraw);
+        if (withdrawalFee !== undefined)
+          assert.equal(
+            withdrawalFee.min_withdraw_amount,
+            currencyMap[x.currency].min_withdraw_amount,
+          );
       }
 
       result[symbol][platform] = {
         symbol,
         platform,
         fee: parseFloat(x.min_fee),
-        min: withdrawalFee.min_withdraw_amount,
+        min:
+          x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]
+            ? currencyMap[x.currency].min_withdraw_amount!
+            : 0.0,
       };
     });
 
   return result;
+}
+
+async function getAddressWithTryCatch(
+  authClient: any,
+  symbol: string,
+): Promise<
+  | {
+      address: string;
+      currency: string;
+      to: number;
+      memo?: string;
+      tag?: string;
+    }[]
+  | Error
+> {
+  try {
+    return await authClient.account().getAddress(symbol);
+  } catch (e) {
+    return e;
+  }
 }
 
 export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
@@ -342,18 +368,21 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       const withdrawalFee = getWithdrawalFee(
         symbol,
         x.currency.includes('-') ? platform : undefined,
-      )!;
+      );
       if (withdrawalFee === undefined) console.error(x);
-      assert.ok(withdrawalFee);
-      assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+
+      if (withdrawalFee !== undefined) {
+        assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
+      }
 
       // Some coins like USDT-TRC20 don't have min_withdraw_amount in getCurrencies()
       if (x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]) {
-        assert.equal(
-          withdrawalFee.min_withdraw_amount,
-          currencyMap[x.currency].min_withdraw_amount,
-        );
         assert.ok(currencyMap[x.currency].can_withdraw);
+        if (withdrawalFee !== undefined)
+          assert.equal(
+            withdrawalFee.min_withdraw_amount,
+            currencyMap[x.currency].min_withdraw_amount,
+          );
       }
 
       const currency: Currency = result[symbol] || {
@@ -372,20 +401,28 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
         platform,
         enabled: true,
         fee: parseFloat(x.min_fee),
-        min: withdrawalFee.min_withdraw_amount,
+        min:
+          x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]
+            ? currencyMap[x.currency].min_withdraw_amount!
+            : 0.0,
       };
 
       result[symbol] = currency;
     });
 
-  const requests = Object.keys(result).map(symbol => authClient.account().getAddress(symbol));
-  const depositAddresses = ((await Promise.all(requests)) as {
-    address: string;
-    currency: string;
-    to: number;
-    memo?: string;
-    tag?: string;
-  }[][]).flatMap(x => x);
+  const requests = Object.keys(result).map(symbol => getAddressWithTryCatch(authClient, symbol));
+  const depositAddresses = (await Promise.all(requests))
+    .filter(x => !(x instanceof Error))
+    .flatMap(
+      x =>
+        x as {
+          address: string;
+          currency: string;
+          to: number;
+          memo?: string;
+          tag?: string;
+        }[],
+    );
 
   depositAddresses.forEach(x => {
     x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign

@@ -426,11 +426,10 @@ export async function getDepositAddresses(
  */
 export async function getWithdrawalFees(
   exchange: SupportedExchange,
-  symbols: string[],
+  symbols?: string[],
 ): Promise<{ [key: string]: { [key: string]: WithdrawalFee } }> {
   assert.ok(exchange);
-  assert.ok(symbols);
-  if (symbols.length === 0) return {};
+  if (symbols) assert.ok(symbols.length, 'symbols is an empty array');
 
   switch (exchange) {
     case 'Binance':
@@ -443,12 +442,18 @@ export async function getWithdrawalFees(
       return Coinbase.getWithdrawalFees();
     case 'Huobi':
       return Huobi.getWithdrawalFees();
-    case 'Newdex':
+    case 'Newdex': {
+      if (symbols === undefined || symbols.length <= 0)
+        throw Error(`${exchange} requires an array of symbols`);
       return Newdex.getWithdrawalFees(symbols);
+    }
     case 'OKEx_Spot':
       return OKEx_Spot.getWithdrawalFees();
-    case 'WhaleEx':
+    case 'WhaleEx': {
+      if (symbols === undefined || symbols.length <= 0)
+        throw Error(`${exchange} requires an array of symbols`);
       return WhaleEx.getWithdrawalFees(symbols);
+    }
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
