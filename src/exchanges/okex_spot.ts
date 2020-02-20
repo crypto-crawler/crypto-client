@@ -1,7 +1,6 @@
 import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
 import { ExchangeInfo, PairInfo } from 'exchange-info';
-import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -186,6 +185,73 @@ export async function getDepositAddresses(
   return result;
 }
 
+async function getAddressWithTryCatch(
+  authClient: any,
+  symbol: string,
+): Promise<
+  | {
+      address: string;
+      currency: string;
+      to: number;
+      memo?: string;
+      tag?: string;
+    }[]
+  | Error
+> {
+  try {
+    return await authClient.account().getAddress(symbol);
+  } catch (e) {
+    return e;
+  }
+}
+
+async function getERC20Tokens(symbols: string[]): Promise<Set<string>> {
+  assert.ok(symbols.includes('ETH'));
+  const erc20Tokens = new Set<string>();
+  const authClient = createAuthenticatedClient();
+
+  const requests = Object.keys(symbols).map(symbol => getAddressWithTryCatch(authClient, symbol));
+  const depositAddresses = (await Promise.all(requests))
+    .filter(x => !(x instanceof Error))
+    .flatMap(
+      x =>
+        x as {
+          address: string;
+          currency: string;
+          to: number;
+          memo?: string;
+          tag?: string;
+        }[],
+    );
+
+  depositAddresses.forEach(x => {
+    x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
+  });
+
+  const ethAddress = depositAddresses.filter(x => x.currency === 'ETH')[0].address;
+  assert.ok(ethAddress);
+
+  // Rename USDT to USDT-OMNI
+  depositAddresses
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+    });
+
+  // console.info(depositAddresses);
+  // console.info(depositAddresses.filter(x => x.currency.includes('-')).map(x => x.currency));
+
+  depositAddresses.forEach(x => {
+    const [symbol] = parseCurrency(x.currency);
+
+    if (x.address === ethAddress && symbol !== 'ETH') {
+      erc20Tokens.add(symbol);
+    }
+  });
+
+  return erc20Tokens;
+}
+
 export async function getWithdrawalFees(): Promise<{
   [key: string]: { [key: string]: WithdrawalFee };
 }> {
@@ -243,32 +309,19 @@ export async function getWithdrawalFees(): Promise<{
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
+  const erc20Tokens = await getERC20Tokens(
+    withdrawalFees.filter(x => x.min_fee).map(x => parseCurrency(x.currency)[0]),
+  );
+
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
   withdrawalFees
     .filter(x => x.min_fee)
     .forEach(x => {
-      const [symbol, platform] = parseCurrency(x.currency);
+      const symbol = parseCurrency(x.currency)[0];
+      let platform = parseCurrency(x.currency)[1];
+      if (erc20Tokens.has(symbol)) platform = 'ERC20';
+
       if (!(symbol in result)) result[symbol] = {};
-
-      const withdrawalFee = getWithdrawalFee(
-        symbol,
-        x.currency.includes('-') ? platform : undefined,
-      );
-      if (withdrawalFee === undefined) console.error(x);
-
-      if (withdrawalFee !== undefined) {
-        assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
-      }
-
-      // Some coins like USDT-TRC20 don't have min_withdraw_amount in getCurrencies()
-      if (x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]) {
-        assert.ok(currencyMap[x.currency].can_withdraw);
-        if (withdrawalFee !== undefined)
-          assert.equal(
-            withdrawalFee.min_withdraw_amount,
-            currencyMap[x.currency].min_withdraw_amount,
-          );
-      }
 
       result[symbol][platform] = {
         symbol,
@@ -282,26 +335,6 @@ export async function getWithdrawalFees(): Promise<{
     });
 
   return result;
-}
-
-async function getAddressWithTryCatch(
-  authClient: any,
-  symbol: string,
-): Promise<
-  | {
-      address: string;
-      currency: string;
-      to: number;
-      memo?: string;
-      tag?: string;
-    }[]
-  | Error
-> {
-  try {
-    return await authClient.account().getAddress(symbol);
-  } catch (e) {
-    return e;
-  }
 }
 
 export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
@@ -364,26 +397,6 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     .filter(x => x.min_fee)
     .forEach(x => {
       const [symbol, platform] = parseCurrency(x.currency);
-
-      const withdrawalFee = getWithdrawalFee(
-        symbol,
-        x.currency.includes('-') ? platform : undefined,
-      );
-      if (withdrawalFee === undefined) console.error(x);
-
-      if (withdrawalFee !== undefined) {
-        assert.equal(parseFloat(x.min_fee), withdrawalFee.withdrawal_fee);
-      }
-
-      // Some coins like USDT-TRC20 don't have min_withdraw_amount in getCurrencies()
-      if (x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]) {
-        assert.ok(currencyMap[x.currency].can_withdraw);
-        if (withdrawalFee !== undefined)
-          assert.equal(
-            withdrawalFee.min_withdraw_amount,
-            currencyMap[x.currency].min_withdraw_amount,
-          );
-      }
 
       const currency: Currency = result[symbol] || {
         symbol,
