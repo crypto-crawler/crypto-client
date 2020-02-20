@@ -15,6 +15,7 @@ import * as WhaleEx from './exchanges/whaleex';
 import { createOrder as createOrderWhaleEx } from './exchanges/whaleex_eos';
 import { ActionExtended } from './pojo';
 import { Currency } from './pojo/currency';
+import { CurrencyStatus } from './pojo/currency_status';
 import { DepositAddress } from './pojo/deposit_address';
 import { WithdrawalFee } from './pojo/withdrawal_fee';
 
@@ -473,6 +474,23 @@ export async function fetchCurrencies(
       return Huobi.fetchCurrencies();
     case 'OKEx_Spot':
       return OKEx_Spot.fetchCurrencies();
+    default:
+      throw Error(`Unsupported exchange: ${exchange}`);
+  }
+}
+
+export async function fetchCurrencyStatuses(
+  exchange: SupportedExchange,
+): Promise<{ [key: string]: CurrencyStatus }> {
+  assert.ok(exchange);
+
+  switch (exchange) {
+    case 'Binance':
+      return Binance.fetchCurrencyStatuses();
+    case 'Huobi':
+      return Huobi.fetchCurrencyStatuses();
+    case 'OKEx_Spot':
+      return OKEx_Spot.fetchCurrencyStatuses();
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }

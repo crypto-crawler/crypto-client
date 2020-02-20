@@ -3,7 +3,7 @@ import { strict as assert } from 'assert';
 import { ExchangeInfo, PairInfo } from 'exchange-info';
 import { getWithdrawalFee } from 'okex-withdrawal-fee';
 import { USER_CONFIG } from '../config';
-import { WithdrawalFee } from '../pojo';
+import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -120,21 +120,18 @@ export async function queryBalance(symbol: string): Promise<number> {
 }
 
 function parseCurrency(currency: string): [string, string] {
+  currency = currency.toUpperCase(); // eslint-disable-line no-param-reassign
   let symbol: string;
   let platform: string;
 
   if (currency.includes('-')) {
     const [symbol_, platform_] = currency.split('-');
-    symbol = symbol_.toUpperCase();
+    symbol = symbol_;
     platform = platform_;
   } else {
-    symbol = currency.toUpperCase();
+    symbol = currency;
     platform = symbol;
   }
-
-  // Rename to CoinMarketCap compatible platform
-  if (platform === 'ERC20') platform = 'Ethereum';
-  else if (platform === 'TRC20') platform = 'TRON';
 
   return [symbol, platform];
 }
@@ -161,11 +158,11 @@ export async function getDepositAddresses(
     tag?: string;
   }[][]).flatMap(x => x);
 
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   arr
     .filter(x => x.currency.toUpperCase() === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(arr);
@@ -203,11 +200,11 @@ export async function getWithdrawalFees(): Promise<{
     can_withdraw: '0' | '1';
     min_withdrawal?: string;
   }>;
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   currencies
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
 
@@ -239,11 +236,11 @@ export async function getWithdrawalFees(): Promise<{
 
   // console.info(JSON.stringify(withdrawalFees, undefined, 2));
 
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   withdrawalFees
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
@@ -293,11 +290,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     can_withdraw: '0' | '1';
     min_withdrawal?: string;
   }>;
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   currencies
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
 
@@ -329,11 +326,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
   // console.info(JSON.stringify(withdrawalFees, undefined, 2));
 
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   withdrawalFees
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
@@ -393,11 +390,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
   depositAddresses.forEach(x => {
     x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
   });
-  // Rename USDT to USDT-Omni
+  // Rename USDT to USDT-OMNI
   depositAddresses
     .filter(x => x.currency === 'USDT')
     .forEach(x => {
-      x.currency = 'USDT-Omni'; // eslint-disable-line no-param-reassign
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(depositAddresses);
@@ -423,6 +420,38 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
         enabled: true,
       };
     }
+  });
+  return result;
+}
+
+export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
+  const result: { [key: string]: CurrencyStatus } = {};
+
+  const authClient = createAuthenticatedClient();
+
+  const currencies = (await await authClient.account().getCurrencies()) as ReadonlyArray<{
+    name: string;
+    currency: string;
+    can_deposit: '0' | '1';
+    can_withdraw: '0' | '1';
+    min_withdrawal?: string;
+  }>;
+  // Rename USDT to USDT-OMNI
+  currencies
+    .filter(x => x.currency === 'USDT')
+    .forEach(x => {
+      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
+    });
+  // console.info(JSON.stringify(currencies, undefined, 2));
+
+  currencies.forEach(x => {
+    const [symbol, platform] = parseCurrency(x.currency);
+    if (!(symbol in result)) {
+      result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {} };
+    }
+
+    result[symbol].deposit_enabled[platform] = x.can_deposit === '1';
+    result[symbol].withdrawal_enabled[platform] = x.can_withdraw === '1';
   });
   return result;
 }

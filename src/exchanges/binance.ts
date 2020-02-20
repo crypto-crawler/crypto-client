@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { WithdrawalFee } from '../pojo';
+import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -107,11 +107,11 @@ export async function getDepositAddresses(
 
       let platform = symbol;
       if (address.address === ethAddress) {
-        platform = 'Ethereum';
+        platform = 'ERC20';
       }
       if (symbol === 'WTC') platform = 'WTC';
       if (symbol === 'CTXC') platform = 'CTXC';
-      if (['GTO', 'MITH', 'ONE'].includes(symbol)) platform = 'Binance Coin';
+      if (['GTO', 'MITH', 'ONE'].includes(symbol)) platform = 'BEP2';
 
       const depositAddress: DepositAddress = {
         symbol,
@@ -142,8 +142,8 @@ export async function getWithdrawalFees(): Promise<{
     if (detail === undefined) return;
 
     let platform = symbol;
-    if (symbol === 'WTC') platform = 'Ethereum';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'Binance Coin';
+    if (symbol === 'WTC') platform = 'ERC20';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
 
     if (!(symbol in result)) result[symbol] = {};
 
@@ -172,8 +172,8 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     if (detail === undefined) return;
 
     let platform = symbol;
-    if (symbol === 'WTC') platform = 'Ethereum';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'Binance Coin';
+    if (symbol === 'WTC') platform = 'ERC20';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
 
     result[symbol] = {
       symbol,
@@ -192,6 +192,33 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       fee: detail.withdrawFee,
       min: detail.minWithdrawAmount,
     };
+  });
+
+  return result;
+}
+
+export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
+  const result: { [key: string]: CurrencyStatus } = {};
+
+  const client = createAuthenticatedClient();
+  const assetDetail = await client.assetDetail();
+  if (!assetDetail.success) return result;
+
+  // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
+
+  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+    const detail = assetDetail.assetDetail[symbol];
+    if (detail === undefined) return;
+
+    let platform = symbol;
+    if (symbol === 'WTC') platform = 'ERC20';
+    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
+
+    if (!(symbol in result)) {
+      result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {} };
+    }
+    result[symbol].deposit_enabled[platform] = detail.depositStatus;
+    result[symbol].withdrawal_enabled[platform] = detail.withdrawStatus;
   });
 
   return result;

@@ -22,7 +22,7 @@ test("getDepositAddresses('Binance')", async () => {
   symbols
     .filter(x => x === 'USDT')
     .forEach(symbol => {
-      expect(addresses[symbol]).toHaveProperty('Ethereum');
+      expect(addresses[symbol]).toHaveProperty('ERC20');
     });
 
   expect(addresses).not.toHaveProperty('XXX');
@@ -62,7 +62,7 @@ test("getDepositAddresses('OKEx_Spot')", async () => {
   symbols
     .filter(x => x === 'USDT')
     .forEach(symbol => {
-      expect(addresses[symbol]).toHaveProperty('Omni');
+      expect(addresses[symbol]).toHaveProperty('OMNI');
     });
 
   expect(addresses).not.toHaveProperty('XXX');
