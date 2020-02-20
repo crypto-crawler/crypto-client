@@ -142,7 +142,7 @@ export async function getWithdrawalFees(): Promise<{
     if (detail === undefined) return;
 
     let platform = symbol;
-    if (symbol === 'WTC') platform = 'ERC20';
+    if (['USDT', 'WTC'].includes(symbol)) platform = 'ERC20';
     if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
 
     if (!(symbol in result)) result[symbol] = {};
