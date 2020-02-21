@@ -198,8 +198,9 @@ export async function getWithdrawalFees(): Promise<{
   Object.keys(data.withdraw).forEach(rawSymbol => {
     const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
     if (!(symbol in result)) result[symbol] = {};
+    const platform = tokenPlatformMap[symbol] || symbol;
 
-    result[symbol][symbol] = {
+    result[symbol][platform] = {
       symbol,
       platform: tokenPlatformMap[symbol] || symbol,
       fee: parseFloat(data.withdraw[symbol]),
