@@ -8,6 +8,29 @@ beforeAll(async () => {
   jest.setTimeout(90 * 1000);
 });
 
+test("getWithdrawalFees('Binance')", async () => {
+  const addresses = await getWithdrawalFees('Binance');
+
+  /* eslint-disable jest/no-standalone-expect */
+  expect(addresses).toHaveProperty('BTC');
+  expect(addresses).toHaveProperty('EOS');
+  expect(addresses).toHaveProperty('ETH');
+  expect(addresses).toHaveProperty('USDT');
+  expect(addresses).toHaveProperty('BNB');
+  expect(addresses).not.toHaveProperty('XXX');
+
+  if (addresses.GTO) {
+    expect(addresses.GTO).toHaveProperty('BEP2');
+  }
+  if (addresses.MITH) {
+    expect(addresses.MITH).toHaveProperty('BEP2');
+  }
+  if (addresses.ONE) {
+    expect(addresses.ONE).toHaveProperty('BEP2');
+  }
+  /* eslint-enable jest/no-standalone-expect */
+});
+
 test("getWithdrawalFees('Bitfinex')", async () => {
   const addresses = await getWithdrawalFees('Bitfinex');
 
@@ -35,6 +58,51 @@ test("getWithdrawalFees('Coinbase')", async () => {
 
   expect(addresses).toHaveProperty('USD');
   expect(addresses).toHaveProperty('EUR');
+});
+
+test("getWithdrawalFees('Huobi')", async () => {
+  const addresses = await getWithdrawalFees('Huobi');
+
+  /* eslint-disable jest/no-standalone-expect */
+  expect(addresses).toHaveProperty('BTC');
+  expect(addresses).toHaveProperty('EOS');
+  expect(addresses).toHaveProperty('ETH');
+  expect(addresses).toHaveProperty('USDT');
+  expect(addresses).not.toHaveProperty('XXX');
+
+  if (addresses.AAC) {
+    expect(addresses.AAC).toHaveProperty('ERC20');
+  }
+  if (addresses.ITC) {
+    expect(addresses.ITC).toHaveProperty('ERC20');
+  }
+  if (addresses.ONE) {
+    expect(addresses.ONE).toHaveProperty('ERC20');
+  }
+  /* eslint-enable jest/no-standalone-expect */
+});
+
+test("getWithdrawalFees('OKEx_Spot')", async () => {
+  const addresses = await getWithdrawalFees('OKEx_Spot');
+
+  /* eslint-disable jest/no-standalone-expect */
+  expect(addresses).toHaveProperty('BTC');
+  expect(addresses).toHaveProperty('EOS');
+  expect(addresses).toHaveProperty('ETH');
+  expect(addresses).toHaveProperty('USDT');
+  expect(addresses).toHaveProperty('OKB');
+  expect(addresses).not.toHaveProperty('XXX');
+
+  if (addresses.AAC) {
+    expect(addresses.AAC).toHaveProperty('AAC');
+  }
+  if (addresses.ITC) {
+    expect(addresses.ITC).toHaveProperty('ITC');
+  }
+  if (addresses.MITH) {
+    expect(addresses.MITH).toHaveProperty('ERC20');
+  }
+  /* eslint-enable jest/no-standalone-expect */
 });
 
 each(['Newdex', 'WhaleEx']).test(
