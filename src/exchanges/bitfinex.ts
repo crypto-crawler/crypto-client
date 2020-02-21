@@ -3,7 +3,7 @@ import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
 
 const { RESTv2 } = require('bfx-api-node-rest');
 const { Order } = require('bfx-api-node-models');
@@ -146,6 +146,17 @@ export async function getDepositAddresses(
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
 
+  const ethAddress = ((await fetchDepositAddress('Ethereum')) as {
+    address: string;
+    memo?: string | undefined;
+  }).address;
+  const trxAddress = ((await fetchDepositAddress('TRX')) as {
+    address: string;
+    memo?: string | undefined;
+  }).address;
+  assert.ok(ethAddress);
+  assert.ok(trxAddress);
+
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
@@ -157,7 +168,10 @@ export async function getDepositAddresses(
 
     if (!(address instanceof Error)) {
       if (!(symbol in result)) result[symbol] = {};
-      result[symbol][symbol] = { symbol, platform: symbol, ...address };
+      let platform = symbol;
+      if (address.address === ethAddress && symbol !== 'ETH') platform = 'ERC20';
+      if (address.address === trxAddress && symbol !== 'TRX') platform = 'TRC20';
+      result[symbol][platform] = { symbol, platform, ...address };
     }
   }
 
@@ -175,6 +189,11 @@ export async function getWithdrawalFees(): Promise<{
     data.withdraw[normalizedSymbol] = data.withdraw[rawSymbol];
   });
 
+  const depositAddresses = await getDepositAddresses(
+    Object.keys(data.withdraw).map(rawSymbol => normalizeSymbol(rawSymbol, 'Bitfinex')),
+  );
+  const tokenPlatformMap = calcTokenPlatform(depositAddresses);
+
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
   Object.keys(data.withdraw).forEach(rawSymbol => {
     const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
@@ -182,7 +201,7 @@ export async function getWithdrawalFees(): Promise<{
 
     result[symbol][symbol] = {
       symbol,
-      platform: symbol,
+      platform: tokenPlatformMap[symbol] || symbol,
       fee: parseFloat(data.withdraw[symbol]),
       min: 0,
     };

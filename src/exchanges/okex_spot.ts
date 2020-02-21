@@ -5,7 +5,7 @@ import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): any {
   assert.ok(USER_CONFIG.OKEX_SPOT_API_KEY);
@@ -135,56 +135,6 @@ function parseCurrency(currency: string): [string, string] {
   return [symbol, platform];
 }
 
-export async function getDepositAddresses(
-  symbols: string[],
-  exchangeInfo: ExchangeInfo,
-): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
-  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
-
-  const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
-
-  const authClient = createAuthenticatedClient();
-
-  const requests = symbols
-    .filter(symbol => allSymbols.has(symbol))
-    .map(symbol => authClient.account().getAddress(symbol));
-
-  const arr = ((await Promise.all(requests)) as {
-    address: string;
-    currency: string;
-    to: number;
-    memo?: string;
-    tag?: string;
-  }[][]).flatMap(x => x);
-
-  // Rename USDT to USDT-OMNI
-  arr
-    .filter(x => x.currency.toUpperCase() === 'USDT')
-    .forEach(x => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
-    });
-
-  // console.info(arr);
-
-  arr
-    .filter(x => x.to === 1) // 1, spot; 6, fund
-    .forEach(x => {
-      const [symbol, platform] = parseCurrency(x.currency);
-      if (!(symbol in result)) result[symbol] = {};
-
-      const depositAddress: DepositAddress = {
-        symbol,
-        platform,
-        address: x.address,
-      };
-      if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
-
-      result[symbol][platform] = depositAddress;
-    });
-
-  return result;
-}
-
 async function getAddressWithTryCatch(
   authClient: any,
   symbol: string,
@@ -205,13 +155,23 @@ async function getAddressWithTryCatch(
   }
 }
 
-async function getERC20Tokens(symbols: string[]): Promise<Set<string>> {
-  assert.ok(symbols.includes('ETH'));
-  const erc20Tokens = new Set<string>();
-  const authClient = createAuthenticatedClient();
+export async function getDepositAddresses(
+  symbols: string[],
+  exchangeInfo: ExchangeInfo,
+): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
+  if (!symbols.includes('ETH')) symbols.push('ETH');
+  if (!symbols.includes('TRX')) symbols.push('TRX');
 
-  const requests = Object.keys(symbols).map(symbol => getAddressWithTryCatch(authClient, symbol));
-  const depositAddresses = (await Promise.all(requests))
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
+
+  const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
+
+  const authClient = createAuthenticatedClient();
+  const requests = symbols
+    .filter(symbol => allSymbols.has(symbol))
+    .map(symbol => getAddressWithTryCatch(authClient, symbol));
+
+  const arr = (await Promise.all(requests))
     .filter(x => !(x instanceof Error))
     .flatMap(
       x =>
@@ -224,35 +184,50 @@ async function getERC20Tokens(symbols: string[]): Promise<Set<string>> {
         }[],
     );
 
-  depositAddresses.forEach(x => {
-    x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
-  });
-
-  const ethAddress = depositAddresses.filter(x => x.currency === 'ETH')[0].address;
+  const ethAddress = arr.filter(x => x.currency.toUpperCase() === 'ETH')[0].address;
   assert.ok(ethAddress);
+  const trxAddress = arr.filter(x => x.currency.toUpperCase() === 'TRX')[0].address;
+  assert.ok(trxAddress);
 
   // Rename USDT to USDT-OMNI
-  depositAddresses
-    .filter(x => x.currency === 'USDT')
+  arr
+    .filter(x => x.currency.toUpperCase() === 'USDT')
     .forEach(x => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
-  // console.info(depositAddresses);
-  // console.info(depositAddresses.filter(x => x.currency.includes('-')).map(x => x.currency));
+  // console.info(arr);
 
-  depositAddresses.forEach(x => {
-    const [symbol] = parseCurrency(x.currency);
+  arr
+    .filter(x => x.to === 1) // 1, spot; 6, fund
+    .forEach(x => {
+      const [symbol, platformTmp] = parseCurrency(x.currency);
+      if (!(symbol in result)) result[symbol] = {};
 
-    if (x.address === ethAddress && symbol !== 'ETH') {
-      erc20Tokens.add(symbol);
-    }
-  });
+      let platform = platformTmp;
+      if (x.address === ethAddress && symbol !== 'ETH') {
+        platform = 'ERC20';
+      }
+      if (x.address === trxAddress && symbol !== 'TRX') {
+        platform = 'TRC20';
+      }
 
-  return erc20Tokens;
+      const depositAddress: DepositAddress = {
+        symbol,
+        platform,
+        address: x.address,
+      };
+      if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
+
+      result[symbol][platform] = depositAddress;
+    });
+
+  return result;
 }
 
-export async function getWithdrawalFees(): Promise<{
+export async function getWithdrawalFees(
+  exchangeInfo: ExchangeInfo,
+): Promise<{
   [key: string]: { [key: string]: WithdrawalFee };
 }> {
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
@@ -309,17 +284,18 @@ export async function getWithdrawalFees(): Promise<{
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
-  const erc20Tokens = await getERC20Tokens(
+  const depositAddresses = await getDepositAddresses(
     withdrawalFees.filter(x => x.min_fee).map(x => parseCurrency(x.currency)[0]),
+    exchangeInfo,
   );
+  const tokenPlatformMap = calcTokenPlatform(depositAddresses);
 
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
   withdrawalFees
     .filter(x => x.min_fee)
     .forEach(x => {
       const symbol = parseCurrency(x.currency)[0];
-      let platform = parseCurrency(x.currency)[1];
-      if (erc20Tokens.has(symbol)) platform = 'ERC20';
+      const platform = tokenPlatformMap[symbol] || parseCurrency(x.currency)[1];
 
       if (!(symbol in result)) result[symbol] = {};
 

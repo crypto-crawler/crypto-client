@@ -5,7 +5,7 @@ import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
 
 function createAuthenticatedClient(): Binance {
   assert.ok(USER_CONFIG.BINANCE_API_KEY);
@@ -88,6 +88,8 @@ export async function getDepositAddresses(
   symbols: string[],
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   if (!symbols.includes('ETH')) symbols.push('ETH');
+  if (!symbols.includes('TRX')) symbols.push('TRX');
+  if (!symbols.includes('BNB')) symbols.push('BNB');
 
   const client = createAuthenticatedClient();
   const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
@@ -95,6 +97,10 @@ export async function getDepositAddresses(
 
   const ethAddress = addresses.filter(address => address.asset === 'ETH')[0].address;
   assert.ok(ethAddress);
+  const trxAddress = addresses.filter(address => address.asset === 'TRX')[0].address;
+  assert.ok(trxAddress);
+  const bnbAddress = addresses.filter(address => address.asset === 'BNB')[0].address;
+  assert.ok(bnbAddress);
 
   // TODO: use sapi/v1/capital/deposit/address to get USDT-OMNI and USDT-TRC20
 
@@ -106,12 +112,17 @@ export async function getDepositAddresses(
       if (!(symbol in result)) result[symbol] = {};
 
       let platform = symbol;
-      if (address.address === ethAddress) {
+      if (address.address === ethAddress && symbol !== 'ETH') {
         platform = 'ERC20';
+      }
+      if (address.address === trxAddress && symbol !== 'TRX') {
+        platform = 'TRC20';
+      }
+      if (address.address === bnbAddress && symbol !== 'BNB') {
+        platform = 'BEP2';
       }
       if (symbol === 'WTC') platform = 'WTC';
       if (symbol === 'CTXC') platform = 'CTXC';
-      if (['GTO', 'MITH', 'ONE'].includes(symbol)) platform = 'BEP2';
 
       const depositAddress: DepositAddress = {
         symbol,
@@ -137,14 +148,14 @@ export async function getWithdrawalFees(): Promise<{
 
   // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
 
+  const depositAddresses = await getDepositAddresses(Object.keys(assetDetail.assetDetail));
+  const tokenPlatformMap = calcTokenPlatform(depositAddresses);
   Object.keys(assetDetail.assetDetail).forEach(symbol => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
 
-    let platform = symbol;
-    if (['USDT', 'WTC'].includes(symbol)) platform = 'ERC20';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
-    if (symbol === 'BTT') platform = 'TRC20';
+    let platform: string = tokenPlatformMap[symbol] || symbol;
+    if (symbol === 'WTC') platform = 'WTC';
 
     if (!(symbol in result)) result[symbol] = {};
 

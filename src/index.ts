@@ -431,6 +431,8 @@ export async function getWithdrawalFees(
   assert.ok(exchange);
   if (symbols) assert.ok(symbols.length, 'symbols is an empty array');
 
+  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+
   switch (exchange) {
     case 'Binance':
       return Binance.getWithdrawalFees();
@@ -448,7 +450,7 @@ export async function getWithdrawalFees(
       return Newdex.getWithdrawalFees(symbols);
     }
     case 'OKEx_Spot':
-      return OKEx_Spot.getWithdrawalFees();
+      return OKEx_Spot.getWithdrawalFees(exchangeInfo);
     case 'WhaleEx': {
       if (symbols === undefined || symbols.length <= 0)
         throw Error(`${exchange} requires an array of symbols`);

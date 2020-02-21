@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
 import { PairInfo } from 'exchange-info';
+import { DepositAddress } from '../pojo';
 
 export const FIAT_SYMBOLS = ['CAD', 'CHF', 'EUR', 'GBP', 'JPY', 'USD'];
 
@@ -138,4 +139,18 @@ export function convertPriceAndQuantityToStrings(
   assert.ok(validatePriceQuantity(pairInfo, priceStr, quantityStr, quoteQuantity));
 
   return [priceStr, quantityStr, quoteQuantity];
+}
+
+export function calcTokenPlatform(depositAddresses: {
+  [key: string]: { [key: string]: DepositAddress };
+}): { [key: string]: string } {
+  const result: { [key: string]: string } = {};
+  Object.keys(depositAddresses).forEach(symbol => {
+    const platforms = Object.keys(depositAddresses[symbol]);
+    if (platforms.length === 1) {
+      result[symbol] = platforms[0]; // eslint-disable-line prefer-destructuring
+    }
+  });
+
+  return result;
 }
