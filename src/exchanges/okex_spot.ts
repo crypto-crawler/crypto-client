@@ -1,6 +1,6 @@
 import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
-import { ExchangeInfo, PairInfo } from 'exchange-info';
+import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -157,19 +157,15 @@ async function getAddressWithTryCatch(
 
 export async function getDepositAddresses(
   symbols: string[],
-  exchangeInfo: ExchangeInfo,
+  all: boolean = false,
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   if (!symbols.includes('ETH')) symbols.push('ETH');
   if (!symbols.includes('TRX')) symbols.push('TRX');
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
-  const allSymbols = new Set(Object.keys(exchangeInfo.pairs).flatMap(pair => pair.split('_')));
-
   const authClient = createAuthenticatedClient();
-  const requests = symbols
-    .filter(symbol => allSymbols.has(symbol))
-    .map(symbol => getAddressWithTryCatch(authClient, symbol));
+  const requests = symbols.map(symbol => getAddressWithTryCatch(authClient, symbol));
 
   const arr = (await Promise.all(requests))
     .filter(x => !(x instanceof Error))
@@ -184,10 +180,10 @@ export async function getDepositAddresses(
         }[],
     );
 
-  const ethAddress = arr.filter(x => x.currency.toUpperCase() === 'ETH')[0].address;
-  assert.ok(ethAddress);
-  const trxAddress = arr.filter(x => x.currency.toUpperCase() === 'TRX')[0].address;
-  assert.ok(trxAddress);
+  const ethAddresses = arr.filter(x => x.currency.toUpperCase() === 'ETH').map(x => x.address);
+  assert.ok(ethAddresses.length > 0);
+  const trxAddresses = arr.filter(x => x.currency.toUpperCase() === 'TRX').map(x => x.address);
+  assert.ok(trxAddresses.length > 0);
 
   // Rename USDT to USDT-OMNI
   arr
@@ -199,16 +195,16 @@ export async function getDepositAddresses(
   // console.info(arr);
 
   arr
-    .filter(x => x.to === 1) // 1, spot; 6, fund
+    .filter(x => all || x.to === 1) // 1, spot; 6, fund
     .forEach(x => {
       const [symbol, platformTmp] = parseCurrency(x.currency);
       if (!(symbol in result)) result[symbol] = {};
 
       let platform = platformTmp;
-      if (x.address === ethAddress && symbol !== 'ETH') {
+      if (ethAddresses.includes(x.address) && symbol !== 'ETH') {
         platform = 'ERC20';
       }
-      if (x.address === trxAddress && symbol !== 'TRX') {
+      if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
         platform = 'TRC20';
       }
 
@@ -225,9 +221,7 @@ export async function getDepositAddresses(
   return result;
 }
 
-export async function getWithdrawalFees(
-  exchangeInfo: ExchangeInfo,
-): Promise<{
+export async function getWithdrawalFees(): Promise<{
   [key: string]: { [key: string]: WithdrawalFee };
 }> {
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
@@ -286,7 +280,7 @@ export async function getWithdrawalFees(
 
   const depositAddresses = await getDepositAddresses(
     withdrawalFees.filter(x => x.min_fee).map(x => parseCurrency(x.currency)[0]),
-    exchangeInfo,
+    true,
   );
   const tokenPlatformMap = calcTokenPlatform(depositAddresses);
 
