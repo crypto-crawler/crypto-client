@@ -509,6 +509,7 @@ export async function fetchCurrencyStatuses(
  * @param address Destination address
  * @param amount Withdrawal amount
  * @param memo Optional, some currencies like EOS require addtional  memo
+ * @param platform Optional, e.g., USDT has OMNI, ERC20 and TRC20
  * @returns The withdrawal ID, error if failed
  */
 export async function withdraw(
@@ -517,12 +518,15 @@ export async function withdraw(
   address: string,
   amount: number,
   memo?: string,
+  platform?: string,
 ): Promise<string | Error> {
   assert.ok(exchange);
 
   switch (exchange) {
     case 'Binance':
       return Binance.withdraw(symbol, address, amount, memo);
+    case 'Huobi':
+      return Huobi.withdraw(symbol, address, amount, memo, platform);
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }

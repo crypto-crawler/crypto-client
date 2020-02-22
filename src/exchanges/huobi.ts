@@ -6,7 +6,7 @@ import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { convertPriceAndQuantityToStrings, numberToString } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
 const API_ENDPOINT = `https://${DOMAIN}`;
@@ -126,6 +126,32 @@ export async function queryAccounts(): Promise<
   return response.data.data;
 }
 
+interface ReferenceCurrency {
+  currency: string;
+  instStatus: 'normal' | 'delisted';
+  chains: {
+    chain: string;
+    baseChain?: string;
+    baseChainProtocol?: string;
+    isDynamic: boolean;
+    depositStatus: 'allowed' | 'prohibited';
+    maxTransactFeeWithdraw: string;
+    maxWithdrawAmt: string;
+    minDepositAmt: string;
+    minWithdrawAmt: string;
+    numOfConfirmations: number;
+    numOfFastConfirmations: 999;
+    withdrawFeeType: 'fixed' | 'circulated';
+    transactFeeWithdraw?: string;
+    minTransactFeeWithdraw?: string;
+    withdrawPrecision: 5;
+    withdrawQuotaPerDay: string;
+    withdrawQuotaPerYear: string;
+    withdrawQuotaTotal: string;
+    withdrawStatus: 'allowed' | 'prohibited';
+  }[];
+}
+
 export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
   const path = `/v1/account/accounts/${USER_CONFIG.HUOBI_ACCOUNT_ID!}/balance`;
   const fullUrl = signRequest('GET', path);
@@ -151,9 +177,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   return result;
 }
 
-export async function getWithdrawalFees(): Promise<{
-  [key: string]: { [key: string]: WithdrawalFee };
-}> {
+async function getReferenceCurrencies(): Promise<ReferenceCurrency[]> {
   const path = '/v2/reference/currencies';
 
   const response = await Axios.get(`${API_ENDPOINT}${path}`, {
@@ -163,31 +187,13 @@ export async function getWithdrawalFees(): Promise<{
   assert.equal(response.status, 200);
   assert.equal(response.data.code, 200);
 
-  const arr = response.data.data as {
-    currency: string;
-    instStatus: 'normal' | 'delisted';
-    chains: {
-      chain: string;
-      baseChain: string;
-      baseChainProtocol: string;
-      isDynamic: boolean;
-      depositStatus: 'allowed' | 'prohibited';
-      maxTransactFeeWithdraw: string;
-      maxWithdrawAmt: string;
-      minDepositAmt: string;
-      minWithdrawAmt: string;
-      numOfConfirmations: number;
-      numOfFastConfirmations: 999;
-      withdrawFeeType: 'fixed' | 'circulated';
-      transactFeeWithdraw?: string;
-      minTransactFeeWithdraw?: string;
-      withdrawPrecision: 5;
-      withdrawQuotaPerDay: string;
-      withdrawQuotaPerYear: string;
-      withdrawQuotaTotal: string;
-      withdrawStatus: 'allowed' | 'prohibited';
-    }[];
-  }[];
+  return response.data.data;
+}
+
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
+  const arr = await getReferenceCurrencies();
 
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
   arr
@@ -213,40 +219,7 @@ export async function getWithdrawalFees(): Promise<{
 export async function fetchCurrencies(): Promise<{
   [key: string]: Currency;
 }> {
-  const path = '/v2/reference/currencies';
-
-  const response = await Axios.get(`${API_ENDPOINT}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  assert.equal(response.status, 200);
-  assert.equal(response.data.code, 200);
-
-  const arr = response.data.data as {
-    currency: string;
-    instStatus: 'normal' | 'delisted';
-    chains: {
-      chain: string;
-      baseChain: string;
-      baseChainProtocol: string;
-      isDynamic: boolean;
-      depositStatus: 'allowed' | 'prohibited';
-      maxTransactFeeWithdraw: string;
-      maxWithdrawAmt: string;
-      minDepositAmt: string;
-      minWithdrawAmt: string;
-      numOfConfirmations: number;
-      numOfFastConfirmations: 999;
-      withdrawFeeType: 'fixed' | 'circulated';
-      transactFeeWithdraw?: string;
-      minTransactFeeWithdraw?: string;
-      withdrawPrecision: 5;
-      withdrawQuotaPerDay: string;
-      withdrawQuotaPerYear: string;
-      withdrawQuotaTotal: string;
-      withdrawStatus: 'allowed' | 'prohibited';
-    }[];
-  }[];
+  const arr = await getReferenceCurrencies();
 
   const result: { [key: string]: Currency } = {};
   arr
@@ -276,40 +249,7 @@ export async function fetchCurrencies(): Promise<{
 }
 
 export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
-  const path = '/v2/reference/currencies';
-
-  const response = await Axios.get(`${API_ENDPOINT}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  assert.equal(response.status, 200);
-  assert.equal(response.data.code, 200);
-
-  const arr = response.data.data as {
-    currency: string;
-    instStatus: 'normal' | 'delisted';
-    chains: {
-      chain: string;
-      baseChain: string;
-      baseChainProtocol: string;
-      isDynamic: boolean;
-      depositStatus: 'allowed' | 'prohibited';
-      maxTransactFeeWithdraw: string;
-      maxWithdrawAmt: string;
-      minDepositAmt: string;
-      minWithdrawAmt: string;
-      numOfConfirmations: number;
-      numOfFastConfirmations: 999;
-      withdrawFeeType: 'fixed' | 'circulated';
-      transactFeeWithdraw?: string;
-      minTransactFeeWithdraw?: string;
-      withdrawPrecision: 5;
-      withdrawQuotaPerDay: string;
-      withdrawQuotaPerYear: string;
-      withdrawQuotaTotal: string;
-      withdrawStatus: 'allowed' | 'prohibited';
-    }[];
-  }[];
+  const arr = await getReferenceCurrencies();
 
   const result: { [key: string]: CurrencyStatus } = {};
   arr.forEach(x => {
@@ -334,4 +274,112 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
     });
   });
   return result;
+}
+
+async function getChainInfo(): Promise<{
+  [key: string]: {
+    [key: string]: {
+      currency: string;
+      chain: string;
+      baseChain?: string;
+      baseChainProtocol?: string;
+      fee: string;
+      min: number;
+      withdrawPrecision: number;
+      withdrawal_enabled: boolean;
+    };
+  };
+}> {
+  const arr = await getReferenceCurrencies();
+
+  const result: {
+    [key: string]: {
+      [key: string]: {
+        currency: string;
+        chain: string;
+        baseChain?: string;
+        baseChainProtocol?: string;
+        fee: string;
+        min: number;
+        withdrawPrecision: number;
+        withdrawal_enabled: boolean;
+      };
+    };
+  } = {};
+
+  arr
+    .filter(x => x.chains.length > 0)
+    .forEach(x => {
+      const symbol = normalizeSymbol(x.currency, 'Huobi');
+      if (!(symbol in result)) result[symbol] = {};
+
+      x.chains.forEach(y => {
+        const platform = y.baseChainProtocol || symbol;
+
+        result[symbol][platform] = {
+          currency: x.currency,
+          chain: y.chain,
+          baseChain: y.baseChain,
+          baseChainProtocol: y.baseChainProtocol,
+          fee: y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0',
+          min: parseFloat(y.minWithdrawAmt),
+          withdrawPrecision: y.withdrawPrecision,
+          withdrawal_enabled: y.withdrawStatus === 'allowed',
+        };
+      });
+    });
+
+  return result;
+}
+
+export async function withdraw(
+  symbol: string,
+  address: string, // only supports existing addresses in your withdrawal address list
+  amount: number,
+  memo?: string,
+  platform?: string,
+): Promise<string | Error> {
+  const path = '/v1/dw/withdraw/api/create';
+  assert.ok(platform, 'The platform parameter must be provided in Huobi');
+
+  const chainInfoMap = await getChainInfo();
+  if (!(symbol in chainInfoMap)) {
+    return new Error(`${symbol} is not in chainInfoMap`);
+  }
+  if (!(platform! in chainInfoMap[symbol])) {
+    return new Error(`${platform} is not in chainInfoMap[${symbol}]`);
+  }
+
+  const chainInfo = chainInfoMap[symbol][platform!];
+  if (!chainInfo.withdrawal_enabled) return new Error(`Huobi ${symbol} withdrawal is disabled now`);
+  if (amount < chainInfo.min)
+    return new Error(
+      `The withdrawal amount ${amount} is less than Huobi ${symbol} minWithdrawAmt ${chainInfo.min}`,
+    );
+
+  const params: {
+    address: string;
+    currency: string;
+    amount: string;
+    fee: string;
+    chain?: string;
+    'addr-tag'?: string;
+  } = {
+    address,
+    currency: chainInfo.currency,
+    amount: numberToString(amount, chainInfo.withdrawPrecision, false),
+    fee: chainInfo.fee,
+    chain: chainInfo.chain,
+  };
+  if (memo) params['addr-tag'] = memo;
+
+  const fullUrl = signRequest('POST', path, params);
+
+  const response = await Axios.post(fullUrl, params, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  assert.equal(response.status, 200);
+
+  if (response.data.data === null) return new Error(JSON.stringify(response.data));
+  return response.data.data.toString();
 }
