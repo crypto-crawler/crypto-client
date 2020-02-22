@@ -235,3 +235,26 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
 
   return result;
 }
+
+export async function withdraw(
+  symbol: string,
+  address: string,
+  amount: number,
+  memo?: string,
+): Promise<string | Error> {
+  const client = createAuthenticatedClient();
+
+  const params: any = {
+    asset: symbol,
+    address,
+    amount,
+  };
+  if (memo) {
+    params.addressTag = memo;
+  }
+  const data = (await client.withdraw(params)) as { success: boolean; id: string };
+  if (data.success) {
+    return data.id;
+  }
+  return new Error(JSON.stringify(data));
+}

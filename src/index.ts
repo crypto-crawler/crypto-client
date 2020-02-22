@@ -500,3 +500,30 @@ export async function fetchCurrencyStatuses(
       throw Error(`Unsupported exchange: ${exchange}`);
   }
 }
+
+/**
+ * Withdraw.
+ *
+ * @param exchange The exchange name
+ * @param symbol The currency symbol
+ * @param address Destination address
+ * @param amount Withdrawal amount
+ * @param memo Optional, some currencies like EOS require addtional  memo
+ * @returns The withdrawal ID, error if failed
+ */
+export async function withdraw(
+  exchange: SupportedExchange,
+  symbol: string,
+  address: string,
+  amount: number,
+  memo?: string,
+): Promise<string | Error> {
+  assert.ok(exchange);
+
+  switch (exchange) {
+    case 'Binance':
+      return Binance.withdraw(symbol, address, amount, memo);
+    default:
+      throw Error(`Unsupported exchange: ${exchange}`);
+  }
+}
