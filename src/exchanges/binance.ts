@@ -241,6 +241,7 @@ export async function withdraw(
   address: string,
   amount: number,
   memo?: string,
+  platform?: string,
 ): Promise<string | Error> {
   const client = createAuthenticatedClient();
 
@@ -251,6 +252,17 @@ export async function withdraw(
   };
   if (memo) {
     params.addressTag = memo;
+  }
+  if (platform) {
+    const platformNetworkMap: { [key: string]: string } = {
+      ERC20: 'ETH',
+      OMNI: 'BTC',
+      TRC20: 'TRX',
+    };
+    const network = platformNetworkMap[platform];
+    if (network === undefined)
+      return new Error(`Binance ${symbol} ${platform} can NOT find network`);
+    params.network = network;
   }
   const data = (await client.withdraw(params)) as { success: boolean; id: string };
   if (data.success) {

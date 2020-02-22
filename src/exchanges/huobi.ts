@@ -340,7 +340,7 @@ export async function withdraw(
   platform?: string,
 ): Promise<string | Error> {
   const path = '/v1/dw/withdraw/api/create';
-  assert.ok(platform, 'The platform parameter must be provided in Huobi');
+  if (platform === undefined) platform = symbol; // eslint-disable-line no-param-reassign
 
   const chainInfoMap = await getChainInfo();
   if (!(symbol in chainInfoMap)) {

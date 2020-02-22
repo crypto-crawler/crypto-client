@@ -522,9 +522,14 @@ export async function withdraw(
 ): Promise<string | Error> {
   assert.ok(exchange);
 
+  const symbolsRequirePlatform = ['USDT'];
+  if (symbolsRequirePlatform.includes(symbol)) {
+    if (!platform) return new Error(`${symbol} requires platform`);
+  }
+
   switch (exchange) {
     case 'Binance':
-      return Binance.withdraw(symbol, address, amount, memo);
+      return Binance.withdraw(symbol, address, amount, memo, platform);
     case 'Huobi':
       return Huobi.withdraw(symbol, address, amount, memo, platform);
     default:
