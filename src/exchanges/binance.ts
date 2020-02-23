@@ -111,15 +111,18 @@ export async function getDepositAddresses(
       const symbol = address.asset;
       if (!(symbol in result)) result[symbol] = {};
 
-      let platform = detectPlatform(address.address, symbol) || symbol;
+      let platform = symbol;
       if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
-        assert.equal(platform, 'ERC20');
+        platform = 'ERC20';
+        assert.equal(platform, detectPlatform(address.address, symbol));
       }
       if (address.address === trxAddress && symbol !== 'TRX') {
-        assert.equal(platform, 'TRC20');
+        platform = 'TRC20';
+        assert.equal(platform, detectPlatform(address.address, symbol));
       }
       if (address.address === bnbAddress && symbol !== 'BNB') {
-        assert.equal(platform, 'BEP2');
+        platform = 'BEP2';
+        assert.equal(platform, detectPlatform(address.address, symbol));
       }
       if (symbol === 'WTC') platform = 'WTC';
       if (symbol === 'CTXC') platform = 'CTXC';

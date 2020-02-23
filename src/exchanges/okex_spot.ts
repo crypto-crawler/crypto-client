@@ -200,12 +200,14 @@ export async function getDepositAddresses(
       const [symbol, platformTmp] = parseCurrency(x.currency);
       if (!(symbol in result)) result[symbol] = {};
 
-      const platform = detectPlatform(x.address, symbol) || platformTmp;
+      let platform = platformTmp;
       if (ethAddresses.includes(x.address) && symbol !== 'ETH' && symbol !== 'ETC') {
-        assert.equal(platform, 'ERC20');
+        platform = 'ERC20';
+        assert.equal(platform, detectPlatform(x.address, symbol));
       }
       if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
-        assert.equal(platform, 'TRC20');
+        platform = 'TRC20';
+        assert.equal(platform, detectPlatform(x.address, symbol));
       }
 
       const depositAddress: DepositAddress = {
