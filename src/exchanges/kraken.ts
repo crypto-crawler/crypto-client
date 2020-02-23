@@ -256,13 +256,15 @@ export async function getDepositAddresses(
     const data = await getDepositAddress(symbol); // eslint-disable-line no-await-in-loop
     await sleep(3000); // eslint-disable-line no-await-in-loop
     if (data) {
-      result[symbol][symbol] = data;
+      const platform = detectPlatform(data.address, symbol) || symbol;
+      result[symbol][platform] = data;
     } else {
       // generate new address
       const newAddress = await getDepositAddress(symbol, true); // eslint-disable-line no-await-in-loop
       await sleep(3000); // eslint-disable-line no-await-in-loop
       if (newAddress) {
-        result[symbol][symbol] = newAddress;
+        const platform = detectPlatform(newAddress.address, symbol) || symbol;
+        result[symbol][platform] = newAddress;
       }
     }
   }

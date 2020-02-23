@@ -3,7 +3,7 @@ import { AuthenticatedClient, LimitOrder } from 'coinbase-pro';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
 function createAuthenticatedClient(): AuthenticatedClient {
   assert.ok(USER_CONFIG.COINBASE_ACCESS_KEY);
@@ -107,9 +107,11 @@ export async function getDepositAddresses(
         address_info: { address: string; destination_tag?: string };
       };
 
-      result[symbol][symbol] = {
+      const platform = detectPlatform(address_info.address, symbol) || symbol;
+
+      result[symbol][platform] = {
         symbol,
-        platform: symbol,
+        platform,
         address: address_info.address,
       };
       if (address_info.destination_tag) result[symbol][symbol].memo = address_info.destination_tag;
