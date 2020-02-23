@@ -201,7 +201,7 @@ export async function getDepositAddresses(
       if (!(symbol in result)) result[symbol] = {};
 
       let platform = platformTmp;
-      if (ethAddresses.includes(x.address) && symbol !== 'ETH') {
+      if (ethAddresses.includes(x.address) && symbol !== 'ETH' && symbol !== 'ETC') {
         platform = 'ERC20';
       }
       if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
