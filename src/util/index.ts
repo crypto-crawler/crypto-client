@@ -1,6 +1,8 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
+import bs58 from 'bs58';
 import { PairInfo } from 'exchange-info';
+import Web3Utils from 'web3-utils';
 import { DepositAddress } from '../pojo';
 
 export const FIAT_SYMBOLS = ['CAD', 'CHF', 'EUR', 'GBP', 'JPY', 'USD'];
@@ -153,4 +155,28 @@ export function calcTokenPlatform(depositAddresses: {
   });
 
   return result;
+}
+
+export function detectPlatform(address: string): string | undefined {
+  if (address.indexOf('bc1') === 0) return 'BTC';
+
+  try {
+    const hexString = bs58.decode(address);
+    if (hexString.length === 50) {
+      if (hexString.indexOf('00') === 0 || hexString.indexOf('05') === 0) {
+        return 'OMNI';
+      }
+      if (hexString.indexOf('41') === 0) {
+        return 'TRC20';
+      }
+    }
+  } catch (e) {
+    // do nothing;
+  }
+
+  if (Web3Utils.isAddress(address)) return 'ERC20';
+
+  if (address.length === 12) return 'EOS'; // TODO: await accountExists(address)
+
+  return undefined;
 }

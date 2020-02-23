@@ -18,6 +18,7 @@ import { Currency } from './pojo/currency';
 import { CurrencyStatus } from './pojo/currency_status';
 import { DepositAddress } from './pojo/deposit_address';
 import { WithdrawalFee } from './pojo/withdrawal_fee';
+import { detectPlatform } from './util';
 
 export { UserConfig } from './config';
 export * from './pojo';
@@ -508,8 +509,8 @@ export async function fetchCurrencyStatuses(
  * @param symbol The currency symbol
  * @param address Destination address
  * @param amount Withdrawal amount
- * @param memo Optional, some currencies like EOS require addtional  memo
- * @param platform Optional, e.g., USDT has OMNI, ERC20 and TRC20
+ * @param memo Optional, some currencies like EOS require addtional memo
+ * @param params Additional parameters, each exchange is different
  * @returns The withdrawal ID, error if failed
  */
 export async function withdraw(
@@ -518,18 +519,23 @@ export async function withdraw(
   address: string,
   amount: number,
   memo?: string,
-  platform?: string,
+  params: { [key: string]: string | number | boolean } = {},
 ): Promise<string | Error> {
   assert.ok(exchange);
 
   const symbolsRequirePlatform = ['USDT'];
+  let platform: string | undefined;
   if (symbolsRequirePlatform.includes(symbol)) {
-    if (!platform) return new Error(`${symbol} requires platform`);
+    platform = detectPlatform(address);
+    if (!platform) return new Error(`${symbol} requires the platform parameter`);
   }
+  if (symbol === 'EOS' && !memo) return new Error('EOS withdrawal requires memo');
 
   switch (exchange) {
     case 'Binance':
       return Binance.withdraw(symbol, address, amount, memo, platform);
+    case 'Bitfinex':
+      return Bitfinex.withdraw(symbol, address, amount, memo, platform, params);
     case 'Huobi':
       return Huobi.withdraw(symbol, address, amount, memo, platform);
     default:

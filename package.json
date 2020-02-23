@@ -45,6 +45,7 @@
   "homepage": "https://github.com/soulmachine/crypto-client#readme",
   "devDependencies": {
     "@types/assert": "^1.4.6",
+    "@types/bs58": "^4.0.1",
     "@types/debug": "^4.1.5",
     "@types/jest": "^25.1.3",
     "@types/long": "^4.0.1",
@@ -79,6 +80,7 @@
     "bfx-api-node-rest": "^3.0.1",
     "bignumber.js": "^9.0.0",
     "binance-api-node": "^0.9.15",
+    "bs58": "^4.0.1",
     "coinbase-pro": "^0.9.0",
     "crypto-pair": "0.1.2",
     "debug": "^4.1.1",
@@ -93,6 +95,7 @@
     "promise.any": "^2.0.1",
     "qs": "^6.9.1",
     "uuid": "^3.4.0",
+    "web3-utils": "^1.2.6",
     "yargs": "^15.1.0"
   }
 }
