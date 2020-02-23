@@ -169,14 +169,12 @@ export async function getDepositAddresses(
 
     if (!(address instanceof Error)) {
       if (!(symbol in result)) result[symbol] = {};
-      let platform = symbol;
+      const platform = detectPlatform(address.address, symbol) || symbol;
       if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
-        platform = 'ERC20';
-        assert.equal(platform, detectPlatform(address.address, symbol));
+        assert.equal(platform, 'ERC20');
       }
       if (address.address === trxAddress && symbol !== 'TRX') {
-        platform = 'TRC20';
-        assert.equal(platform, detectPlatform(address.address, symbol));
+        assert.equal(platform, 'TRC20');
       }
       result[symbol][platform] = { symbol, platform, ...address };
     }
