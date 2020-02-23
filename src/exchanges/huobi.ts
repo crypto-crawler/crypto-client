@@ -252,27 +252,24 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
   const arr = await getReferenceCurrencies();
 
   const result: { [key: string]: CurrencyStatus } = {};
-  arr.forEach(x => {
-    const trading = x.instStatus === 'normal';
-    const symbol = normalizeSymbol(x.currency, 'Huobi');
-    if (!(symbol in result)) {
-      result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {}, trading };
-    }
 
-    x.chains.forEach(y => {
-      let platform: string;
-      if (symbol === 'USDT') {
-        if (y.chain === 'trc20usdt') platform = 'TR20C';
-        else if (y.chain === 'usdterc20') platform = 'ERC20';
-        else platform = 'OMNI';
-      } else {
-        platform = y.chain.toUpperCase() === symbol ? symbol : y.chain;
+  arr
+    .filter(x => x.chains.length > 0)
+    .forEach(x => {
+      const trading = x.instStatus === 'normal';
+      const symbol = normalizeSymbol(x.currency, 'Huobi');
+      if (!(symbol in result)) {
+        result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {}, trading };
       }
 
-      result[symbol].deposit_enabled[platform] = y.depositStatus === 'allowed';
-      result[symbol].withdrawal_enabled[platform] = y.withdrawStatus === 'allowed';
+      x.chains.forEach(y => {
+        const platform = y.baseChainProtocol || symbol;
+
+        result[symbol].deposit_enabled[platform] = y.depositStatus === 'allowed';
+        result[symbol].withdrawal_enabled[platform] = y.withdrawStatus === 'allowed';
+      });
     });
-  });
+
   return result;
 }
 
