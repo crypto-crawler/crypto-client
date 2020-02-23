@@ -203,11 +203,11 @@ export async function getDepositAddresses(
       let platform = platformTmp;
       if (ethAddresses.includes(x.address) && symbol !== 'ETH' && symbol !== 'ETC') {
         platform = 'ERC20';
-        assert.equal(platform, detectPlatform(x.address));
+        assert.equal(platform, detectPlatform(x.address, symbol));
       }
       if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
         platform = 'TRC20';
-        assert.equal(platform, detectPlatform(x.address));
+        assert.equal(platform, detectPlatform(x.address, symbol));
       }
 
       const depositAddress: DepositAddress = {

@@ -6,7 +6,7 @@ import { PairInfo } from 'exchange-info';
 import qs from 'qs';
 import { USER_CONFIG } from '../config';
 import { DepositAddress } from '../pojo';
-import { convertPriceAndQuantityToStrings, FIAT_SYMBOLS, sleep } from '../util';
+import { convertPriceAndQuantityToStrings, detectPlatform, FIAT_SYMBOLS, sleep } from '../util';
 
 const API_ENDPOINT = 'https://api.kraken.com';
 
@@ -226,12 +226,13 @@ export async function getDepositAddress(
 
   const address = arr[0];
 
+  const platform: string = detectPlatform(address.address, symbol) || symbol;
+
   const result: DepositAddress = {
     symbol,
-    platform: symbol,
+    platform,
     address: address.address,
   };
-  if (symbol === 'USDT') result.platform = 'OMNI';
   if (address.memo) result.memo = address.memo;
   if (parseFloat(depositMethod.fee) > 0) result.fee = parseFloat(depositMethod.fee);
   if (typeof depositMethod.limit === 'string')

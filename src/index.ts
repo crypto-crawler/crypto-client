@@ -523,19 +523,18 @@ export async function withdraw(
 ): Promise<string | Error> {
   assert.ok(exchange);
 
-  let platform = detectPlatform(address);
-  if (!platform) return new Error(`Failed to detect platform of ${symbol}`);
-
-  const symbolsRequireMemoList = ['ATOM', 'EOS', 'XLM', 'XRP'];
-
-  if (!memo) {
-    if (symbolsRequireMemoList.includes(symbol)) return new Error(`${symbol} requires memo`);
-    if (symbolsRequireMemoList.includes(platform))
-      return new Error(`${symbol} on ${platform} requires memo`);
+  const platform = detectPlatform(address, symbol);
+  const symbolsRequirePlatform = ['USDT'];
+  if (symbolsRequirePlatform.includes(symbol) && !platform) {
+    return new Error(`Failed to detect platform of ${symbol}`);
   }
 
-  const symbolsRequirePlatform = ['USDT'];
-  platform = symbolsRequirePlatform.includes(symbol) ? platform : undefined;
+  const symbolsRequireMemoList = ['ATOM', 'EOS', 'XLM', 'XRP'];
+  if (!memo) {
+    if (symbolsRequireMemoList.includes(symbol)) return new Error(`${symbol} requires memo`);
+    if (symbolsRequireMemoList.includes(platform!))
+      return new Error(`${symbol} on ${platform} requires memo`);
+  }
 
   switch (exchange) {
     case 'Binance':
