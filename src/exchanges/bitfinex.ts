@@ -4,7 +4,7 @@ import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
-import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
 const { RESTv2 } = require('bfx-api-node-rest');
 const { Order } = require('bfx-api-node-models');
@@ -170,9 +170,14 @@ export async function getDepositAddresses(
     if (!(address instanceof Error)) {
       if (!(symbol in result)) result[symbol] = {};
       let platform = symbol;
-      if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC')
+      if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
         platform = 'ERC20';
-      if (address.address === trxAddress && symbol !== 'TRX') platform = 'TRC20';
+        assert.equal(platform, detectPlatform(address.address));
+      }
+      if (address.address === trxAddress && symbol !== 'TRX') {
+        platform = 'TRC20';
+        assert.equal(platform, detectPlatform(address.address));
+      }
       result[symbol][platform] = { symbol, platform, ...address };
     }
   }

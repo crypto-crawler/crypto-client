@@ -5,7 +5,7 @@ import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
-import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
 function createAuthenticatedClient(): any {
   assert.ok(USER_CONFIG.OKEX_SPOT_API_KEY);
@@ -203,9 +203,11 @@ export async function getDepositAddresses(
       let platform = platformTmp;
       if (ethAddresses.includes(x.address) && symbol !== 'ETH' && symbol !== 'ETC') {
         platform = 'ERC20';
+        assert.equal(platform, detectPlatform(x.address));
       }
       if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
         platform = 'TRC20';
+        assert.equal(platform, detectPlatform(x.address));
       }
 
       const depositAddress: DepositAddress = {

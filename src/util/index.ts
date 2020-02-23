@@ -161,7 +161,7 @@ export function detectPlatform(address: string): string | undefined {
   if (address.indexOf('bc1') === 0) return 'BTC';
 
   try {
-    const hexString = bs58.decode(address);
+    const hexString = bs58.decode(address).toString('hex');
     if (hexString.length === 50) {
       if (hexString.indexOf('00') === 0 || hexString.indexOf('05') === 0) {
         return 'OMNI';
@@ -177,6 +177,8 @@ export function detectPlatform(address: string): string | undefined {
   if (Web3Utils.isAddress(address)) return 'ERC20';
 
   if (address.length === 12) return 'EOS'; // TODO: await accountExists(address)
+
+  if (address.indexOf('bnb') === 0) return 'BEP2';
 
   return undefined;
 }

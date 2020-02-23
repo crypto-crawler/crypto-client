@@ -5,7 +5,7 @@ import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { DepositAddress } from '../pojo/deposit_address';
-import { calcTokenPlatform, convertPriceAndQuantityToStrings } from '../util';
+import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
 function createAuthenticatedClient(): Binance {
   assert.ok(USER_CONFIG.BINANCE_API_KEY);
@@ -114,12 +114,15 @@ export async function getDepositAddresses(
       let platform = symbol;
       if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
         platform = 'ERC20';
+        assert.equal(platform, detectPlatform(address.address));
       }
       if (address.address === trxAddress && symbol !== 'TRX') {
         platform = 'TRC20';
+        assert.equal(platform, detectPlatform(address.address));
       }
       if (address.address === bnbAddress && symbol !== 'BNB') {
         platform = 'BEP2';
+        assert.equal(platform, detectPlatform(address.address));
       }
       if (symbol === 'WTC') platform = 'WTC';
       if (symbol === 'CTXC') platform = 'CTXC';
