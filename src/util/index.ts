@@ -190,7 +190,7 @@ export function detectPlatform(address: string, symbol: string): string | undefi
   if (platform === 'ERC20' && (symbol === 'ETH' || symbol === 'ETC')) return undefined;
   if (platform === 'TRC20' && symbol === 'TRX') return undefined;
   if (platform === 'EOS' && symbol === 'EOS') return undefined;
-  if (platform === 'BEP' && symbol === 'BNB') return undefined;
+  if (platform === 'BEP2' && symbol === 'BNB') return undefined;
 
   if (platform === symbol) return undefined;
 
