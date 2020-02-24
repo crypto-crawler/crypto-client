@@ -65,33 +65,42 @@ export async function placeOrder(
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
-  assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
+    assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
-  assert.ok(priceStr);
-  assert.ok(quantityStr);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
+    assert.ok(priceStr);
+    assert.ok(quantityStr);
 
-  const path = '/0/private/AddOrder';
+    const path = '/0/private/AddOrder';
 
-  const params: { nonce: number; [key: string]: string | number } = {
-    pair: pairInfo.raw_pair,
-    type: sell ? 'sell' : 'buy',
-    ordertype: 'limit',
-    price,
-    volume: quantity,
-    nonce: generateNonce(),
-  };
-  if (clientOrderId) {
-    params.userref = parseInt(clientOrderId, 10);
+    const params: { nonce: number; [key: string]: string | number } = {
+      pair: pairInfo.raw_pair,
+      type: sell ? 'sell' : 'buy',
+      ordertype: 'limit',
+      price,
+      volume: quantity,
+      nonce: generateNonce(),
+    };
+    if (clientOrderId) {
+      params.userref = parseInt(clientOrderId, 10);
+    }
+
+    const data = await privateMethod(path, params);
+    const txid = data.txid as string[];
+    assert.ok(txid.length > 0);
+    return txid[0]; // TODO: handle txid.length > 1
+  } catch (e) {
+    return e;
   }
-
-  const data = await privateMethod(path, params);
-  const txid = data.txid as string[];
-  assert.ok(txid.length > 0);
-  return txid[0]; // TODO: handle txid.length > 1
 }
 
 export async function cancelOrder(

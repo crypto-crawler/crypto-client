@@ -26,27 +26,36 @@ export async function placeOrder(
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
-): Promise<string> {
-  assert.ok(pairInfo);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
 
-  const params: { [key: string]: string } = {
-    type: 'limit',
-    side: sell ? 'sell' : 'buy',
-    instrument_id: pairInfo.raw_pair,
-    price: priceStr,
-    size: quantityStr,
-  };
-  if (clientOrderId) {
-    params.client_oid = clientOrderId;
+    const params: { [key: string]: string } = {
+      type: 'limit',
+      side: sell ? 'sell' : 'buy',
+      instrument_id: pairInfo.raw_pair,
+      price: priceStr,
+      size: quantityStr,
+    };
+    if (clientOrderId) {
+      params.client_oid = clientOrderId;
+    }
+
+    const authClient = createAuthenticatedClient();
+    const data = await authClient.spot().postOrder(params);
+    if (data.error_code) throw new Error(data.error_message);
+
+    return data.order_id;
+  } catch (e) {
+    return e;
   }
-
-  const authClient = createAuthenticatedClient();
-  const data = await authClient.spot().postOrder(params);
-  if (data.error_code) throw new Error(data.error_message);
-
-  return data.order_id;
 }
 
 export async function cancelOrder(

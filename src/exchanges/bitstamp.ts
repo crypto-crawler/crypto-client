@@ -63,34 +63,43 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.BITSTAMP_API_KEY);
-  assert.ok(USER_CONFIG.BITSTAMP_API_SECRET);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.BITSTAMP_API_KEY);
+    assert.ok(USER_CONFIG.BITSTAMP_API_SECRET);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
 
-  const path = `/api/v2/${sell ? 'sell' : 'buy'}/${pairInfo.raw_pair}/`;
+    const path = `/api/v2/${sell ? 'sell' : 'buy'}/${pairInfo.raw_pair}/`;
 
-  const payload = `price=${priceStr}&amount=${quantityStr}`;
-  const headers = sign(
-    USER_CONFIG.BITSTAMP_API_KEY!,
-    USER_CONFIG.BITSTAMP_API_SECRET!,
-    'POST',
-    path,
-    payload,
-  );
+    const payload = `price=${priceStr}&amount=${quantityStr}`;
+    const headers = sign(
+      USER_CONFIG.BITSTAMP_API_KEY!,
+      USER_CONFIG.BITSTAMP_API_SECRET!,
+      'POST',
+      path,
+      payload,
+    );
 
-  const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
-    headers,
-  });
-  assert.equal(response.status, 200);
+    const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
+      headers,
+    });
+    assert.equal(response.status, 200);
 
-  if (response.data.status === 'error') {
-    throw new Error(response.data.reason.__all__[0] as string); // eslint-disable-line no-underscore-dangle
+    if (response.data.status === 'error') {
+      return new Error(response.data.reason.__all__[0] as string); // eslint-disable-line no-underscore-dangle
+    }
+
+    return response.data.id;
+  } catch (e) {
+    return e;
   }
-
-  return response.data.id;
 }
 
 export async function queryOrder(

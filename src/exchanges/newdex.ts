@@ -78,14 +78,18 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.eosAccount);
-  assert.ok(USER_CONFIG.eosPrivateKey);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.eosAccount);
+    assert.ok(USER_CONFIG.eosPrivateKey);
 
-  const actionExt = createOrder(pairInfo, price, quantity, sell);
-  const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!);
-  return response.transaction_id || response.id;
+    const actionExt = createOrder(pairInfo, price, quantity, sell);
+    const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!);
+    return response.transaction_id || response.id;
+  } catch (e) {
+    return e;
+  }
 }
 
 export async function cancelOrder(

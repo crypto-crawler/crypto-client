@@ -28,23 +28,32 @@ export async function placeOrder(
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
-): Promise<string> {
-  assert.ok(pairInfo);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
-  const order: { [key: string]: string | number } = {
-    type: 'EXCHANGE LIMIT',
-    symbol: `t${pairInfo.raw_pair.toUpperCase()}`,
-    price: priceStr,
-    amount: `${sell ? '-' : ''}${quantityStr}`, // positive for buy, negative for sell
-  };
-  if (clientOrderId) {
-    order.cid = parseInt(clientOrderId, 10);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
+    const order: { [key: string]: string | number } = {
+      type: 'EXCHANGE LIMIT',
+      symbol: `t${pairInfo.raw_pair.toUpperCase()}`,
+      price: priceStr,
+      amount: `${sell ? '-' : ''}${quantityStr}`, // positive for buy, negative for sell
+    };
+    if (clientOrderId) {
+      order.cid = parseInt(clientOrderId, 10);
+    }
+
+    const authClient = createAuthenticatedClient();
+    const arr = await authClient.submitOrder(new Order(order));
+    return arr[0].toString();
+  } catch (e) {
+    return e;
   }
-
-  const authClient = createAuthenticatedClient();
-  const arr = await authClient.submitOrder(new Order(order));
-  return arr[0].toString();
 }
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {

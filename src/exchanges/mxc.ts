@@ -59,26 +59,31 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.MXC_ACCESS_KEY);
-  assert.ok(USER_CONFIG.MXC_SECRET_KEY);
-
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
-
-  const path = '/open/api/v1/private/order';
-
-  const params = {
-    api_key: USER_CONFIG.MXC_ACCESS_KEY!,
-    req_time: Date.now(),
-    market: pairInfo.raw_pair,
-    price: priceStr,
-    quantity: quantityStr,
-    trade_type: sell ? 2 : 1,
-  };
-  const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
-
+): Promise<string | Error> {
   try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.MXC_ACCESS_KEY);
+    assert.ok(USER_CONFIG.MXC_SECRET_KEY);
+
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
+
+    const path = '/open/api/v1/private/order';
+
+    const params = {
+      api_key: USER_CONFIG.MXC_ACCESS_KEY!,
+      req_time: Date.now(),
+      market: pairInfo.raw_pair,
+      price: priceStr,
+      quantity: quantityStr,
+      trade_type: sell ? 2 : 1,
+    };
+    const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
+
     const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
     debug(requestUrl);
     const response = await Axios.post(requestUrl);

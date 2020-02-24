@@ -54,50 +54,59 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'APIKey is empty');
-  assert.ok(USER_CONFIG.eosAccount);
-  assert.ok(USER_CONFIG.eosPrivateKey);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'APIKey is empty');
+    assert.ok(USER_CONFIG.eosAccount);
+    assert.ok(USER_CONFIG.eosPrivateKey);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
 
-  const path = '/api/v1/order/orders/place';
+    const path = '/api/v1/order/orders/place';
 
-  const order: WhaleExOrder = {
-    orderId: await getIdFromCache(),
-    amount: quantityStr,
-    price: priceStr,
-    symbol: pairInfo.raw_pair,
-    type: sell ? 'sell-limit' : 'buy-limit',
-  };
+    const order: WhaleExOrder = {
+      orderId: await getIdFromCache(),
+      amount: quantityStr,
+      price: priceStr,
+      symbol: pairInfo.raw_pair,
+      type: sell ? 'sell-limit' : 'buy-limit',
+    };
 
-  let baseToken = pairInfo.normalized_pair.split('_')[0];
-  if (baseToken === 'MYKEY') baseToken = 'KEY';
+    let baseToken = pairInfo.normalized_pair.split('_')[0];
+    if (baseToken === 'MYKEY') baseToken = 'KEY';
 
-  const symbolObj: SymbolObj = {
-    baseToken,
-    quoteToken: pairInfo.normalized_pair.split('_')[1],
-    basePrecision: pairInfo.base_precision,
-    quotePrecision: pairInfo.quote_precision,
-    baseContract: pairInfo.base_contract!,
-    quoteContract: pairInfo.quote_contract!,
-  };
-  const params = signDataOrder(order, symbolObj);
+    const symbolObj: SymbolObj = {
+      baseToken,
+      quoteToken: pairInfo.normalized_pair.split('_')[1],
+      basePrecision: pairInfo.base_precision,
+      quotePrecision: pairInfo.quote_precision,
+      baseContract: pairInfo.base_contract!,
+      quoteContract: pairInfo.quote_contract!,
+    };
+    const params = signDataOrder(order, symbolObj);
 
-  const response = await Axios.post(`${URL_PREFIX}${path}?${params}`, order, {
-    transformResponse: resp => {
-      return JSON.parse(resp.replace(/"result":(\d+)/g, '"result":"$1"'));
-    },
-    responseType: 'json',
-  });
-  assert.equal(response.status, 200);
+    const response = await Axios.post(`${URL_PREFIX}${path}?${params}`, order, {
+      transformResponse: resp => {
+        return JSON.parse(resp.replace(/"result":(\d+)/g, '"result":"$1"'));
+      },
+      responseType: 'json',
+    });
+    assert.equal(response.status, 200);
 
-  if (response.data.returnCode === '0') {
-    assert.equal(typeof response.data.result, 'string');
-    return response.data.result as string;
+    if (response.data.returnCode === '0') {
+      assert.equal(typeof response.data.result, 'string');
+      return response.data.result as string;
+    }
+    return new Error(JSON.stringify(response.data));
+  } catch (e) {
+    return e;
   }
-  throw new Error(JSON.stringify(response.data));
 }
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {

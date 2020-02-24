@@ -22,23 +22,32 @@ export async function placeOrder(
   price: number,
   quantity: number,
   sell: boolean,
-): Promise<string> {
-  assert.ok(pairInfo);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
 
-  const client = createAuthenticatedClient();
+    const client = createAuthenticatedClient();
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
 
-  const order: LimitOrder = {
-    type: 'limit',
-    side: sell ? 'sell' : 'buy',
-    product_id: pairInfo.raw_pair,
-    price: priceStr,
-    size: quantityStr,
-  };
+    const order: LimitOrder = {
+      type: 'limit',
+      side: sell ? 'sell' : 'buy',
+      product_id: pairInfo.raw_pair,
+      price: priceStr,
+      size: quantityStr,
+    };
 
-  const orderResult = await client.placeOrder(order);
-  return orderResult.id;
+    const orderResult = await client.placeOrder(order);
+    return orderResult.id;
+  } catch (e) {
+    return e;
+  }
 }
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {

@@ -204,31 +204,45 @@ export async function placeOrder(
   const pairInfo = exchangeInfo.pairs[pair];
   assert.ok(pairInfo, `${exchange} does NOT have pair ${pair}`);
 
+  let result: string | Error;
   switch (exchange) {
     case 'Binance':
-      return Binance.placeOrder(pairInfo, price, quantity, sell);
+      result = await Binance.placeOrder(pairInfo, price, quantity, sell);
+      break;
     case 'Bitfinex':
-      return Bitfinex.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Bitfinex.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      break;
     case 'Bitstamp':
-      return Bitstamp.placeOrder(pairInfo, price, quantity, sell);
+      result = await Bitstamp.placeOrder(pairInfo, price, quantity, sell);
+      break;
     case 'Coinbase':
-      return Coinbase.placeOrder(pairInfo, price, quantity, sell);
+      result = await Coinbase.placeOrder(pairInfo, price, quantity, sell);
+      break;
     case 'Huobi':
-      return Huobi.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Huobi.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      break;
     case 'Kraken':
-      return Kraken.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Kraken.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      break;
     case 'MXC':
-      return MXC.placeOrder(pairInfo, price, quantity, sell);
+      result = await MXC.placeOrder(pairInfo, price, quantity, sell);
+      break;
     case 'Newdex':
-      return Newdex.placeOrder(pairInfo, price, quantity, sell);
+      result = await Newdex.placeOrder(pairInfo, price, quantity, sell);
+      break;
     case 'OKEx_Spot':
-      return OKEx_Spot.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await OKEx_Spot.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      break;
     case 'WhaleEx': {
-      return WhaleEx.placeOrder(pairInfo, price, quantity, sell);
+      result = await WhaleEx.placeOrder(pairInfo, price, quantity, sell);
+      break;
     }
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
+
+  if (result instanceof Error) throw result;
+  else return result;
 }
 
 /**

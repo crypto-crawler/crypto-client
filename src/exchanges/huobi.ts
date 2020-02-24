@@ -49,34 +49,43 @@ export async function placeOrder(
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
-): Promise<string> {
-  assert.ok(pairInfo);
-  assert.ok(USER_CONFIG.HUOBI_ACCESS_KEY);
-  assert.ok(USER_CONFIG.HUOBI_SECRET_KEY);
-  assert.ok(USER_CONFIG.HUOBI_ACCOUNT_ID);
+): Promise<string | Error> {
+  try {
+    assert.ok(pairInfo);
+    assert.ok(USER_CONFIG.HUOBI_ACCESS_KEY);
+    assert.ok(USER_CONFIG.HUOBI_SECRET_KEY);
+    assert.ok(USER_CONFIG.HUOBI_ACCOUNT_ID);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
+      pairInfo,
+      price,
+      quantity,
+      sell,
+    );
 
-  const path = '/v1/order/orders/place';
-  const params: { [key: string]: string } = {
-    'account-id': USER_CONFIG.HUOBI_ACCOUNT_ID!.toString(),
-    amount: quantityStr,
-    price: priceStr,
-    symbol: pairInfo.raw_pair,
-    type: sell ? 'sell-limit' : 'buy-limit',
-  };
-  if (clientOrderId) {
-    params['client-order-id'] = clientOrderId;
+    const path = '/v1/order/orders/place';
+    const params: { [key: string]: string } = {
+      'account-id': USER_CONFIG.HUOBI_ACCOUNT_ID!.toString(),
+      amount: quantityStr,
+      price: priceStr,
+      symbol: pairInfo.raw_pair,
+      type: sell ? 'sell-limit' : 'buy-limit',
+    };
+    if (clientOrderId) {
+      params['client-order-id'] = clientOrderId;
+    }
+
+    const fullUrl = signRequest('POST', path, params);
+
+    const response = await Axios.post(fullUrl, params, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.data.status, 'ok');
+    return response.data.data as string;
+  } catch (e) {
+    return e;
   }
-
-  const fullUrl = signRequest('POST', path, params);
-
-  const response = await Axios.post(fullUrl, params, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  assert.equal(response.status, 200);
-  assert.equal(response.data.status, 'ok');
-  return response.data.data as string;
 }
 
 export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
