@@ -6,18 +6,24 @@ import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
 import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
-const { RESTv2 } = require('bfx-api-node-rest');
+const { RESTv1, RESTv2 } = require('bfx-api-node-rest');
 const { Order } = require('bfx-api-node-models');
 
-function createAuthenticatedClient(): any {
+function createAuthenticatedClient(version: 'v1' | 'v2' = 'v2'): any {
   assert.ok(USER_CONFIG.BITFINEX_API_KEY);
   assert.ok(USER_CONFIG.BITFINEX_API_SECRET);
 
-  const rest = new RESTv2({
-    apiKey: USER_CONFIG.BITFINEX_API_KEY!,
-    apiSecret: USER_CONFIG.BITFINEX_API_SECRET!,
-    transform: true, // to have full models returned by all methods
-  });
+  const rest =
+    version === 'v2'
+      ? new RESTv2({
+          apiKey: USER_CONFIG.BITFINEX_API_KEY!,
+          apiSecret: USER_CONFIG.BITFINEX_API_SECRET!,
+          transform: true, // to have full models returned by all methods
+        })
+      : new RESTv1({
+          apiKey: USER_CONFIG.BITFINEX_API_KEY!,
+          apiSecret: USER_CONFIG.BITFINEX_API_SECRET!,
+        });
 
   return rest;
 }
@@ -94,7 +100,7 @@ export async function queryOrder(
   return arr[0];
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalancesV2(all: boolean = false): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
 
   const wallets = (await authClient.wallets()) as any[];
@@ -104,6 +110,38 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   arr.forEach(x => {
     const pair = normalizeSymbol(x.currency, 'Bitfinex');
     result[pair] = x.balance;
+  });
+
+  return result;
+}
+
+export async function queryAllBalances(
+  all: boolean = false,
+): Promise<{ [key: string]: number } | Error> {
+  const authClient = createAuthenticatedClient('v1');
+
+  interface Item {
+    type: string;
+    currency: string;
+    amount: string;
+    available: string;
+  }
+
+  const arr = await new Promise<Item[]>((resolve, reject) => {
+    authClient.wallet_balances((err: Error, data: Item[]) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  }).catch((e: Error) => {
+    return e;
+  });
+
+  if (arr instanceof Error) return arr;
+
+  const result: { [key: string]: number } = {};
+  arr.forEach((x: any) => {
+    const symbol = normalizeSymbol(x.currency, 'Bitfinex');
+    result[symbol] = parseFloat(all ? x.amount : x.available);
   });
 
   return result;

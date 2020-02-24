@@ -344,7 +344,7 @@ export async function queryAllBalances(
   exchange: SupportedExchange,
   all: boolean = false,
 ): Promise<{ [key: string]: number }> {
-  let result: { [key: string]: number } = {};
+  let result: { [key: string]: number } | Error;
   switch (exchange) {
     case 'Binance':
       result = await Binance.queryAllBalances(all);
@@ -380,12 +380,14 @@ export async function queryAllBalances(
       throw Error(`Unknown exchange: ${exchange}`);
   }
 
-  // filter out zero balances
-  Object.keys(result).forEach(symbol => {
-    if (result[symbol] <= 0) delete result[symbol];
-  });
+  if (result instanceof Error) throw result;
 
-  return result;
+  // filter out zero balances
+  const resultTmp: { [key: string]: number } = result;
+  Object.keys(resultTmp).forEach(symbol => {
+    if (resultTmp[symbol] <= 0) delete resultTmp[symbol];
+  });
+  return resultTmp;
 }
 
 export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
