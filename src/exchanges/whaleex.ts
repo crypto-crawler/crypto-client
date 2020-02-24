@@ -96,7 +96,10 @@ export async function placeOrder(
         return JSON.parse(resp.replace(/"result":(\d+)/g, '"result":"$1"'));
       },
       responseType: 'json',
+    }).catch((e: Error) => {
+      return e;
     });
+    if (response instanceof Error) return response;
     assert.equal(response.status, 200);
 
     if (response.data.returnCode === '0') {

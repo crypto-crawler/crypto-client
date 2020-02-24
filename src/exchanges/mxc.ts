@@ -86,7 +86,10 @@ export async function placeOrder(
 
     const requestUrl = `${API_BASE_URL}${path}?${paramsText}&sign=${signature}`;
     debug(requestUrl);
-    const response = await Axios.post(requestUrl);
+    const response = await Axios.post(requestUrl).catch((e: Error) => {
+      return e;
+    });
+    if (response instanceof Error) return response;
     assert.equal(response.status, 200);
     assert.equal(response.data.code, 200);
 

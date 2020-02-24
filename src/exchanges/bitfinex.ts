@@ -49,7 +49,11 @@ export async function placeOrder(
     }
 
     const authClient = createAuthenticatedClient();
-    const arr = await authClient.submitOrder(new Order(order));
+    const arr = await authClient.submitOrder(new Order(order)).catch((e: Error) => {
+      return e;
+    });
+
+    if (arr instanceof Error) return arr;
     return arr[0].toString();
   } catch (e) {
     return e;

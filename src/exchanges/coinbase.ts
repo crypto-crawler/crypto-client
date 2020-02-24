@@ -43,7 +43,11 @@ export async function placeOrder(
       size: quantityStr,
     };
 
-    const orderResult = await client.placeOrder(order);
+    const orderResult = await client.placeOrder(order).catch((e: Error) => {
+      return e;
+    });
+
+    if (orderResult instanceof Error) return orderResult;
     return orderResult.id;
   } catch (e) {
     return e;

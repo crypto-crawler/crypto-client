@@ -94,7 +94,10 @@ export async function placeOrder(
       params.userref = parseInt(clientOrderId, 10);
     }
 
-    const data = await privateMethod(path, params);
+    const data = await privateMethod(path, params).catch((e: Error) => {
+      return e;
+    });
+    if (data instanceof Error) return data;
     const txid = data.txid as string[];
     assert.ok(txid.length > 0);
     return txid[0]; // TODO: handle txid.length > 1

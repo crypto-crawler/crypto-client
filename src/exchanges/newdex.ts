@@ -85,7 +85,12 @@ export async function placeOrder(
     assert.ok(USER_CONFIG.eosPrivateKey);
 
     const actionExt = createOrder(pairInfo, price, quantity, sell);
-    const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!);
+    const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!).catch(
+      (e: Error) => {
+        return e;
+      },
+    );
+    if (response instanceof Error) return response;
     return response.transaction_id || response.id;
   } catch (e) {
     return e;

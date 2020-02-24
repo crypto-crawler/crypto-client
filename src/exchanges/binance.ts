@@ -35,14 +35,19 @@ export async function placeOrder(
       sell,
     );
 
-    const order = await client.order({
-      symbol: pairInfo.raw_pair,
-      type: 'LIMIT',
-      side: sell ? 'SELL' : 'BUY',
-      quantity: quantityStr,
-      price: priceStr,
-    });
+    const order = await client
+      .order({
+        symbol: pairInfo.raw_pair,
+        type: 'LIMIT',
+        side: sell ? 'SELL' : 'BUY',
+        quantity: quantityStr,
+        price: priceStr,
+      })
+      .catch((e: Error) => {
+        return e;
+      });
 
+    if (order instanceof Error) return order;
     return order.orderId.toString();
   } catch (e) {
     return e;

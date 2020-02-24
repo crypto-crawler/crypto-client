@@ -89,7 +89,10 @@ export async function placeOrder(
 
     const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
       headers,
+    }).catch((e: Error) => {
+      return e;
     });
+    if (response instanceof Error) return response;
     assert.equal(response.status, 200);
 
     if (response.data.status === 'error') {

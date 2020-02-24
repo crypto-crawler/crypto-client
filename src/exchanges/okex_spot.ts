@@ -49,7 +49,14 @@ export async function placeOrder(
     }
 
     const authClient = createAuthenticatedClient();
-    const data = await authClient.spot().postOrder(params);
+    const data = await authClient
+      .spot()
+      .postOrder(params)
+      .catch((e: Error) => {
+        return e;
+      });
+    if (data instanceof Error) return data;
+
     if (data.error_code) throw new Error(data.error_message);
 
     return data.order_id;
