@@ -201,11 +201,12 @@ export async function placeOrder(
   clientOrderId?: string,
 ): Promise<string> {
   const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
+  assert.ok(exchangeInfo);
   const pairInfo = exchangeInfo.pairs[pair];
-  assert.ok(pairInfo, `${exchange} does NOT have pair ${pair}`);
+  assert.ok(pairInfo, `${exchangeInfo.name} does NOT have pair ${pair}`);
 
   let result: string | Error;
-  switch (exchange) {
+  switch (exchangeInfo.name) {
     case 'Binance':
       result = await Binance.placeOrder(pairInfo, price, quantity, sell);
       break;
@@ -238,7 +239,7 @@ export async function placeOrder(
       break;
     }
     default:
-      throw Error(`Unknown exchange: ${exchange}`);
+      throw Error(`Unknown exchange: ${exchangeInfo.name}`);
   }
 
   if (result instanceof Error) throw result;
