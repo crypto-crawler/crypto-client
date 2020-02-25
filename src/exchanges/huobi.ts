@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
-import { CurrencyStatus, WithdrawalFee } from '../pojo';
+import { CurrencyStatus, DepositAddress, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
 import { convertPriceAndQuantityToStrings, numberToString } from '../util';
 
@@ -200,6 +200,49 @@ async function getReferenceCurrencies(): Promise<ReferenceCurrency[]> {
   assert.equal(response.data.code, 200);
 
   return response.data.data;
+}
+
+export async function fetchCurrencyList(): Promise<string[] | Error> {
+  const path = '/v1/common/currencys';
+
+  const response = await Axios.get(`${API_ENDPOINT}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+  }).catch((e: Error) => {
+    return e;
+  });
+  if (response instanceof Error) return response;
+
+  assert.equal(response.status, 200);
+  assert.equal(response.data.status, 'ok');
+
+  return response.data.data as string[];
+}
+
+// TODO: work in progress
+export async function getDepositAddresses(): Promise<{
+  [key: string]: { [key: string]: DepositAddress };
+}> {
+  const result: { [key: string]: { [key: string]: DepositAddress } } = {};
+
+  const currencyList = await fetchCurrencyList();
+  if (currencyList instanceof Error) return result;
+
+  const path = '/v2/account/deposit/address';
+  const requests = currencyList
+    .map(currency => signRequest('GET', `${path}?currency=${currency}`))
+    .map(fullUrl => Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } }));
+
+  const responses = await Promise.all(requests);
+  responses.forEach(response => {
+    assert.equal(response.status, 200);
+    console.info(response.data);
+    assert.equal(response.data.status, 'ok');
+  });
+
+  const arr = responses.map(response => response.data.data);
+  console.info(arr);
+
+  return result;
 }
 
 export async function getWithdrawalFees(): Promise<{

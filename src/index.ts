@@ -423,6 +423,8 @@ export async function getDepositAddresses(
       return Bitstamp.getDepositAddresses(symbols);
     case 'Coinbase':
       return Coinbase.getDepositAddresses(symbols);
+    case 'Huobi':
+      return Huobi.getDepositAddresses();
     case 'Kraken':
       return Kraken.getDepositAddresses(symbols);
     case 'OKEx_Spot':
