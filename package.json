@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.22.4",
+  "version": "0.22.5",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -51,7 +51,7 @@
     "@types/long": "^4.0.1",
     "@types/mathjs": "^6.0.4",
     "@types/node": "^13.7.4",
-    "@types/node-fetch": "^2.5.4",
+    "@types/node-fetch": "^2.5.5",
     "@types/qs": "^6.9.1",
     "@types/text-encoding": "0.0.35",
     "@types/uuid": "^3.4.7",

@@ -23,6 +23,7 @@ export interface UserConfig {
   OKEX_SPOT_API_KEY?: string;
   OKEX_SPOT_API_SECRET?: string;
   OKEX_SPOT_API_PASSPHRASE?: string;
+  OKEX_SPOT_FUND_PASSWORD?: string;
   WHALEEX_API_KEY?: string;
   WHALEEX_USER_ID?: string;
 }

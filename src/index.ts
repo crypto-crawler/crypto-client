@@ -67,6 +67,7 @@ export async function init({
   OKEX_SPOT_API_KEY = '',
   OKEX_SPOT_API_SECRET = '',
   OKEX_SPOT_API_PASSPHRASE = '',
+  OKEX_SPOT_FUND_PASSWORD = '',
   WHALEEX_API_KEY = '',
   WHALEEX_USER_ID = '',
 }: UserConfig): Promise<void> {
@@ -125,6 +126,7 @@ export async function init({
     USER_CONFIG.OKEX_SPOT_API_KEY = OKEX_SPOT_API_KEY!;
     USER_CONFIG.OKEX_SPOT_API_SECRET = OKEX_SPOT_API_SECRET!;
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE = OKEX_SPOT_API_PASSPHRASE!;
+    if (OKEX_SPOT_FUND_PASSWORD) USER_CONFIG.OKEX_SPOT_FUND_PASSWORD = OKEX_SPOT_FUND_PASSWORD;
   }
   if (WHALEEX_API_KEY) {
     assert.ok(WHALEEX_USER_ID, 'WHALEEX_USER_ID is empty');
@@ -565,6 +567,9 @@ export async function withdraw(
       break;
     case 'Huobi':
       result = await Huobi.withdraw(symbol, address, amount, memo, platform);
+      break;
+    case 'OKEx_Spot':
+      result = await OKEx_Spot.withdraw(symbol, address, amount, memo, platform);
       break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);

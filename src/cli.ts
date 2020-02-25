@@ -71,6 +71,9 @@ const { argv } = yargs.options({
   OKEX_SPOT_API_PASSPHRASE: {
     type: 'string',
   },
+  OKEX_SPOT_FUND_PASSWORD: {
+    type: 'string',
+  },
   WHALEEX_API_KEY: {
     type: 'string',
   },

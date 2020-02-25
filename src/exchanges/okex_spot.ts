@@ -1,5 +1,6 @@
 import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
+import BigNumber from 'bignumber.js';
 import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
@@ -246,7 +247,15 @@ export async function getWithdrawalFees(): Promise<{
 
   const authClient = createAuthenticatedClient();
 
-  const currencies = (await await authClient.account().getCurrencies()) as ReadonlyArray<{
+  const currenciesTmp = await authClient
+    .account()
+    .getCurrencies()
+    .catch((e: Error) => {
+      return e;
+    });
+  if (currenciesTmp instanceof Error) return result;
+
+  const currencies = currenciesTmp as ReadonlyArray<{
     name: string;
     currency: string;
     can_deposit: '0' | '1';
@@ -281,7 +290,14 @@ export async function getWithdrawalFees(): Promise<{
     }
   });
 
-  const withdrawalFees = (await authClient.account().getWithdrawalFee()) as ReadonlyArray<{
+  const withdrawalFeesTmp = await authClient
+    .account()
+    .getWithdrawalFee()
+    .catch((e: Error) => {
+      return e;
+    });
+  if (withdrawalFeesTmp instanceof Error) return result;
+  const withdrawalFees = withdrawalFeesTmp as ReadonlyArray<{
     min_fee: string;
     currency: string;
     max_fee: string;
@@ -492,4 +508,73 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
     result[symbol].withdrawal_enabled[platform] = x.can_withdraw === '1';
   });
   return result;
+}
+
+export async function withdraw(
+  symbol: string,
+  address: string, // only supports existing addresses in your withdrawal address list
+  amount: number,
+  memo?: string,
+  platform?: string,
+): Promise<string | Error> {
+  const authClient = createAuthenticatedClient();
+  if (!USER_CONFIG.OKEX_SPOT_FUND_PASSWORD) return new Error('OKEX_SPOT_FUND_PASSWORD is empty');
+
+  const transferData = await authClient
+    .account()
+    .postTransfer({ currency: symbol, amount, from: 1, to: 6 })
+    .catch((e: Error) => {
+      return e;
+    });
+
+  if (transferData instanceof Error) return transferData;
+  const typedTransferData = transferData as {
+    transfer_id: string;
+    currency: string;
+    from: string;
+    amount: string;
+    to: string;
+    result: boolean;
+  };
+  if (!typedTransferData.result) return new Error(JSON.stringify(typedTransferData));
+
+  const withdrawalFees = await getWithdrawalFees();
+  if (!(symbol in withdrawalFees)) return new Error(`${symbol} not in withdrawalFees`);
+  const withdrawalFee = withdrawalFees[symbol][platform || symbol];
+  if (withdrawalFee === undefined) {
+    return new Error(`Can NOT find platform ${platform || symbol} in withdrawalFees[${symbol}]`);
+  }
+  if (amount < withdrawalFee.min) {
+    return new Error(`amount ${amount} is less than withdrawalFee.min ${withdrawalFee.min}`);
+  }
+
+  const amountMinusFee = new BigNumber(amount - withdrawalFee.fee)
+    .times(new BigNumber(10).pow(8))
+    .integerValue(BigNumber.ROUND_DOWN)
+    .div(new BigNumber(10).pow(8));
+  const amountStr = amountMinusFee.toFixed(8); // TODO: precision_on_chain || precision of exchange
+
+  const withdrawData = await authClient
+    .account()
+    .postWithdrawal({
+      currency: symbol,
+      amount: amountStr,
+      destination: 4, // crypto currency address
+      to_address: memo ? `${address}:${memo}` : address,
+      trade_pwd: USER_CONFIG.OKEX_SPOT_FUND_PASSWORD!,
+      fee: withdrawalFee.fee,
+    })
+    .catch((e: Error) => {
+      return e;
+    });
+  if (withdrawData instanceof Error) return withdrawData;
+  const typedWithdrawData = withdrawData as {
+    amount: number;
+    withdrawal_id: number;
+    currency: string;
+    result: boolean;
+  };
+
+  if (typedWithdrawData.result) return typedWithdrawData.withdrawal_id.toString();
+  return new Error(JSON.stringify(typedWithdrawData));
 }
