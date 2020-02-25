@@ -543,14 +543,14 @@ export async function withdraw(
   const platform = detectPlatform(address, symbol);
   const symbolsRequirePlatform = ['USDT'];
   if (symbolsRequirePlatform.includes(symbol) && !platform) {
-    return new Error(`Failed to detect platform of ${symbol}`);
+    throw new Error(`Failed to detect platform of ${symbol}`);
   }
 
   const symbolsRequireMemoList = ['ATOM', 'EOS', 'XLM', 'XRP'];
   if (!memo) {
-    if (symbolsRequireMemoList.includes(symbol)) return new Error(`${symbol} requires memo`);
+    if (symbolsRequireMemoList.includes(symbol)) throw new Error(`${symbol} requires memo`);
     if (symbolsRequireMemoList.includes(platform!))
-      return new Error(`${symbol} on ${platform} requires memo`);
+      throw new Error(`${symbol} on ${platform} requires memo`);
   }
 
   let result: string | Error;
