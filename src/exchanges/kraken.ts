@@ -34,10 +34,10 @@ function getSignature(
   return hmacDigest;
 }
 
-async function privateMethod(
+async function privateMethod<T>(
   path: string,
   params: { nonce: number; [key: string]: string | number | boolean },
-): Promise<any> {
+): Promise<T | Error> {
   assert.ok(USER_CONFIG.KRAKEN_API_KEY);
   assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
   assert.ok(params.nonce);
@@ -50,11 +50,14 @@ async function privateMethod(
     'API-Sign': signature,
   };
 
-  const response = await Axios.post(url, qs.stringify(params), { headers });
+  const response = await Axios.post(url, qs.stringify(params), { headers }).catch((e: Error) => {
+    return e;
+  });
+  if (response instanceof Error) return response;
   assert.equal(response.status, 200);
 
   if (response.data.error.length > 0) {
-    throw new Error((response.data.error as string[]).join('\n'));
+    return new Error((response.data.error as string[]).join('\n'));
   }
   return response.data.result;
 }
@@ -94,13 +97,10 @@ export async function placeOrder(
       params.userref = parseInt(clientOrderId, 10);
     }
 
-    const data = await privateMethod(path, params).catch((e: Error) => {
-      return e;
-    });
+    const data = await privateMethod<{ txid: string[] }>(path, params);
     if (data instanceof Error) return data;
-    const txid = data.txid as string[];
-    assert.ok(txid.length > 0);
-    return txid[0]; // TODO: handle txid.length > 1
+    assert.ok(data.txid.length > 0);
+    return data.txid[0]; // TODO: handle txid.length > 1
   } catch (e) {
     return e;
   }
@@ -123,7 +123,8 @@ export async function cancelOrder(
     params.txid = parseInt(clientOrderId, 10);
   }
 
-  const data = (await privateMethod(path, params)) as { count: number };
+  const data = await privateMethod<{ count: number }>(path, params);
+  if (data instanceof Error) return false;
   return data.count > 0;
 }
 
@@ -144,16 +145,16 @@ export async function queryOrder(
     params.userref = parseInt(clientOrderId, 10);
   }
 
-  const data = await privateMethod(path, params);
+  const data = await privateMethod<{ [key: string]: any }>(path, params);
+  if (data instanceof Error) return undefined;
   return data[orderId];
 }
 
 export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   const path = '/0/private/Balance';
 
-  const balances = (await privateMethod(path, { nonce: generateNonce() })) as {
-    [key: string]: string;
-  };
+  const balances = await privateMethod<{ [key: string]: string }>(path, { nonce: generateNonce() });
+  if (balances instanceof Error) return {};
 
   const result: { [key: string]: number } = {};
   Object.keys(balances).forEach(symbol => {
@@ -166,12 +167,15 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
 
 async function getDepositMethod(
   symbol: string,
-): Promise<{
-  method: string;
-  limit: boolean | string;
-  fee: string;
-  'gen-address': boolean;
-}> {
+): Promise<
+  | {
+      method: string;
+      limit: boolean | string;
+      fee: string;
+      'gen-address': boolean;
+    }
+  | Error
+> {
   assert.ok(symbol);
   assert.ok(
     !FIAT_SYMBOLS.includes(symbol),
@@ -196,12 +200,15 @@ async function getDepositMethod(
     nonce: generateNonce(),
   };
 
-  const arr = (await privateMethod(path, params)) as readonly {
-    method: string;
-    limit: boolean | string;
-    fee: string;
-    'gen-address': boolean;
-  }[];
+  const arr = await privateMethod<
+    {
+      method: string;
+      limit: boolean | string;
+      fee: string;
+      'gen-address': boolean;
+    }[]
+  >(path, params);
+  if (arr instanceof Error) return arr;
 
   assert.equal(arr.length, 1);
 
@@ -211,7 +218,7 @@ async function getDepositMethod(
 export async function getDepositAddress(
   symbol: string,
   generateNew: boolean = false,
-): Promise<DepositAddress | undefined> {
+): Promise<DepositAddress | Error> {
   assert.ok(symbol);
   assert.ok(
     !FIAT_SYMBOLS.includes(symbol),
@@ -219,6 +226,7 @@ export async function getDepositAddress(
   );
 
   const depositMethod = await getDepositMethod(symbol);
+  if (depositMethod instanceof Error) return depositMethod;
 
   const path = '/0/private/DepositAddresses';
 
@@ -229,12 +237,15 @@ export async function getDepositAddress(
   };
   if (generateNew) params.new = true;
 
-  const arr = (await privateMethod(path, params)) as readonly {
-    address: string;
-    expiretm: string;
-    memo?: string;
-  }[];
-  if (arr.length <= 0) return undefined;
+  const arr = await privateMethod<
+    readonly {
+      address: string;
+      expiretm: string;
+      memo?: string;
+    }[]
+  >(path, params);
+  if (arr instanceof Error) return arr;
+  if (arr.length <= 0) return new Error('Returned empty array');
 
   const address = arr[0];
 
@@ -267,13 +278,13 @@ export async function getDepositAddresses(
 
     const data = await getDepositAddress(symbol); // eslint-disable-line no-await-in-loop
     await sleep(3000); // eslint-disable-line no-await-in-loop
-    if (data) {
+    if (!(data instanceof Error)) {
       result[symbol][data.platform] = data;
     } else {
       // generate new address
       const newAddress = await getDepositAddress(symbol, true); // eslint-disable-line no-await-in-loop
       await sleep(3000); // eslint-disable-line no-await-in-loop
-      if (newAddress) {
+      if (!(newAddress instanceof Error)) {
         result[symbol][newAddress.platform] = newAddress;
       }
     }
