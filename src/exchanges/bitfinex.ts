@@ -194,6 +194,7 @@ async function fetchMethod(): Promise<{
     const [method, currencies] = x;
     currencies.forEach(rawSymbol => {
       if (rawSymbol === 'USD') return; // skip USD
+      if (rawSymbol === 'BCH') return; // BAB is BCH at Bitfinex
 
       const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
       symbolMethodMap[symbol] = {
@@ -302,6 +303,54 @@ async function fetchUSDPrice(
   return arr[6];
 }
 
+async function withdrawV1(
+  withdraw_type: string,
+  walletselected: string,
+  address: string,
+  amount: number,
+  payment_id: string,
+): Promise<string | Error> {
+  assert.ok(payment_id);
+
+  const parameters = {
+    withdraw_type,
+    walletselected,
+    address,
+    amount: amount.toString(),
+    payment_id,
+  };
+
+  interface Item {
+    wallettype: string;
+    method: string;
+    address: string;
+    payment_id: string;
+    amount: string;
+    status: string;
+    message: string;
+    withdrawal_id: number;
+    fees: string;
+  }
+
+  const arr = await new Promise<Item[]>((resolve, reject) => {
+    createAuthenticatedClient('v1').make_request(
+      'withdraw',
+      parameters,
+      (err: Error, data: Item[]) => {
+        if (err) reject(err);
+        else resolve(data);
+      },
+    );
+  }).catch((e: Error) => {
+    return e;
+  });
+  if (arr instanceof Error) return arr;
+
+  if (arr.length !== 1) return new Error('Returned more than one item');
+
+  return arr[0].withdrawal_id.toString();
+}
+
 export async function withdraw(
   symbol: string,
   address: string,
@@ -320,15 +369,19 @@ export async function withdraw(
   const method = symbol === 'USDT' ? USDT_METHOD_MAP[platform!] : symbolMethodMap[symbol].method;
   if (method === undefined) return new Error(`Bitfinex ${symbol} can NOT find method`);
 
+  if (memo) return withdrawV1(method, params.wallet as string, address, amount, memo);
+
   Object.assign(params, { address, amount: amount.toString(), method });
   if (memo) params.memo = memo; // eslint-disable-line no-param-reassign
 
-  try {
-    const data = await createAuthenticatedClient().withdraw(params);
-    assert.equal(data.status, 'SUCCESS');
-    if (data.notifyInfo[0] === 0) return new Error(data.text);
-    return data.notifyInfo[0].toString();
-  } catch (e) {
-    return e;
-  }
+  const data = await createAuthenticatedClient()
+    .withdraw(params)
+    .catch((e: Error) => {
+      return e;
+    });
+  if (data instanceof Error) return data;
+
+  assert.equal(data.status, 'SUCCESS');
+  if (data.notifyInfo[0] === 0) return new Error(data.text);
+  return data.notifyInfo[0].toString();
 }
