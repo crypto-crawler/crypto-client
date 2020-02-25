@@ -528,7 +528,7 @@ export async function fetchCurrencyStatuses(
  * @param amount Withdrawal amount
  * @param memo Optional, some currencies like EOS require addtional memo
  * @param params Additional parameters, each exchange is different
- * @returns The withdrawal ID, error if failed
+ * @returns Withdrawal ID
  */
 export async function withdraw(
   exchange: SupportedExchange,
@@ -537,7 +537,7 @@ export async function withdraw(
   amount: number,
   memo?: string,
   params: { [key: string]: string | number | boolean } = {},
-): Promise<string | Error> {
+): Promise<string> {
   assert.ok(exchange);
 
   const platform = detectPlatform(address, symbol);
@@ -553,14 +553,21 @@ export async function withdraw(
       return new Error(`${symbol} on ${platform} requires memo`);
   }
 
+  let result: string | Error;
   switch (exchange) {
     case 'Binance':
-      return Binance.withdraw(symbol, address, amount, memo, platform);
+      result = await Binance.withdraw(symbol, address, amount, memo, platform);
+      break;
     case 'Bitfinex':
-      return Bitfinex.withdraw(symbol, address, amount, memo, platform, params);
+      result = await Bitfinex.withdraw(symbol, address, amount, memo, platform, params);
+      break;
     case 'Huobi':
-      return Huobi.withdraw(symbol, address, amount, memo, platform);
+      result = await Huobi.withdraw(symbol, address, amount, memo, platform);
+      break;
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
+
+  if (result instanceof Error) throw result;
+  else return result;
 }
