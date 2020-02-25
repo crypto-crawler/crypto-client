@@ -173,25 +173,37 @@ export async function fetchDepositAddress(
   }
 }
 
-// The following symbols use label to get deposit addresses.
-const SYMBOL_LABEL_MAP: { [key: string]: string } = {
-  AVT: 'Aventus',
-  BTC: 'Bitcoin',
-  DASH: 'Dash',
-  EDO: 'Eidoo',
-  ETH: 'Ethereum',
-  GNT: 'Golem',
-  IOTA: 'Iota',
-  LTC: 'Litecoin',
-  OMG: 'OmiseGO',
-  ORSGROUP: 'ORS',
-  QTUM: 'Qtum',
-  SAN: 'Santiment',
-  SNT: 'Status',
-  XMR: 'Monero',
-  XRP: 'Ripple',
-  ZEC: 'Zcash',
+const USDT_METHOD_MAP: { [key: string]: string } = {
+  OMNI: 'tetheruso',
+  ERC20: 'tetheruse',
+  TRC20: 'tetherusx',
+  EOS: 'tetheruss',
+  LIQUID: 'tetherusl',
 };
+
+async function fetchMethod(): Promise<{
+  [key: string]: { method: string; rawSymbol: string };
+}> {
+  const response = await Axios.get('https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method');
+  assert.equal(response.status, 200);
+
+  const symbolMethodMap: { [key: string]: { method: string; rawSymbol: string } } = {};
+  const arr = response.data[0] as [string, string[]][];
+  arr.forEach(x => {
+    assert.equal(x.length, 2);
+    const [method, currencies] = x;
+    currencies.forEach(rawSymbol => {
+      if (rawSymbol === 'USD') return; // skip USD
+
+      const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
+      symbolMethodMap[symbol] = {
+        method: method.toLowerCase(),
+        rawSymbol,
+      };
+    });
+  });
+  return symbolMethodMap;
+}
 
 export async function getDepositAddresses(
   symbols: string[],
@@ -209,27 +221,34 @@ export async function getDepositAddresses(
   assert.ok(ethAddress);
   assert.ok(trxAddress);
 
+  const symbolMethodMap = await fetchMethod();
+
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
 
-    const symbolOrLabel = symbol in SYMBOL_LABEL_MAP ? SYMBOL_LABEL_MAP[symbol] : symbol;
+    const symbolOrLabels =
+      symbol === 'USDT'
+        ? Object.values(USDT_METHOD_MAP).map(x => x.toLowerCase())
+        : [symbol in symbolMethodMap ? symbolMethodMap[symbol].method : symbol];
 
-    // eslint-disable-next-line no-await-in-loop
-    const address = await fetchDepositAddress(symbolOrLabel);
+    for (let j = 0; j < symbolOrLabels.length; j += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const address = await fetchDepositAddress(symbolOrLabels[j]);
 
-    if (!(address instanceof Error)) {
-      if (!(symbol in result)) result[symbol] = {};
-      let platform = symbol;
-      if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
-        platform = 'ERC20';
-        assert.equal(platform, detectPlatform(address.address, symbol));
+      if (!(address instanceof Error)) {
+        if (!(symbol in result)) result[symbol] = {};
+        let platform = symbol;
+        if (address.address === ethAddress && symbol !== 'ETH' && symbol !== 'ETC') {
+          platform = 'ERC20';
+          assert.equal(platform, detectPlatform(address.address, symbol));
+        }
+        if (address.address === trxAddress && symbol !== 'TRX') {
+          platform = 'TRC20';
+          assert.equal(platform, detectPlatform(address.address, symbol));
+        }
+        result[symbol][platform] = { symbol, platform, ...address };
       }
-      if (address.address === trxAddress && symbol !== 'TRX') {
-        platform = 'TRC20';
-        assert.equal(platform, detectPlatform(address.address, symbol));
-      }
-      result[symbol][platform] = { symbol, platform, ...address };
     }
   }
 
@@ -269,28 +288,6 @@ export async function getWithdrawalFees(): Promise<{
   return result;
 }
 
-async function fetchMethod(): Promise<{ [key: string]: { method: string; rawSymbol: string } }> {
-  const response = await Axios.get('https://api-pub.bitfinex.com//v2/conf/pub:map:tx:method');
-  assert.equal(response.status, 200);
-
-  const symbolMethodMap: { [key: string]: { method: string; rawSymbol: string } } = {};
-  const arr = response.data[0] as [string, string[]][];
-  arr.forEach(x => {
-    assert.equal(x.length, 2);
-    const [method, currencies] = x;
-    currencies.forEach(rawSymbol => {
-      if (rawSymbol === 'USD') return; // skip USD
-
-      const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
-      symbolMethodMap[symbol] = {
-        method: method.toLowerCase(),
-        rawSymbol,
-      };
-    });
-  });
-  return symbolMethodMap;
-}
-
 async function fetchUSDPrice(
   symbol: string,
   symbolMethodMap: { [key: string]: { method: string; rawSymbol: string } },
@@ -304,14 +301,6 @@ async function fetchUSDPrice(
   const arr = response.data as number[];
   return arr[6];
 }
-
-const USDT_METHOD_MAP: { [key: string]: string } = {
-  OMNI: 'tetheruso',
-  ERC20: 'tetheruse',
-  TRC20: 'tetherusx',
-  EOS: 'tetheruss',
-  LIQUID: 'tetherusl',
-};
 
 export async function withdraw(
   symbol: string,
