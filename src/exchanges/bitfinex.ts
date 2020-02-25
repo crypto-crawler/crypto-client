@@ -223,6 +223,7 @@ export async function getDepositAddresses(
   assert.ok(trxAddress);
 
   const symbolMethodMap = await fetchMethod();
+  // console.info(symbolMethodMap);
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   for (let i = 0; i < symbols.length; i += 1) {
@@ -249,6 +250,8 @@ export async function getDepositAddresses(
           assert.equal(platform, detectPlatform(address.address, symbol));
         }
         result[symbol][platform] = { symbol, platform, ...address };
+      } else {
+        // console.error(address);
       }
     }
   }
