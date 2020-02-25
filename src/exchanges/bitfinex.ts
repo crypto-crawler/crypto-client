@@ -194,6 +194,8 @@ async function fetchMethod(): Promise<{
     const [method, currencies] = x;
     currencies.forEach(rawSymbol => {
       if (rawSymbol === 'USD') return; // skip USD
+      // BCH is now fully replaced by BAB when using API, ["BCH","Bitcoin Cash"]
+      // will be removed, quoted from custom support.
       if (rawSymbol === 'BCH') return; // BAB is BCH at Bitfinex
 
       const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
