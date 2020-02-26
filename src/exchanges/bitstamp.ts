@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
 import { PairInfo } from 'exchange-info';
-import uuidv1 from 'uuid/v1';
+import { v1 as uuidv1 } from 'uuid';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';

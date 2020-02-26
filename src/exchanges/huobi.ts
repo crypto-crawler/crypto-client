@@ -6,7 +6,7 @@ import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, DepositAddress, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
-import { convertPriceAndQuantityToStrings, detectPlatform, numberToString } from '../util';
+import { convertPriceAndQuantityToStrings, detectPlatform, numberToString, sleep } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
 const API_ENDPOINT = `https://${DOMAIN}`;
@@ -257,6 +257,7 @@ export async function getDepositAddresses(): Promise<{
     assert.equal(response.status, 200);
     assert.equal(response.data.code, 200);
     assert.ok(Array.isArray(response.data.data));
+    await sleep(100); // eslint-disable-line no-await-in-loop
 
     const arrTmp: readonly {
       currency: string;
