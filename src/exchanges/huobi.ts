@@ -6,7 +6,7 @@ import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, DepositAddress, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
-import { convertPriceAndQuantityToStrings, numberToString } from '../util';
+import { convertPriceAndQuantityToStrings, detectPlatform, numberToString } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
 const API_ENDPOINT = `https://${DOMAIN}`;
@@ -21,7 +21,7 @@ function signRequest(
   /* eslint-disable no-param-reassign */
   params.Timestamp = new Date().toISOString().replace(/\..+/, ''); // .getTime()+ Huobi.info.timeOffset;
   params.SignatureMethod = 'HmacSHA256';
-  params.SignatureVersion = 2;
+  params.SignatureVersion = '2';
   params.AccessKeyId = USER_CONFIG.HUOBI_ACCESS_KEY!;
   /* eslint-enable no-param-reassign */
 
@@ -138,30 +138,32 @@ export async function queryAccounts(): Promise<
   return response.data.data;
 }
 
+interface Chain {
+  chain: string;
+  baseChain?: string;
+  baseChainProtocol?: string;
+  isDynamic: boolean;
+  depositStatus: 'allowed' | 'prohibited';
+  maxTransactFeeWithdraw: string;
+  maxWithdrawAmt: string;
+  minDepositAmt: string;
+  minWithdrawAmt: string;
+  numOfConfirmations: number;
+  numOfFastConfirmations: 999;
+  withdrawFeeType: 'fixed' | 'circulated';
+  transactFeeWithdraw?: string;
+  minTransactFeeWithdraw?: string;
+  withdrawPrecision: 5;
+  withdrawQuotaPerDay: string;
+  withdrawQuotaPerYear: string;
+  withdrawQuotaTotal: string;
+  withdrawStatus: 'allowed' | 'prohibited';
+}
+
 interface ReferenceCurrency {
   currency: string;
   instStatus: 'normal' | 'delisted';
-  chains: {
-    chain: string;
-    baseChain?: string;
-    baseChainProtocol?: string;
-    isDynamic: boolean;
-    depositStatus: 'allowed' | 'prohibited';
-    maxTransactFeeWithdraw: string;
-    maxWithdrawAmt: string;
-    minDepositAmt: string;
-    minWithdrawAmt: string;
-    numOfConfirmations: number;
-    numOfFastConfirmations: 999;
-    withdrawFeeType: 'fixed' | 'circulated';
-    transactFeeWithdraw?: string;
-    minTransactFeeWithdraw?: string;
-    withdrawPrecision: 5;
-    withdrawQuotaPerDay: string;
-    withdrawQuotaPerYear: string;
-    withdrawQuotaTotal: string;
-    withdrawStatus: 'allowed' | 'prohibited';
-  }[];
+  chains: Chain[];
 }
 
 export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
@@ -218,29 +220,84 @@ export async function fetchCurrencyList(): Promise<string[] | Error> {
   return response.data.data as string[];
 }
 
-// TODO: work in progress
 export async function getDepositAddresses(): Promise<{
   [key: string]: { [key: string]: DepositAddress };
 }> {
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
+  const currencies = await getReferenceCurrencies();
+  const symbolChainMap: { [key: string]: { [key: string]: Chain } } = {};
+  currencies
+    .filter(x => x.chains.length > 0)
+    .forEach(x => {
+      const symbol = normalizeSymbol(x.currency, 'Huobi');
+      if (!(symbol in symbolChainMap)) symbolChainMap[symbol] = {};
+
+      x.chains.forEach(y => {
+        symbolChainMap[symbol][y.chain] = y;
+      });
+    });
+
   const currencyList = await fetchCurrencyList();
   if (currencyList instanceof Error) return result;
 
   const path = '/v2/account/deposit/address';
-  const requests = currencyList
-    .map(currency => signRequest('GET', `${path}?currency=${currency}`))
-    .map(fullUrl => Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } }));
 
-  const responses = await Promise.all(requests);
-  responses.forEach(response => {
+  const arr: {
+    currency: string;
+    address: string;
+    addressTag: string;
+    chain: string;
+  }[] = [];
+  for (let i = 0; i < currencyList.length; i += 1) {
+    const currency = currencyList[i];
+    const fullUrl = signRequest('GET', path, { currency });
+    // eslint-disable-next-line no-await-in-loop
+    const response = await Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } });
     assert.equal(response.status, 200);
-    console.info(response.data);
-    assert.equal(response.data.status, 'ok');
-  });
+    assert.equal(response.data.code, 200);
+    assert.ok(Array.isArray(response.data.data));
 
-  const arr = responses.map(response => response.data.data);
-  console.info(arr);
+    const arrTmp: readonly {
+      currency: string;
+      address: string;
+      addressTag: string;
+      chain: string;
+    }[] = response.data.data;
+
+    arr.push(...arrTmp);
+  }
+
+  arr.forEach(x => {
+    const symbol = normalizeSymbol(x.currency, 'Huobi');
+    if (!(symbol in result)) result[symbol] = {};
+    if (
+      symbolChainMap[symbol][x.chain].depositStatus === 'prohibited' ||
+      symbolChainMap[symbol][x.chain].withdrawStatus === 'prohibited'
+    ) {
+      return;
+    }
+
+    let platform = symbolChainMap[symbol][x.chain].baseChainProtocol || symbol;
+
+    // special logic
+    if (symbol === 'BCH' && x.chain === 'bcc') platform = 'BCH';
+
+    if (!symbolChainMap[symbol][x.chain].baseChainProtocol) {
+      const detected = detectPlatform(x.address, symbol);
+      if (detected !== symbol && detected !== 'ERC20' && detected !== 'NEP5') {
+        console.info(x);
+        console.info(`${detectPlatform(x.address, symbol)}, ${symbol}`);
+      }
+    }
+
+    result[symbol][platform] = {
+      symbol,
+      platform,
+      address: x.address,
+    };
+    if (x.addressTag) result[symbol][platform].memo = x.addressTag;
+  });
 
   return result;
 }

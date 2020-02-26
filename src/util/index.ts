@@ -163,11 +163,67 @@ export function detectPlatformFromAddress(address: string): string | undefined {
   try {
     const hexString = bs58.decode(address).toString('hex');
     if (hexString.length === 50) {
-      if (hexString.indexOf('00') === 0 || hexString.indexOf('05') === 0) {
-        return 'OMNI';
+      const prefixPlatformMap: { [key: string]: string } = {
+        '00': 'OMNI',
+        '05': 'OMNI',
+        '1e': 'DOGE',
+        '21': 'ELA',
+        '24': 'GRS',
+        '30': 'LTC',
+        '38': 'PAI',
+        '3c': 'KMD',
+        '41': 'TRC20',
+        '3a': 'QTUM',
+        '17': 'NEP5',
+        '49': 'WICC',
+        '4c': 'DASH',
+        '52': 'XZC',
+        '7c': 'XRP',
+      };
+      const prefix = hexString.slice(0, 2);
+      if (prefix in prefixPlatformMap) return prefixPlatformMap[prefix];
+    } else if (hexString.length === 52) {
+      const prefixPlatformMap: { [key: string]: string } = {
+        '01': 'WAVES',
+        '05': 'VSYS',
+        '07': 'DCR',
+        '09': 'HC',
+        '1c': 'ZEC',
+        '19': 'NRC20',
+        '20': 'ZEN',
+      };
+      const prefix = hexString.slice(0, 2);
+      if (prefix in prefixPlatformMap) return prefixPlatformMap[prefix];
+    } else if (hexString.length === 54) {
+      const prefixPlatformMap: { [key: string]: string } = {
+        '06': 'XTZ',
+        '9e': 'NULS',
+      };
+      const prefix = hexString.slice(0, 2);
+      if (prefix in prefixPlatformMap) return prefixPlatformMap[prefix];
+
+      if (hexString.indexOf('06') === 0) {
+        return 'XTZ';
       }
-      if (hexString.indexOf('41') === 0) {
-        return 'TRC20';
+    } else if (hexString.length === 58) {
+      if (hexString.indexOf('08') === 0) {
+        return 'NEW';
+      }
+    } else if (hexString.length === 60) {
+      if (hexString.indexOf('01') === 0) {
+        return 'XEM';
+      }
+    } else if (hexString.length === 140) {
+      if (hexString.indexOf('02') === 0) {
+        return 'XMR';
+      }
+    } else if (hexString.length === 144) {
+      if (hexString.indexOf('2c') === 0) {
+        return 'ETN';
+      }
+    } else if (hexString.length === 152) {
+      if (hexString.indexOf('82') === 0) {
+        return 'ADA';
       }
     }
   } catch (e) {
@@ -176,9 +232,20 @@ export function detectPlatformFromAddress(address: string): string | undefined {
 
   if (Web3Utils.isAddress(address)) return 'ERC20';
 
-  if (address.length === 12) return 'EOS'; // TODO: await accountExists(address)
-
+  if (address.indexOf('cosmos') === 0) return 'ATOM';
   if (address.indexOf('bnb') === 0) return 'BEP2';
+  if (address.indexOf('zil') === 0) return 'ZIL';
+  if (address.indexOf('hx') === 0) return 'ICX';
+  if (address.indexOf('bm') === 0) return 'BTM';
+  if (address.indexOf('ACT') === 0) return 'ACT';
+  if (address.indexOf('ckb') === 0) return 'CKB';
+  if (address.indexOf('ak_') === 0) return 'AE';
+  if (address.indexOf('nano_') === 0) return 'NANO';
+  if (/^[0-9]{1,20}L$/.test(address)) return 'LSK';
+  if (/^[0-9a-f]{76}$/.test(address)) return 'SC';
+
+  // https://github.com/EOSIO/eos/issues/955
+  if (/(^[a-z1-5.]{1,11}[a-z1-5]$)|(^[a-z1-5.]{12}[a-j1-5]$)/.test(address)) return 'EOS';
 
   return undefined;
 }
@@ -186,13 +253,14 @@ export function detectPlatformFromAddress(address: string): string | undefined {
 export function detectPlatform(address: string, symbol: string): string | undefined {
   const platform = detectPlatformFromAddress(address);
 
-  if (platform === 'OMNI' && symbol !== 'USDT') return undefined;
-  if (platform === 'ERC20' && (symbol === 'ETH' || symbol === 'ETC')) return undefined;
-  if (platform === 'TRC20' && symbol === 'TRX') return undefined;
-  if (platform === 'EOS' && symbol === 'EOS') return undefined;
-  if (platform === 'BEP2' && symbol === 'BNB') return undefined;
-
-  if (platform === symbol) return undefined;
+  if (platform === 'OMNI') return ['BTC', 'BCH', 'BSV', 'BHD'].includes(symbol) ? symbol : platform;
+  if (platform === 'ERC20') return ['ETH', 'ETC'].includes(symbol) ? symbol : platform;
+  if (platform === 'TRC20' && symbol === 'TRX') return 'TRX';
+  if (platform === 'NRC20' && symbol === 'NAS') return 'NAS';
+  if (platform === 'EOS' && symbol === 'EOS') return 'EOS';
+  if (platform === 'BEP2' && symbol === 'BNB') return 'BNB';
+  if (platform === 'NEP5' && symbol === 'NEO') return 'NEO';
+  if (platform === 'DOGE') return ['DOGE', 'XVG'].includes(symbol) ? symbol : platform;
 
   return platform;
 }
