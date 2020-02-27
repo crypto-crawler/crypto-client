@@ -58,7 +58,9 @@ export async function placeOrder(
       });
     if (data instanceof Error) return data;
 
-    if (data.error_code) throw new Error(data.error_message);
+    if (!data.result || data.error_code !== '0' || data.order_id === '-1') {
+      throw new Error(data.error_message);
+    }
 
     return data.order_id;
   } catch (e) {
