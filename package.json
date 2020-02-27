@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.22.8",
+  "version": "0.22.9",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -76,7 +76,7 @@
     "@okfe/okex-node": "0.0.52",
     "assert": "^2.0.0",
     "axios": "^0.19.2",
-    "bfx-api-node-models": "^1.1.7",
+    "bfx-api-node-models": "^1.1.8",
     "bfx-api-node-rest": "^3.0.3",
     "bignumber.js": "^9.0.0",
     "binance-api-node": "^0.9.15",

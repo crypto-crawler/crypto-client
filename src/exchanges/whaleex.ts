@@ -70,9 +70,15 @@ export async function placeOrder(
 
     const path = '/api/v1/order/orders/place';
 
-    const orderId = await getIdFromCache().catch((e: Error) => {
-      return e;
-    });
+    let orderId: string | Error | undefined;
+    for (let i = 0; i < 3; i += 1) {
+      if (orderId instanceof Error || orderId === undefined) {
+        // eslint-disable-next-line no-await-in-loop
+        orderId = await getIdFromCache().catch((e: Error) => {
+          return e;
+        });
+      }
+    }
     if (orderId instanceof Error) return orderId;
     if (orderId === undefined) return new Error(`orderId is undefined`);
 
