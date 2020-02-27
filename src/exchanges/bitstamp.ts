@@ -245,3 +245,39 @@ export function getWithdrawalFees(): { [key: string]: { [key: string]: Withdrawa
 
   return result;
 }
+
+export async function withdraw(
+  symbol: string,
+  address: string,
+  amount: number,
+  memo?: string,
+): Promise<string | Error> {
+  const pathMap: { [key: string]: string } = {
+    BCH: '/api/v2/bch_withdrawal/',
+    BTC: '/api/bitcoin_withdrawal/',
+    ETH: '/api/v2/eth_withdrawal/',
+    LTC: '/api/v2/ltc_withdrawal/',
+    XRP: '/api/ripple_withdrawal/',
+  };
+
+  if (!(symbol in pathMap)) return new Error(`Invalid symbol ${symbol} at Bitstamp`);
+
+  const path = pathMap[symbol];
+
+  const params: { [key: string]: string } = {
+    address,
+    amount: amount.toString(),
+  };
+  if (symbol === 'XRP') {
+    if (memo !== undefined) {
+      params.destination_tag = memo;
+    }
+  }
+
+  const data = await privateRequest(path, params);
+  if (data instanceof Error) return data;
+
+  const dataTyped = data as { id: number };
+
+  return dataTyped.id.toString();
+}
