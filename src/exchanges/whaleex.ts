@@ -70,8 +70,14 @@ export async function placeOrder(
 
     const path = '/api/v1/order/orders/place';
 
+    const orderId = await getIdFromCache().catch((e: Error) => {
+      return e;
+    });
+    if (orderId instanceof Error) return orderId;
+    if (orderId === undefined) return new Error(`orderId is undefined`);
+
     const order: WhaleExOrder = {
-      orderId: await getIdFromCache(),
+      orderId,
       amount: quantityStr,
       price: priceStr,
       symbol: pairInfo.raw_pair,
