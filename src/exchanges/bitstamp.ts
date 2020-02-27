@@ -2,6 +2,7 @@ import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
 import { PairInfo } from 'exchange-info';
+import qs from 'qs';
 import { v1 as uuidv1 } from 'uuid';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
@@ -58,27 +59,43 @@ function sign_v1(apiKey: string, apiSecret: string, customerId: number, nonce: n
   return signature;
 }
 
-export async function placeOrder(
-  pairInfo: PairInfo,
-  price: number,
-  quantity: number,
-  sell: boolean,
-): Promise<string | Error> {
+async function privateRequestV1(path: string, params: { [key: string]: string }): Promise<any> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(!path.includes('/v2/'));
+
+    const nonce = Date.now();
+
+    const signature = sign_v1(
+      USER_CONFIG.BITSTAMP_API_KEY!,
+      USER_CONFIG.BITSTAMP_API_SECRET!,
+      USER_CONFIG.BITSTAMP_USER_ID!,
+      nonce,
+    );
+    Object.assign(params, { key: USER_CONFIG.BITSTAMP_API_KEY!, signature, nonce });
+    const payload = qs.stringify(params);
+
+    const response = await Axios.post(`https://${DOMAIN}${path}`, payload).catch((e: Error) => {
+      return e;
+    });
+    if (response instanceof Error) return response;
+    assert.equal(response.status, 200);
+
+    if (response.data.error) return new Error(JSON.stringify(response.data.error));
+
+    return response.data;
+  } catch (e) {
+    return e;
+  }
+}
+
+async function privateRequestV2(path: string, params: { [key: string]: string }): Promise<any> {
+  try {
     assert.ok(USER_CONFIG.BITSTAMP_API_KEY);
     assert.ok(USER_CONFIG.BITSTAMP_API_SECRET);
+    assert.ok(path.includes('/v2/'));
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const payload = qs.stringify(params) || '{}';
 
-    const path = `/api/v2/${sell ? 'sell' : 'buy'}/${pairInfo.raw_pair}/`;
-
-    const payload = `price=${priceStr}&amount=${quantityStr}`;
     const headers = sign(
       USER_CONFIG.BITSTAMP_API_KEY!,
       USER_CONFIG.BITSTAMP_API_SECRET!,
@@ -96,86 +113,64 @@ export async function placeOrder(
     assert.equal(response.status, 200);
 
     if (response.data.status === 'error') {
-      return new Error(response.data.reason.__all__[0] as string); // eslint-disable-line no-underscore-dangle
+      return new Error(JSON.stringify(response.data.reason)); // eslint-disable-line no-underscore-dangle
     }
 
-    return response.data.id;
+    return response.data;
   } catch (e) {
     return e;
   }
 }
 
-export async function queryOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
-
-  const path = '/api/order_status/';
-
-  const nonce = Date.now();
-  const signature = sign_v1(
-    USER_CONFIG.BITSTAMP_API_KEY!,
-    USER_CONFIG.BITSTAMP_API_SECRET!,
-    USER_CONFIG.BITSTAMP_USER_ID!,
-    nonce,
-  );
-  const payload = `id=${orderId}&key=${USER_CONFIG.BITSTAMP_API_KEY!}&signature=${signature}&nonce=${nonce}`;
-
-  const response = await Axios.post(`https://${DOMAIN}${path}`, payload);
-  assert.equal(response.status, 200);
-
-  return response.data.error ? undefined : response.data;
+async function privateRequest(path: string, params: { [key: string]: string } = {}): Promise<any> {
+  return path.includes('/v2/') ? privateRequestV2(path, params) : privateRequestV1(path, params);
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
+export async function placeOrder(
+  pairInfo: PairInfo,
+  price: number,
+  quantity: number,
+  sell: boolean,
+): Promise<string | Error> {
   assert.ok(pairInfo);
+
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+
+  const path = `/api/v2/${sell ? 'sell' : 'buy'}/${pairInfo.raw_pair}/`;
+  const data = await privateRequest(path, { price: priceStr, amount: quantityStr });
+  if (data instanceof Error) return data;
+  return data.id as string;
+}
+
+export async function queryOrder(orderId: string): Promise<{ [key: string]: any } | undefined> {
+  const data = await privateRequest('/api/order_status/', { id: orderId });
+  if (data instanceof Error) return undefined;
+  return data;
+}
+
+export async function cancelOrder(orderId: string): Promise<boolean> {
   assert.ok(orderId);
 
-  const path = '/api/v2/cancel_order/';
+  const data = await privateRequest('/api/v2/cancel_order/', { id: orderId });
+  if (data instanceof Error) return false;
 
-  const payload = `id=${orderId}`;
-  const headers = sign(
-    USER_CONFIG.BITSTAMP_API_KEY!,
-    USER_CONFIG.BITSTAMP_API_SECRET!,
-    'POST',
-    path,
-    payload,
-  );
-
-  const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
-    headers,
-  });
-  assert.equal(response.status, 200);
-
-  return response.data.id.toString() === orderId;
+  return data.id === parseInt(orderId, 10);
 }
 
 export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
-  const path = '/api/v2/balance/';
-
-  const payload = '{}';
-  const headers = sign(
-    USER_CONFIG.BITSTAMP_API_KEY!,
-    USER_CONFIG.BITSTAMP_API_SECRET!,
-    'POST',
-    path,
-    payload,
-  );
-
-  const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
-    headers,
-  });
-  assert.equal(response.status, 200);
-
   const result: { [key: string]: number } = {};
-  Object.keys(response.data)
+
+  const data = await privateRequest('/api/v2/balance/');
+  if (data instanceof Error) return result;
+  const dataTyped = data as { [key: string]: string };
+
+  Object.keys(dataTyped)
     .filter(x =>
       all ? x.endsWith('_available') || x.endsWith('_reserved') : x.endsWith('_available'),
     )
     .forEach(key => {
       const symbol = key.substring(0, key.indexOf('_')).toUpperCase();
-      result[symbol] = parseFloat(response.data[key] as string);
+      result[symbol] = parseFloat(dataTyped[key]);
     });
   return result;
 }
@@ -193,37 +188,16 @@ async function fetchDepositAddress(symbol: string): Promise<DepositAddress | und
 
   const path = pathMap[symbol];
 
-  if (symbol === 'BTC') {
-    const nonce = Date.now();
-    const signature = sign_v1(
-      USER_CONFIG.BITSTAMP_API_KEY!,
-      USER_CONFIG.BITSTAMP_API_SECRET!,
-      USER_CONFIG.BITSTAMP_USER_ID!,
-      nonce,
-    );
-    const payload = `key=${USER_CONFIG.BITSTAMP_API_KEY!}&signature=${signature}&nonce=${nonce}`;
+  const data = await privateRequest(path);
+  if (data instanceof Error) return undefined;
 
-    const response = await Axios.post(`https://${DOMAIN}${path}`, payload);
-    assert.equal(response.status, 200);
-
-    return { symbol, platform: symbol, address: response.data };
+  if (path.includes('/v2/')) {
+    const dataTyped = data as { address: string; destination_tag?: string };
+    return { symbol, platform: symbol, ...dataTyped };
   }
 
-  const payload = '{}';
-  const headers = sign(
-    USER_CONFIG.BITSTAMP_API_KEY!,
-    USER_CONFIG.BITSTAMP_API_SECRET!,
-    'POST',
-    path,
-    payload,
-  );
-
-  const response = await Axios.post(`https://${DOMAIN}${path}`, payload, {
-    headers,
-  });
-  assert.equal(response.status, 200);
-
-  return { symbol, platform: symbol, address: response.data.address };
+  const address = data as string;
+  return { symbol, platform: symbol, address };
 }
 
 export async function getDepositAddresses(

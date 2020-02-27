@@ -272,7 +272,7 @@ export async function cancelOrder(
     case 'Bitfinex':
       return Bitfinex.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Bitstamp':
-      return Bitstamp.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Bitstamp.cancelOrder(orderId_or_transactionId);
     case 'Coinbase':
       return Coinbase.cancelOrder(pairInfo, orderId_or_transactionId);
     case 'Huobi':
@@ -297,40 +297,40 @@ export async function cancelOrder(
  *
  * @param exchange The exchange name
  * @param pair The normalized pair, e.g., EIDOS_EOS
- * @param orderId_or_transactionId orderId if central, transactionId if dex
+ * @param orderId Order ID
  * @returns The order information
  */
 export async function queryOrder(
   exchange: SupportedExchange | ExchangeInfo,
   pair: string,
-  orderId_or_transactionId: string,
+  orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(orderId_or_transactionId);
+  assert.ok(orderId);
 
   const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
   const pairInfo = exchangeInfo.pairs[pair];
 
   switch (exchange) {
     case 'Binance':
-      return Binance.queryOrder(pairInfo, orderId_or_transactionId);
+      return Binance.queryOrder(pairInfo, orderId);
     case 'Bitfinex':
-      return Bitfinex.queryOrder(pairInfo, orderId_or_transactionId);
+      return Bitfinex.queryOrder(pairInfo, orderId);
     case 'Bitstamp':
-      return Bitstamp.queryOrder(pairInfo, orderId_or_transactionId);
+      return Bitstamp.queryOrder(orderId);
     case 'Coinbase':
-      return Coinbase.queryOrder(pairInfo, orderId_or_transactionId);
+      return Coinbase.queryOrder(pairInfo, orderId);
     case 'Huobi':
-      return Huobi.queryOrder(pairInfo, orderId_or_transactionId);
+      return Huobi.queryOrder(pairInfo, orderId);
     case 'Kraken':
-      return Kraken.queryOrder(pairInfo, orderId_or_transactionId);
+      return Kraken.queryOrder(pairInfo, orderId);
     case 'MXC':
-      return MXC.queryOrder(pairInfo, orderId_or_transactionId);
+      return MXC.queryOrder(pairInfo, orderId);
     case 'Newdex':
-      return Newdex.queryOrder(pairInfo, orderId_or_transactionId);
+      return Newdex.queryOrder(pairInfo, orderId);
     case 'OKEx_Spot':
-      return OKEx_Spot.queryOrder(pairInfo, orderId_or_transactionId);
+      return OKEx_Spot.queryOrder(pairInfo, orderId);
     case 'WhaleEx':
-      return WhaleEx.queryOrder(pairInfo, orderId_or_transactionId);
+      return WhaleEx.queryOrder(pairInfo, orderId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
