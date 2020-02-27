@@ -118,7 +118,9 @@ export async function placeOrder(
       assert.equal(typeof response.data.result, 'string');
       return response.data.result as string;
     }
-    return new Error(JSON.stringify(response.data));
+    return new Error(
+      JSON.stringify({ price: priceStr, quantity: quantityStr, data: response.data }),
+    );
   } catch (e) {
     return e;
   }
