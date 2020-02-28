@@ -116,7 +116,12 @@ export async function getDepositAddresses(
       if (!(symbol in result)) result[symbol] = {};
 
       // eslint-disable-next-line no-await-in-loop
-      const { address_info } = (await (client as any).depositCrypto({ currency: symbol })) as {
+      const data = await (client as any).depositCrypto({ currency: symbol }).catch((e: Error) => {
+        return e;
+      });
+      if (data instanceof Error) return result;
+
+      const { address_info } = data as {
         address_info: { address: string; destination_tag?: string };
       };
 
@@ -156,4 +161,44 @@ export function getWithdrawalFees(): { [key: string]: { [key: string]: Withdrawa
   });
 
   return result;
+}
+
+export async function withdraw(
+  symbol: string,
+  address: string, // only supports existing addresses in your withdrawal address list
+  amount: number,
+  memo?: string,
+): Promise<string | Error> {
+  const client = createAuthenticatedClient();
+
+  const minWithdrawalAmount: { [key: string]: number } = { EOS: 1.0 };
+  if (symbol in minWithdrawalAmount && amount < minWithdrawalAmount[symbol]) {
+    return new Error(
+      `${symbol} withdrawal amount ${amount} is less than Coinbase minimum amunt ${minWithdrawalAmount[symbol]}`,
+    );
+  }
+
+  const params: {
+    currency: string;
+    crypto_address: string;
+    amount: number;
+    destination_tag?: string;
+  } = {
+    currency: symbol,
+    crypto_address: address,
+    amount,
+  };
+  if (memo) params.destination_tag = memo;
+
+  const data = await (client as any).withdrawCrypto(params).catch((e: Error) => {
+    return e;
+  });
+  if (data instanceof Error) return data;
+
+  const { id } = data as {
+    id: string;
+    amount: string;
+    currency: string;
+  };
+  return id;
 }

@@ -571,6 +571,9 @@ export async function withdraw(
     case 'Bitstamp':
       result = await Bitstamp.withdraw(symbol, address, amount, memo);
       break;
+    case 'Coinbase':
+      result = await Coinbase.withdraw(symbol, address, amount, memo);
+      break;
     case 'Huobi':
       result = await Huobi.withdraw(symbol, address, amount, platform, memo);
       break;
