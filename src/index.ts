@@ -577,6 +577,13 @@ export async function withdraw(
     case 'Huobi':
       result = await Huobi.withdraw(symbol, address, amount, platform, memo);
       break;
+    case 'Kraken': {
+      if (params.key === undefined) {
+        throw new Error('Kraken withdraw requires a key');
+      }
+      result = await Kraken.withdraw(symbol, platform, params.key as string, amount);
+      break;
+    }
     case 'MXC':
       throw Error(`MXC does NOT have withdraw API`);
     case 'OKEx_Spot':

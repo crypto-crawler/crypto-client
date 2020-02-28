@@ -3,9 +3,10 @@ import Axios from 'axios';
 import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
+import { getWithdrawalFee } from 'kraken-withdrawal-fee';
 import qs from 'qs';
 import { USER_CONFIG } from '../config';
-import { DepositAddress } from '../pojo';
+import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings, detectPlatform, FIAT_SYMBOLS, sleep } from '../util';
 
 const API_ENDPOINT = 'https://api.kraken.com';
@@ -247,7 +248,7 @@ export async function getDepositAddress(
   if (arr instanceof Error) return arr;
   if (arr.length <= 0) return new Error('Returned empty array');
 
-  const address = arr[0];
+  const address = arr[arr.length - 1]; // prefer the oldest address
 
   const platform: string = detectPlatform(address.address, symbol) || symbol;
 
@@ -291,4 +292,81 @@ export async function getDepositAddresses(
   }
 
   return result;
+}
+
+export async function fetchWithdrawInfo(
+  symbol: string,
+  key: string,
+  amount: number,
+): Promise<{ method: string; fee: number } | Error> {
+  const path = '/0/private/WithdrawInfo';
+
+  const params: { nonce: number; [key: string]: string | number } = {
+    asset: symbol === 'DOGE' ? 'XDG' : symbol,
+    nonce: generateNonce(),
+    key,
+    amount,
+  };
+
+  const data = await privateMethod<{
+    method: string;
+    limit: string;
+    amount: string;
+    fee: string;
+  }>(path, params);
+  if (data instanceof Error) return data;
+
+  return { method: data.method, fee: parseFloat(data.fee) };
+}
+
+export async function getWithdrawalFees(): Promise<{
+  [key: string]: { [key: string]: WithdrawalFee };
+}> {
+  const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
+
+  // TODO
+  return result;
+}
+
+export async function withdraw(
+  symbol: string,
+  platform: string,
+  key: string,
+  amount: number,
+): Promise<string | Error> {
+  if (!key) {
+    return new Error('Kraken withdraw requires a key');
+  }
+  const withdrawInfo = await fetchWithdrawInfo(symbol, key, amount);
+  if (withdrawInfo instanceof Error) return withdrawInfo;
+
+  const withdrawalFee = getWithdrawalFee(symbol);
+  if (withdrawalFee === undefined) {
+    return new Error(`${symbol} doesn't  exist in package kraken-withdrawal-fee`);
+  }
+
+  if (Math.abs(withdrawInfo.fee - withdrawalFee.fee) > Number.EPSILON) {
+    return new Error(
+      `fee from package kraken-withdrawal-fee is not consistent with API /0/private/WithdrawInfo`,
+    );
+  }
+  if (amount < withdrawalFee.min) {
+    return new Error(`amount ${amount} is less than min ${withdrawalFee.min}`);
+  }
+  if (withdrawalFee.platform && platform !== withdrawalFee.platform) {
+    return new Error(
+      `platform ${platform} is not identical with withdrawalFee.platform ${withdrawalFee.platform}`,
+    );
+  }
+
+  const params = {
+    asset: symbol === 'DOGE' ? 'XDG' : symbol,
+    nonce: generateNonce(),
+    amount,
+    key,
+  };
+  const data = await privateMethod<{ refid: string }>('/0/private/Withdraw', params);
+  if (data instanceof Error) return data;
+
+  return data.refid;
 }
