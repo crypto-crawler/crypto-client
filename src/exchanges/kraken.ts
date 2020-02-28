@@ -3,7 +3,7 @@ import Axios from 'axios';
 import crypto from 'crypto';
 import { normalizeSymbol } from 'crypto-pair';
 import { PairInfo } from 'exchange-info';
-import { getWithdrawalFee } from 'kraken-withdrawal-fee';
+import { getAllWithdrawalFees, getWithdrawalFee } from 'kraken-withdrawal-fee';
 import qs from 'qs';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
@@ -324,7 +324,18 @@ export async function getWithdrawalFees(): Promise<{
 }> {
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
-  // TODO
+  const fees = getAllWithdrawalFees();
+  Object.keys(fees).forEach(symbol => {
+    const platform = fees[symbol].platform || symbol;
+    if (!(symbol in result)) result[symbol] = {};
+
+    result[symbol][platform] = {
+      symbol,
+      platform,
+      fee: fees[symbol].fee,
+      min: fees[symbol].min,
+    };
+  });
   return result;
 }
 

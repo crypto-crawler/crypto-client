@@ -464,6 +464,8 @@ export async function getWithdrawalFees(
       return Coinbase.getWithdrawalFees();
     case 'Huobi':
       return Huobi.getWithdrawalFees();
+    case 'Kraken':
+      return Kraken.getWithdrawalFees();
     case 'Newdex': {
       if (symbols === undefined || symbols.length <= 0)
         throw Error(`${exchange} requires an array of symbols`);
