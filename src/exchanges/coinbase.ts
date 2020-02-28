@@ -142,6 +142,7 @@ export async function getDepositAddresses(
 }
 
 export function getWithdrawalFees(): { [key: string]: { [key: string]: WithdrawalFee } } {
+  // https://help.coinbase.com/en/pro/trading-and-funding/trading-rules-and-fees/fees.html
   const data: { [key: string]: number } = {
     EUR: 0.15,
     USD: 25,
