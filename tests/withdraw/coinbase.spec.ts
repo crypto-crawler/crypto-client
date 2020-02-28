@@ -8,7 +8,7 @@ beforeAll(async () => {
   await init(USER_CONFIG);
 });
 
-test('withdraw(EOS)', async () => {
+test('withdraw(EOS) less than 1 EOS', async () => {
   const withdrawalId = await withdraw('Coinbase', 'EOS', 'cryptoforest', 0.99, 'Coinbase').catch(
     (e: Error) => {
       return e;
@@ -18,7 +18,7 @@ test('withdraw(EOS)', async () => {
 });
 
 // Sending EOS is temporarily disabled.
-test.skip('withdraw(EOS)', async () => {
+test('withdraw(EOS)', async () => {
   const withdrawalId = await withdraw('Coinbase', 'EOS', 'cryptoforest', 1.0, 'Coinbase').catch(
     (e: Error) => {
       return e;
