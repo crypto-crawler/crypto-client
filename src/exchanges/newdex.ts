@@ -8,6 +8,7 @@ import {
   getCurrencyBalance,
   getTableRows,
   sendTransaction,
+  transfer,
 } from 'eos-utils';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
@@ -15,7 +16,7 @@ import https from 'https';
 import { Bloks } from '../blockchain';
 import { USER_CONFIG } from '../config';
 import { ActionExtended, DepositAddress, NewdexOrder, WithdrawalFee } from '../pojo';
-import { convertPriceAndQuantityToStrings } from '../util';
+import { convertPriceAndQuantityToStrings, numberToString } from '../util';
 
 const promiseAny = require('promise.any');
 
@@ -274,4 +275,34 @@ export function getWithdrawalFees(
   });
 
   return result;
+}
+
+export async function withdraw(
+  symbol: string,
+  address: string, // only supports existing addresses in your withdrawal address list
+  amount: number,
+  platform: string,
+  memo: string,
+): Promise<string | Error> {
+  assert.ok(memo);
+  assert.equal(platform, 'EOS');
+
+  const tokenInfo = getTokenInfo(symbol);
+  if (tokenInfo === undefined) {
+    return new Error(`getTokenInfo(${symbol}) failed`);
+  }
+
+  const response = await transfer(
+    USER_CONFIG.eosAccount!,
+    USER_CONFIG.eosPrivateKey!,
+    address,
+    symbol,
+    numberToString(amount, tokenInfo.decimals, false),
+    memo,
+  ).catch((e: Error) => {
+    return e;
+  });
+
+  if (response instanceof Error) return response;
+  return response.transaction_id || response.id;
 }

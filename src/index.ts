@@ -588,6 +588,9 @@ export async function withdraw(
     }
     case 'MXC':
       throw Error(`MXC does NOT have withdraw API`);
+    case 'Newdex':
+      result = await Newdex.withdraw(symbol, address, amount, platform, memo!);
+      break;
     case 'OKEx_Spot':
       result = await OKEx_Spot.withdraw(symbol, address, amount, platform, memo);
       break;
