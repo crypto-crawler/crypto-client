@@ -1,8 +1,8 @@
 import Axios from 'axios';
 import { normalizeSymbol } from 'crypto-pair';
-import { fetchDepositAddress } from '../src/exchanges/bitfinex';
-import { getDepositAddresses, init } from '../src/index';
-import readUserConfig from './user_config';
+import { fetchDepositAddress } from '../../src/exchanges/bitfinex';
+import { getDepositAddresses, init } from '../../src/index';
+import readUserConfig from '../user_config';
 
 beforeAll(async () => {
   const userConfig = readUserConfig();
