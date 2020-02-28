@@ -257,8 +257,8 @@ export async function withdraw(
   symbol: string,
   address: string,
   amount: number,
+  platform: string,
   memo?: string,
-  platform?: string,
 ): Promise<string | Error> {
   const client = createAuthenticatedClient();
 
@@ -270,7 +270,7 @@ export async function withdraw(
   if (memo) {
     params.addressTag = memo;
   }
-  if (platform) {
+  if (symbol !== platform) {
     const platformNetworkMap: { [key: string]: string } = {
       ERC20: 'ETH',
       OMNI: 'BTC',

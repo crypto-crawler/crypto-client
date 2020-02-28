@@ -545,6 +545,9 @@ export async function withdraw(
   assert.ok(exchange);
 
   const platform = detectPlatform(address, symbol);
+  if (platform === undefined)
+    throw new Error(`Failed to detect platform for address ${address} of ${symbol}`);
+
   const symbolsRequirePlatform = ['USDT'];
   if (symbolsRequirePlatform.includes(symbol) && !platform) {
     throw new Error(`Failed to detect platform of ${symbol}`);
@@ -560,20 +563,24 @@ export async function withdraw(
   let result: string | Error;
   switch (exchange) {
     case 'Binance':
-      result = await Binance.withdraw(symbol, address, amount, memo, platform);
+      result = await Binance.withdraw(symbol, address, amount, platform, memo);
       break;
     case 'Bitfinex':
-      result = await Bitfinex.withdraw(symbol, address, amount, memo, platform, params);
+      result = await Bitfinex.withdraw(symbol, address, amount, platform, memo, params);
       break;
     case 'Bitstamp':
       result = await Bitstamp.withdraw(symbol, address, amount, memo);
       break;
     case 'Huobi':
-      result = await Huobi.withdraw(symbol, address, amount, memo, platform);
+      result = await Huobi.withdraw(symbol, address, amount, platform, memo);
       break;
+    case 'MXC':
+      throw Error(`MXC does NOT have withdraw API`);
     case 'OKEx_Spot':
-      result = await OKEx_Spot.withdraw(symbol, address, amount, memo, platform);
+      result = await OKEx_Spot.withdraw(symbol, address, amount, platform, memo);
       break;
+    case 'WhaleEx':
+      throw Error(`WhaleEx does NOT have withdraw API`);
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }

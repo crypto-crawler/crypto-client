@@ -360,8 +360,8 @@ export async function withdraw(
   symbol: string,
   address: string,
   amount: number,
+  platform: string,
   memo?: string,
-  platform?: string,
   params: { [key: string]: string | number | boolean } = {},
 ): Promise<string | Error> {
   if (!params.wallet) return new Error('wallet should be one of exchange, margin and funding');

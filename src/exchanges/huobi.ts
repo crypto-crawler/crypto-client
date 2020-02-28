@@ -446,11 +446,10 @@ export async function withdraw(
   symbol: string,
   address: string, // only supports existing addresses in your withdrawal address list
   amount: number,
+  platform: string,
   memo?: string,
-  platform?: string,
 ): Promise<string | Error> {
   const path = '/v1/dw/withdraw/api/create';
-  if (platform === undefined) platform = symbol; // eslint-disable-line no-param-reassign
 
   const chainInfoMap = await getChainInfo();
   if (!(symbol in chainInfoMap)) {

@@ -516,8 +516,8 @@ export async function withdraw(
   symbol: string,
   address: string, // only supports existing addresses in your withdrawal address list
   amount: number,
+  platform: string,
   memo?: string,
-  platform?: string,
 ): Promise<string | Error> {
   const authClient = createAuthenticatedClient();
   if (!USER_CONFIG.OKEX_SPOT_FUND_PASSWORD) return new Error('OKEX_SPOT_FUND_PASSWORD is empty');
@@ -542,9 +542,9 @@ export async function withdraw(
 
   const withdrawalFees = await getWithdrawalFees();
   if (!(symbol in withdrawalFees)) return new Error(`${symbol} not in withdrawalFees`);
-  const withdrawalFee = withdrawalFees[symbol][platform || symbol];
+  const withdrawalFee = withdrawalFees[symbol][platform];
   if (withdrawalFee === undefined) {
-    return new Error(`Can NOT find platform ${platform || symbol} in withdrawalFees[${symbol}]`);
+    return new Error(`Can NOT find platform ${platform} in withdrawalFees[${symbol}]`);
   }
   if (amount < withdrawalFee.min) {
     return new Error(`amount ${amount} is less than withdrawalFee.min ${withdrawalFee.min}`);
