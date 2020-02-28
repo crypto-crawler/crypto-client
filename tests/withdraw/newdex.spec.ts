@@ -10,11 +10,15 @@ beforeAll(async () => {
 });
 
 test('withdraw(EOS)', async () => {
-  const withdrawalId = await withdraw('Newdex', 'EOS', 'whaleextrust', 0.0001, 'Newdex').catch(
-    (e: Error) => {
-      return e;
-    },
-  );
+  const withdrawalId = await withdraw(
+    'Newdex',
+    'EOS',
+    'whaleextrust',
+    0.0001,
+    USER_CONFIG.WHALEEX_USER_ID!,
+  ).catch((e: Error) => {
+    return e;
+  });
   expect(withdrawalId instanceof Error).toBeFalsy();
   expect((withdrawalId as string).length).toBeGreaterThan(0);
 });
