@@ -284,11 +284,12 @@ export async function getDepositAddresses(): Promise<{
     // special logic
     if (symbol === 'BCH' && x.chain === 'bcc') platform = 'BCH';
 
+    // for debug only
     if (!symbolChainMap[symbol][x.chain].baseChainProtocol) {
       const detected = detectPlatform(x.address, symbol);
       if (detected !== symbol && detected !== 'ERC20' && detected !== 'NEP5') {
-        console.info(x);
-        console.info(`${detectPlatform(x.address, symbol)}, ${symbol}`);
+        // console.info(x);
+        // console.info(`${detectPlatform(x.address, symbol)}, ${symbol}`);
       }
     }
 
