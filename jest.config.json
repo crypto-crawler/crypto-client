@@ -2,5 +2,5 @@
   "preset": "ts-jest",
   "testEnvironment": "node",
   "roots": ["<rootDir>/tests"],
-  "testPathIgnorePatterns": ["<rootDir>/node_modules/", "<rootDir>/tests/withdraw"]
+  "testPathIgnorePatterns": ["<rootDir>/node_modules/", "<rootDir>/tests/withdraw/"]
 }
