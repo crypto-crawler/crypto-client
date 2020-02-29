@@ -41,6 +41,9 @@ const { argv } = yargs.options({
   CB_ACCESS_PASSPHRASE: {
     type: 'string',
   },
+  DFUSE_API_KEY: {
+    type: 'string',
+  },
   HUOBI_ACCESS_KEY: {
     type: 'string',
   },

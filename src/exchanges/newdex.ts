@@ -2,14 +2,7 @@ import { strict as assert } from 'assert';
 import Axios from 'axios';
 import { normalizeSymbol } from 'crypto-pair';
 import { getTokenInfo } from 'eos-token-info';
-import {
-  createTransferAction,
-  EOS_API_ENDPOINTS,
-  getCurrencyBalance,
-  getTableRows,
-  sendTransaction,
-  transfer,
-} from 'eos-utils';
+import { EOS_API_ENDPOINTS, getTableRows } from 'eos-utils';
 import { Serialize } from 'eosjs';
 import { PairInfo } from 'exchange-info';
 import https from 'https';
@@ -17,6 +10,12 @@ import { Bloks } from '../blockchain';
 import { USER_CONFIG } from '../config';
 import { ActionExtended, DepositAddress, NewdexOrder, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings, numberToString } from '../util';
+import {
+  createTransferAction,
+  getCurrencyBalance,
+  sendTransaction,
+  transfer,
+} from '../util/dfuse_eos';
 
 const promiseAny = require('promise.any');
 
@@ -92,7 +91,7 @@ export async function placeOrder(
       },
     );
     if (response instanceof Error) return response;
-    return response.transaction_id || response.id;
+    return response.transaction_id;
   } catch (e) {
     return e;
   }
@@ -122,7 +121,8 @@ export async function cancelOrder(
   };
 
   const response = await sendTransaction([action], USER_CONFIG.eosPrivateKey!);
-  return response.transaction_id || response.id;
+  if (response instanceof Error) return response.message;
+  return true;
 }
 
 export interface NewdexOrderOnChain {
@@ -226,16 +226,12 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
     result[symbol] = x.amount;
   });
 
-  result.EOS = await promiseAny(
-    EOS_API_ENDPOINTS.map(url => getCurrencyBalance(USER_CONFIG.eosAccount!, 'EOS', url)),
-  );
+  result.EOS = await getCurrencyBalance(USER_CONFIG.eosAccount!, 'EOS');
   return result;
 }
 
 export async function queryBalance(symbol: string): Promise<number> {
-  return promiseAny(
-    EOS_API_ENDPOINTS.map(url => getCurrencyBalance(USER_CONFIG.eosAccount!, symbol, url)),
-  );
+  return getCurrencyBalance(USER_CONFIG.eosAccount!, symbol);
 }
 
 export function getDepositAddresses(

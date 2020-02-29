@@ -57,6 +57,7 @@ export async function init({
   COINBASE_ACCESS_KEY = '',
   COINBASE_ACCESS_SECRET = '',
   COINBASE_ACCESS_PASSPHRASE = '',
+  DFUSE_API_KEY = '',
   HUOBI_ACCESS_KEY = '',
   HUOBI_SECRET_KEY = '',
   HUOBI_ACCOUNT_ID = 0,
@@ -75,6 +76,10 @@ export async function init({
     USER_CONFIG.eosAccount = eosAccount;
     if (!isValidPrivate(eosPrivateKey)) throw Error(`Invalid EOS private key: ${eosPrivateKey}`);
     USER_CONFIG.eosPrivateKey = eosPrivateKey;
+  }
+
+  if (DFUSE_API_KEY) {
+    USER_CONFIG.DFUSE_API_KEY = DFUSE_API_KEY;
   }
 
   if (ethPrivateKey) USER_CONFIG.ethPrivateKey = ethPrivateKey;

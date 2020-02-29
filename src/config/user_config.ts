@@ -13,6 +13,7 @@ export interface UserConfig {
   COINBASE_ACCESS_KEY?: string;
   COINBASE_ACCESS_SECRET?: string;
   COINBASE_ACCESS_PASSPHRASE?: string;
+  DFUSE_API_KEY?: string;
   HUOBI_ACCESS_KEY?: string;
   HUOBI_SECRET_KEY?: string;
   HUOBI_ACCOUNT_ID?: number;

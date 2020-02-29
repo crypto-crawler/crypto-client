@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.23.5",
+  "version": "0.23.6",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -50,7 +50,7 @@
     "@types/jest": "^25.1.3",
     "@types/long": "^4.0.1",
     "@types/mathjs": "^6.0.4",
-    "@types/node": "^13.7.6",
+    "@types/node": "^13.7.7",
     "@types/node-fetch": "^2.5.5",
     "@types/qs": "^6.9.1",
     "@types/text-encoding": "0.0.35",
@@ -70,9 +70,10 @@
     "jest-each": "^25.1.0",
     "prettier": "^1.19.1",
     "ts-jest": "^25.2.1",
-    "typescript": "^3.8.2"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@dfuse/client": "^0.3.8",
     "@okfe/okex-node": "0.0.52",
     "assert": "^2.0.0",
     "axios": "^0.19.2",
@@ -95,6 +96,7 @@
     "node-fetch": "^2.6.0",
     "promise.any": "^2.0.1",
     "qs": "^6.9.1",
+    "text-encoding": "^0.7.0",
     "uuid": "^7.0.1",
     "web3-utils": "^1.2.6",
     "yargs": "^15.1.0"
