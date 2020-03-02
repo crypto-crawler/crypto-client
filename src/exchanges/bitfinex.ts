@@ -158,7 +158,7 @@ export async function fetchDepositAddress(
       opRenew: 0,
     });
 
-    if (symbolOrLabel === 'EOS') {
+    if (symbolOrLabel.toLowerCase() === 'eos') {
       return {
         address: data.notifyInfo[5],
         memo: data.notifyInfo[4],
