@@ -151,16 +151,23 @@ export async function queryOrder(
   return data[orderId];
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
-  const path = '/0/private/Balance';
+export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+  const path = '/0/private/BalanceEx';
 
-  const balances = await privateMethod<{ [key: string]: string }>(path, { nonce: generateNonce() });
+  const balances = await privateMethod<{ [key: string]: { balance: string; hold_trade: string } }>(
+    path,
+    {
+      nonce: generateNonce(),
+    },
+  );
   if (balances instanceof Error) return {};
 
   const result: { [key: string]: number } = {};
   Object.keys(balances).forEach(symbol => {
     const symbolNormalized = normalizeSymbol(symbol, 'Kraken');
-    result[symbolNormalized] = parseFloat(balances[symbol]);
+    result[symbolNormalized] = all
+      ? parseFloat(balances[symbol].balance)
+      : parseFloat(balances[symbol].balance) - parseFloat(balances[symbol].hold_trade);
   });
 
   return result;
