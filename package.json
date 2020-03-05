@@ -1,6 +1,6 @@
 {
   "name": "crypto-client",
-  "version": "0.23.9",
+  "version": "0.24.0",
   "description": "An unified client for all cryptocurrency exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -97,7 +97,7 @@
     "promise.any": "^2.0.1",
     "qs": "^6.9.1",
     "text-encoding": "^0.7.0",
-    "uuid": "^7.0.1",
+    "uuid": "^7.0.2",
     "web3-utils": "^1.2.6",
     "yargs": "^15.1.0"
   }

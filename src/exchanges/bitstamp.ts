@@ -165,9 +165,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   const dataTyped = data as { [key: string]: string };
 
   Object.keys(dataTyped)
-    .filter(x =>
-      all ? x.endsWith('_available') || x.endsWith('_reserved') : x.endsWith('_available'),
-    )
+    .filter(x => (all ? x.endsWith('_balance') : x.endsWith('_available')))
     .forEach(key => {
       const symbol = key.substring(0, key.indexOf('_')).toUpperCase();
       result[symbol] = parseFloat(dataTyped[key]);
