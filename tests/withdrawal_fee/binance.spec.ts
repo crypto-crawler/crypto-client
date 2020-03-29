@@ -4,6 +4,7 @@ import readUserConfig from '../user_config';
 beforeAll(async () => {
   const userConfig = readUserConfig();
   await init(userConfig);
+  jest.setTimeout(40 * 1000);
 });
 
 test("getWithdrawalFees('Binance')", async () => {

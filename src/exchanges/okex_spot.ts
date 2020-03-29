@@ -17,6 +17,8 @@ function createAuthenticatedClient(): any {
     USER_CONFIG.OKEX_SPOT_API_KEY!,
     USER_CONFIG.OKEX_SPOT_API_SECRET!,
     USER_CONFIG.OKEX_SPOT_API_PASSPHRASE!,
+    // 'https://www.okex.com',
+    // 9000,
   );
   return authClient;
 }
@@ -59,7 +61,7 @@ export async function placeOrder(
     if (data instanceof Error) return data;
 
     if (!data.result || data.error_code !== '0' || data.order_id === '-1') {
-      throw new Error(data.error_message);
+      return new Error(data.error_message);
     }
 
     return data.order_id;
@@ -168,7 +170,12 @@ async function getAddressWithTryCatch(
   | Error
 > {
   try {
-    return await authClient.account().getAddress(symbol);
+    return await authClient
+      .account()
+      .getAddress(symbol)
+      .catch((e: Error) => {
+        return e;
+      });
   } catch (e) {
     return e;
   }
@@ -184,20 +191,20 @@ export async function getDepositAddresses(
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   const authClient = createAuthenticatedClient();
-  const requests = symbols.map((symbol) => getAddressWithTryCatch(authClient, symbol));
 
-  const arr = (await Promise.all(requests))
-    .filter((x) => !(x instanceof Error))
-    .flatMap(
-      (x) =>
-        x as {
-          address: string;
-          currency: string;
-          to: number;
-          memo?: string;
-          tag?: string;
-        }[],
-    );
+  const arr: {
+    address: string;
+    currency: string;
+    to: number;
+    memo?: string;
+    tag?: string;
+  }[] = [];
+  for (let i = 0; i < symbols.length; i += 1) {
+    const tmp = await getAddressWithTryCatch(authClient, symbols[i]); // eslint-disable-line no-await-in-loop
+    if (!(tmp instanceof Error)) {
+      arr.push(...tmp);
+    }
+  }
 
   const ethAddresses = arr.filter((x) => x.currency.toUpperCase() === 'ETH').map((x) => x.address);
   assert.ok(ethAddresses.length > 0);

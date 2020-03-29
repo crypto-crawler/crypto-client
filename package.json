@@ -90,7 +90,7 @@
     "eos-utils": "0.1.8",
     "eosjs": "^20.0.3",
     "eosjs-ecc": "^4.0.7",
-    "exchange-info": "^1.6.4",
+    "exchange-info": "^1.6.5",
     "kraken-withdrawal-fee": "0.0.3",
     "long": "^4.0.0",
     "mathjs": "^6.6.1",
