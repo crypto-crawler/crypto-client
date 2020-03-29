@@ -103,7 +103,7 @@ export async function queryOrder(
   return data;
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
   const arr = (await authClient.spot().getAccounts()) as {
     id: string;
@@ -116,7 +116,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   }[];
 
   const result: { [key: string]: number } = {};
-  arr.forEach(x => {
+  arr.forEach((x) => {
     result[x.currency] = all ? parseFloat(x.balance) : parseFloat(x.available);
   });
   return result;
@@ -176,7 +176,7 @@ async function getAddressWithTryCatch(
 
 export async function getDepositAddresses(
   symbols: string[],
-  all: boolean = false,
+  all = false,
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   if (!symbols.includes('ETH')) symbols.push('ETH');
   if (!symbols.includes('TRX')) symbols.push('TRX');
@@ -184,12 +184,12 @@ export async function getDepositAddresses(
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
   const authClient = createAuthenticatedClient();
-  const requests = symbols.map(symbol => getAddressWithTryCatch(authClient, symbol));
+  const requests = symbols.map((symbol) => getAddressWithTryCatch(authClient, symbol));
 
   const arr = (await Promise.all(requests))
-    .filter(x => !(x instanceof Error))
+    .filter((x) => !(x instanceof Error))
     .flatMap(
-      x =>
+      (x) =>
         x as {
           address: string;
           currency: string;
@@ -199,23 +199,23 @@ export async function getDepositAddresses(
         }[],
     );
 
-  const ethAddresses = arr.filter(x => x.currency.toUpperCase() === 'ETH').map(x => x.address);
+  const ethAddresses = arr.filter((x) => x.currency.toUpperCase() === 'ETH').map((x) => x.address);
   assert.ok(ethAddresses.length > 0);
-  const trxAddresses = arr.filter(x => x.currency.toUpperCase() === 'TRX').map(x => x.address);
+  const trxAddresses = arr.filter((x) => x.currency.toUpperCase() === 'TRX').map((x) => x.address);
   assert.ok(trxAddresses.length > 0);
 
   // Rename USDT to USDT-OMNI
   arr
-    .filter(x => x.currency.toUpperCase() === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency.toUpperCase() === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(arr);
 
   arr
-    .filter(x => all || x.to === 1) // 1, spot; 6, fund
-    .forEach(x => {
+    .filter((x) => all || x.to === 1) // 1, spot; 6, fund
+    .forEach((x) => {
       const [symbol, platformTmp] = parseCurrency(x.currency);
       if (!(symbol in result)) result[symbol] = {};
 
@@ -266,8 +266,8 @@ export async function getWithdrawalFees(): Promise<{
   }>;
   // Rename USDT to USDT-OMNI
   currencies
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
@@ -281,7 +281,7 @@ export async function getWithdrawalFees(): Promise<{
       min_withdraw_amount?: number;
     };
   } = {};
-  currencies.forEach(x => {
+  currencies.forEach((x) => {
     currencyMap[x.currency] = {
       symbol: x.currency,
       can_deposit: x.can_deposit === '1',
@@ -309,21 +309,21 @@ export async function getWithdrawalFees(): Promise<{
 
   // Rename USDT to USDT-OMNI
   withdrawalFees
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   const depositAddresses = await getDepositAddresses(
-    withdrawalFees.filter(x => x.min_fee).map(x => parseCurrency(x.currency)[0]),
+    withdrawalFees.filter((x) => x.min_fee).map((x) => parseCurrency(x.currency)[0]),
     true,
   );
   const tokenPlatformMap = calcTokenPlatform(depositAddresses);
 
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
   withdrawalFees
-    .filter(x => x.min_fee)
-    .forEach(x => {
+    .filter((x) => x.min_fee)
+    .forEach((x) => {
       const symbol = parseCurrency(x.currency)[0];
       const platform = tokenPlatformMap[symbol] || parseCurrency(x.currency)[1];
 
@@ -357,8 +357,8 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
   }>;
   // Rename USDT to USDT-OMNI
   currencies
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
@@ -372,7 +372,7 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       min_withdraw_amount?: number;
     };
   } = {};
-  currencies.forEach(x => {
+  currencies.forEach((x) => {
     currencyMap[x.currency] = {
       symbol: x.currency,
       can_deposit: x.can_deposit === '1',
@@ -393,15 +393,15 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
   // Rename USDT to USDT-OMNI
   withdrawalFees
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
   withdrawalFees
-    .filter(x => x.min_fee)
-    .forEach(x => {
+    .filter((x) => x.min_fee)
+    .forEach((x) => {
       const [symbol, platform] = parseCurrency(x.currency);
 
       const currency: Currency = result[symbol] || {
@@ -429,11 +429,11 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       result[symbol] = currency;
     });
 
-  const requests = Object.keys(result).map(symbol => getAddressWithTryCatch(authClient, symbol));
+  const requests = Object.keys(result).map((symbol) => getAddressWithTryCatch(authClient, symbol));
   const depositAddresses = (await Promise.all(requests))
-    .filter(x => !(x instanceof Error))
+    .filter((x) => !(x instanceof Error))
     .flatMap(
-      x =>
+      (x) =>
         x as {
           address: string;
           currency: string;
@@ -443,20 +443,20 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
         }[],
     );
 
-  depositAddresses.forEach(x => {
+  depositAddresses.forEach((x) => {
     x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
   });
   // Rename USDT to USDT-OMNI
   depositAddresses
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
   // console.info(depositAddresses);
   // console.info(depositAddresses.filter(x => x.currency.includes('-')).map(x => x.currency));
 
-  depositAddresses.forEach(x => {
+  depositAddresses.forEach((x) => {
     const [symbol, platform] = parseCurrency(x.currency);
 
     const currency = result[symbol];
@@ -494,13 +494,13 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
   }>;
   // Rename USDT to USDT-OMNI
   currencies
-    .filter(x => x.currency === 'USDT')
-    .forEach(x => {
+    .filter((x) => x.currency === 'USDT')
+    .forEach((x) => {
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
   // console.info(JSON.stringify(currencies, undefined, 2));
 
-  currencies.forEach(x => {
+  currencies.forEach((x) => {
     const [symbol, platform] = parseCurrency(x.currency);
     if (!(symbol in result)) {
       result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {} };

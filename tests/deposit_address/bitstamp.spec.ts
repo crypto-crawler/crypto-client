@@ -11,7 +11,7 @@ test("getDepositAddresses('Bitstamp')", async () => {
 
   const addresses = await getDepositAddresses('Bitstamp', symbols);
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);
   });
 });

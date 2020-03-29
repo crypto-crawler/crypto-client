@@ -144,7 +144,7 @@ export async function queryOrder(
 ): Promise<{ [key: string]: any } | undefined> {
   const orderId = await Bloks.getOrderId(transactionId);
   let response = await promiseAny(
-    EOS_API_ENDPOINTS.map(url =>
+    EOS_API_ENDPOINTS.map((url) =>
       getTableRows(
         {
           code: 'newdexpublic',
@@ -159,7 +159,7 @@ export async function queryOrder(
   );
   if (response.rows.length === 0) {
     response = await promiseAny(
-      EOS_API_ENDPOINTS.map(url =>
+      EOS_API_ENDPOINTS.map((url) =>
         getTableRows(
           {
             code: 'newdexpublic',
@@ -221,7 +221,7 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
   }[];
 
   const result: { [key: string]: number } = {};
-  arr.forEach(x => {
+  arr.forEach((x) => {
     const symbol = normalizeSymbol(x.currency, 'Newdex');
     result[symbol] = x.amount;
   });
@@ -239,7 +239,7 @@ export function getDepositAddresses(
 ): { [key: string]: { [key: string]: DepositAddress } } {
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {};
@@ -258,7 +258,7 @@ export function getWithdrawalFees(
 ): { [key: string]: { [key: string]: WithdrawalFee } } {
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {};

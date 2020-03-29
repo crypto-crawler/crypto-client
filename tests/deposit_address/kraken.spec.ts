@@ -13,7 +13,7 @@ test("getDepositAddresses('Kraken')", async () => {
 
   const addresses = await getDepositAddresses('Kraken', symbols);
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);
   });
 });

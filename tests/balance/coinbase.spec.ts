@@ -11,7 +11,7 @@ test('queryAllBalances(Coinbase)', async () => {
   const balances = await queryAllBalances();
   const symbols = ['BTC', 'ETH', 'EOS', 'USD'];
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(balances).toHaveProperty(symbol);
   });
 });

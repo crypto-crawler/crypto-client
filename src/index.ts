@@ -112,7 +112,7 @@ export async function init({
     USER_CONFIG.HUOBI_ACCESS_KEY = HUOBI_ACCESS_KEY;
     USER_CONFIG.HUOBI_SECRET_KEY = HUOBI_SECRET_KEY;
     USER_CONFIG.HUOBI_ACCOUNT_ID =
-      HUOBI_ACCOUNT_ID || (await Huobi.queryAccounts()).filter(x => x.type === 'spot')[0].id;
+      HUOBI_ACCOUNT_ID || (await Huobi.queryAccounts()).filter((x) => x.type === 'spot')[0].id;
   }
   if (KRAKEN_API_KEY) {
     assert.ok(KRAKEN_PRIVATE_KEY);
@@ -349,7 +349,7 @@ export async function queryOrder(
  */
 export async function queryAllBalances(
   exchange: SupportedExchange,
-  all: boolean = false,
+  all = false,
 ): Promise<{ [key: string]: number }> {
   let result: { [key: string]: number } | Error;
   switch (exchange) {
@@ -391,7 +391,7 @@ export async function queryAllBalances(
 
   // filter out zero balances
   const resultTmp: { [key: string]: number } = result;
-  Object.keys(resultTmp).forEach(symbol => {
+  Object.keys(resultTmp).forEach((symbol) => {
     if (resultTmp[symbol] <= 0) delete resultTmp[symbol];
   });
   return resultTmp;

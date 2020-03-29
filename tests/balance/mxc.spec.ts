@@ -11,7 +11,7 @@ test('queryAllBalances(MXC)', async () => {
   const balances = await queryAllBalances();
   const symbols = ['BTC', 'ETH', 'EOS', 'USDT'];
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(balances).toHaveProperty(symbol);
   });
 });

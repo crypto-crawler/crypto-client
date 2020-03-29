@@ -87,11 +87,11 @@ function getHandle(path: string): Handler {
   return HANDLER[path] || HANDLER.default;
 }
 
-function getHash() {
+function getHash(): crypto.Hash {
   return crypto.createHash('sha256');
 }
 
-function multiply(m: number, n: number, decimal: number, ceil: boolean = false): string {
+function multiply(m: number, n: number, decimal: number, ceil = false): string {
   const result = math.evaluate!(`${m} * ${n} * ${10 ** decimal}`);
   if (ceil) {
     return String(Math.ceil(result));
@@ -99,14 +99,14 @@ function multiply(m: number, n: number, decimal: number, ceil: boolean = false):
   return String(result).split('.')[0];
 }
 
-export function getKeys() {
+export function getKeys(): { privateKey: string; publicKey: string; APIKey: string } {
   assert.ok(USER_CONFIG.eosPrivateKey);
   assert.ok(USER_CONFIG.WHALEEX_API_KEY);
 
   return {
-    privateKey: USER_CONFIG.eosPrivateKey,
+    privateKey: USER_CONFIG.eosPrivateKey!,
     publicKey: privateToPublic(USER_CONFIG.eosPrivateKey!),
-    APIKey: USER_CONFIG.WHALEEX_API_KEY,
+    APIKey: USER_CONFIG.WHALEEX_API_KEY!,
   };
 }
 
@@ -127,7 +127,7 @@ export interface WhaleExOrder {
   type: 'buy-limit' | 'sell-limit' | 'buy-market' | 'sell-market';
 }
 
-export function signOrder(post: WhaleExOrder, timestamp: number, symbolObj: SymbolObj) {
+export function signOrder(post: WhaleExOrder, timestamp: number, symbolObj: SymbolObj): string {
   const {
     baseToken = 'IQ',
     quoteToken = 'EOS',
@@ -184,9 +184,7 @@ export function signOrder(post: WhaleExOrder, timestamp: number, symbolObj: Symb
   pack.updateInt16(10).updateInt16(10);
 
   const buf = pack.finalize();
-  const hashData = getHash()
-    .update(buf)
-    .digest('hex');
+  const hashData = getHash().update(buf).digest('hex');
   const { privateKey } = getKeys();
   const sig = signHash(hashData, privateKey!);
   return sig;
@@ -195,7 +193,7 @@ export function signOrder(post: WhaleExOrder, timestamp: number, symbolObj: Symb
 export function sort(params: Params): string {
   const sb: string[] = []; // String buffer
   const keys = Object.keys(params).sort();
-  keys.forEach(key => {
+  keys.forEach((key) => {
     sb.push(`${key}=${params[key]}`);
   });
   return sb.join('&');
@@ -212,7 +210,7 @@ export function signData(method: 'GET' | 'POST', path: string, params: Params = 
   return `${paramsStr}&Signature=${signature}`;
 }
 
-export function signDataOrder(order: WhaleExOrder, symbolObj: SymbolObj) {
+export function signDataOrder(order: WhaleExOrder, symbolObj: SymbolObj): string {
   const { APIKey, publicKey } = getKeys();
   const map = {
     APIKey: APIKey!,

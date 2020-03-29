@@ -104,7 +104,7 @@ export async function placeOrder(
     const params = signDataOrder(order, symbolObj);
 
     const response = await Axios.post(`${URL_PREFIX}${path}?${params}`, order, {
-      transformResponse: resp => {
+      transformResponse: (resp) => {
         return JSON.parse(resp.replace(/"result":(\d+)/g, '"result":"$1"'));
       },
       responseType: 'json',
@@ -170,7 +170,7 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   return undefined;
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const path = '/api/v1/assets';
   const params = signData('GET', path);
   const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
@@ -196,7 +196,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   }[];
 
   const result: { [key: string]: number } = {};
-  arr.forEach(x => {
+  arr.forEach((x) => {
     const symbol = normalizeSymbol(x.currency, 'WhaleEx');
     result[symbol] = all ? parseFloat(x.totalAmount) : parseFloat(x.availableAmount);
   });
@@ -225,7 +225,7 @@ export function getWithdrawalFees(
 ): { [key: string]: { [key: string]: WithdrawalFee } } {
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {};
@@ -287,7 +287,7 @@ export function getDepositAddresses(
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     if (getTokenInfo(symbol === 'MYKEY' ? 'KEY' : symbol) === undefined) return;
 
     result[symbol] = {};

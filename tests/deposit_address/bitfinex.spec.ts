@@ -52,7 +52,7 @@ test.skip('fetchDepositAddress()', async () => {
   console.info(errors); // eslint-disable-line no-console
 
   const symbolLabelMap: { [key: string]: string } = {};
-  labels.forEach(x => {
+  labels.forEach((x) => {
     const [symbol, label] = x;
     const normalizedSymbol = normalizeSymbol(symbol, 'Bitfinex');
     if (normalizedSymbol !== label) {

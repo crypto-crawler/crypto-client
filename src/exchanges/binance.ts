@@ -83,14 +83,14 @@ export async function queryOrder(
   return orderResult;
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const account = await client.accountInfo();
 
   const result: { [key: string]: number } = {};
 
-  account.balances.forEach(balance => {
+  account.balances.forEach((balance) => {
     result[balance.asset] = all
       ? parseFloat(balance.free) + parseFloat(balance.locked)
       : parseFloat(balance.free);
@@ -106,22 +106,22 @@ export async function getDepositAddresses(
   if (!symbols.includes('BNB')) symbols.push('BNB');
 
   const client = createAuthenticatedClient();
-  const requests = symbols.map(symbol => client.depositAddress({ asset: symbol }));
-  const addresses = (await Promise.all(requests)).filter(x => x.success);
+  const requests = symbols.map((symbol) => client.depositAddress({ asset: symbol }));
+  const addresses = (await Promise.all(requests)).filter((x) => x.success);
 
-  const ethAddress = addresses.filter(address => address.asset === 'ETH')[0].address;
+  const ethAddress = addresses.filter((address) => address.asset === 'ETH')[0].address;
   assert.ok(ethAddress);
-  const trxAddress = addresses.filter(address => address.asset === 'TRX')[0].address;
+  const trxAddress = addresses.filter((address) => address.asset === 'TRX')[0].address;
   assert.ok(trxAddress);
-  const bnbAddress = addresses.filter(address => address.asset === 'BNB')[0].address;
+  const bnbAddress = addresses.filter((address) => address.asset === 'BNB')[0].address;
   assert.ok(bnbAddress);
 
   // TODO: use sapi/v1/capital/deposit/address to get USDT-OMNI and USDT-TRC20
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
   addresses
-    .filter(address => symbols.includes(address.asset))
-    .forEach(address => {
+    .filter((address) => symbols.includes(address.asset))
+    .forEach((address) => {
       const symbol = address.asset;
       if (!(symbol in result)) result[symbol] = {};
 
@@ -167,7 +167,7 @@ export async function getWithdrawalFees(): Promise<{
 
   const depositAddresses = await getDepositAddresses(Object.keys(assetDetail.assetDetail));
   const tokenPlatformMap = calcTokenPlatform(depositAddresses);
-  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+  Object.keys(assetDetail.assetDetail).forEach((symbol) => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
 
@@ -196,7 +196,7 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
   // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
 
-  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+  Object.keys(assetDetail.assetDetail).forEach((symbol) => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
 
@@ -235,7 +235,7 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
 
   // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
 
-  Object.keys(assetDetail.assetDetail).forEach(symbol => {
+  Object.keys(assetDetail.assetDetail).forEach((symbol) => {
     const detail = assetDetail.assetDetail[symbol];
     if (detail === undefined) return;
 

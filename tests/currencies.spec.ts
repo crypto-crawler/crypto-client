@@ -142,9 +142,9 @@ test("fetchCurrencies('Binance')", async () => {
     'MAID',
     'RIF',
   ];
-  const top100Symbols = TOP_100_SYMBOLS.filter(symbol => !blacklist.includes(symbol));
+  const top100Symbols = TOP_100_SYMBOLS.filter((symbol) => !blacklist.includes(symbol));
 
-  top100Symbols.forEach(symbol => {
+  top100Symbols.forEach((symbol) => {
     expect(currencies).toHaveProperty(symbol);
   });
 
@@ -187,9 +187,9 @@ test("fetchCurrencies('Huobi')", async () => {
     'RIF',
     'STX',
   ];
-  const top100Symbols = TOP_100_SYMBOLS.filter(symbol => !blacklist.includes(symbol));
+  const top100Symbols = TOP_100_SYMBOLS.filter((symbol) => !blacklist.includes(symbol));
 
-  top100Symbols.forEach(symbol => {
+  top100Symbols.forEach((symbol) => {
     expect(currencies).toHaveProperty(symbol);
   });
 
@@ -240,9 +240,9 @@ test("fetchCurrencies('OKEx_Spot')", async () => {
     'RIF',
     'STX',
   ];
-  const top100Symbols = TOP_100_SYMBOLS.filter(symbol => !blacklist.includes(symbol));
+  const top100Symbols = TOP_100_SYMBOLS.filter((symbol) => !blacklist.includes(symbol));
 
-  top100Symbols.forEach(symbol => {
+  top100Symbols.forEach((symbol) => {
     expect(currencies).toHaveProperty(symbol);
   });
 

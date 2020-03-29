@@ -250,7 +250,7 @@ export async function testMXC(): Promise<void> {
   console.info(await queryOrder('MXC', 'EOS_USDT', orderId));
 }
 
-(async () => {
+(async (): Promise<void> => {
   await init(argv);
 
   console.info(USER_CONFIG);

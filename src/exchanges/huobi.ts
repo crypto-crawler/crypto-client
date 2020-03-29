@@ -166,7 +166,7 @@ interface ReferenceCurrency {
   chains: Chain[];
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const path = `/v1/account/accounts/${USER_CONFIG.HUOBI_ACCOUNT_ID!}/balance`;
   const fullUrl = signRequest('GET', path);
   const response = await Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } });
@@ -184,8 +184,8 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
 
   const result: { [key: string]: number } = {};
   data.list
-    .filter(x => !all && x.type === 'trade')
-    .forEach(x => {
+    .filter((x) => !all && x.type === 'trade')
+    .forEach((x) => {
       result[normalizeSymbol(x.currency, 'Huobi')] = parseFloat(x.balance);
     });
   return result;
@@ -228,12 +228,12 @@ export async function getDepositAddresses(): Promise<{
   const currencies = await getReferenceCurrencies();
   const symbolChainMap: { [key: string]: { [key: string]: Chain } } = {};
   currencies
-    .filter(x => x.chains.length > 0)
-    .forEach(x => {
+    .filter((x) => x.chains.length > 0)
+    .forEach((x) => {
       const symbol = normalizeSymbol(x.currency, 'Huobi');
       if (!(symbol in symbolChainMap)) symbolChainMap[symbol] = {};
 
-      x.chains.forEach(y => {
+      x.chains.forEach((y) => {
         symbolChainMap[symbol][y.chain] = y;
       });
     });
@@ -269,7 +269,7 @@ export async function getDepositAddresses(): Promise<{
     arr.push(...arrTmp);
   }
 
-  arr.forEach(x => {
+  arr.forEach((x) => {
     const symbol = normalizeSymbol(x.currency, 'Huobi');
     if (!(symbol in result)) result[symbol] = {};
     if (
@@ -311,12 +311,12 @@ export async function getWithdrawalFees(): Promise<{
 
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
   arr
-    .filter(x => x.chains.length > 0)
-    .forEach(x => {
+    .filter((x) => x.chains.length > 0)
+    .forEach((x) => {
       const symbol = normalizeSymbol(x.currency, 'Huobi');
       if (!(symbol in result)) result[symbol] = {};
 
-      x.chains.forEach(y => {
+      x.chains.forEach((y) => {
         const platform = y.baseChainProtocol || symbol;
 
         result[symbol][platform] = {
@@ -337,13 +337,13 @@ export async function fetchCurrencies(): Promise<{
 
   const result: { [key: string]: Currency } = {};
   arr
-    .filter(x => x.chains.length > 0)
-    .forEach(x => {
+    .filter((x) => x.chains.length > 0)
+    .forEach((x) => {
       const trading = x.instStatus === 'normal';
       const symbol = normalizeSymbol(x.currency, 'Huobi');
       result[symbol] = { symbol, trading, deposit: {}, withdrawal: {} };
 
-      x.chains.forEach(y => {
+      x.chains.forEach((y) => {
         const platform = y.baseChainProtocol || symbol;
 
         result[symbol].deposit[platform] = {
@@ -368,15 +368,15 @@ export async function fetchCurrencyStatuses(): Promise<{ [key: string]: Currency
   const result: { [key: string]: CurrencyStatus } = {};
 
   arr
-    .filter(x => x.chains.length > 0)
-    .forEach(x => {
+    .filter((x) => x.chains.length > 0)
+    .forEach((x) => {
       const trading = x.instStatus === 'normal';
       const symbol = normalizeSymbol(x.currency, 'Huobi');
       if (!(symbol in result)) {
         result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {}, trading };
       }
 
-      x.chains.forEach(y => {
+      x.chains.forEach((y) => {
         const platform = y.baseChainProtocol || symbol;
 
         result[symbol].deposit_enabled[platform] = y.depositStatus === 'allowed';
@@ -419,12 +419,12 @@ async function getChainInfo(): Promise<{
   } = {};
 
   arr
-    .filter(x => x.chains.length > 0)
-    .forEach(x => {
+    .filter((x) => x.chains.length > 0)
+    .forEach((x) => {
       const symbol = normalizeSymbol(x.currency, 'Huobi');
       if (!(symbol in result)) result[symbol] = {};
 
-      x.chains.forEach(y => {
+      x.chains.forEach((y) => {
         const platform = y.baseChainProtocol || symbol;
 
         result[symbol][platform] = {

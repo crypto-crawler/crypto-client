@@ -26,10 +26,7 @@ function sign(
   const nonce = uuidv1();
   const timestamp = Date.now();
   const stringToSign = `BITSTAMP ${apiKey}${verb}${DOMAIN}${path}${CONTENT_TYPE}${nonce}${timestamp}v2${data}`;
-  const signature = crypto
-    .createHmac('sha256', apiSecret)
-    .update(stringToSign)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', apiSecret).update(stringToSign).digest('hex');
   const headers: { [key: string]: any } = {
     'X-Auth': `BITSTAMP ${apiKey}`,
     'X-Auth-Signature': signature,
@@ -157,7 +154,7 @@ export async function cancelOrder(orderId: string): Promise<boolean> {
   return data.id === parseInt(orderId, 10);
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const result: { [key: string]: number } = {};
 
   const data = await privateRequest('/api/v2/balance/');
@@ -165,8 +162,8 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   const dataTyped = data as { [key: string]: string };
 
   Object.keys(dataTyped)
-    .filter(x => (all ? x.endsWith('_balance') : x.endsWith('_available')))
-    .forEach(key => {
+    .filter((x) => (all ? x.endsWith('_balance') : x.endsWith('_available')))
+    .forEach((key) => {
       const symbol = key.substring(0, key.indexOf('_')).toUpperCase();
       result[symbol] = parseFloat(dataTyped[key]);
     });
@@ -203,11 +200,11 @@ export async function getDepositAddresses(
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
 
-  const requests = symbols.map(symbol => fetchDepositAddress(symbol));
+  const requests = symbols.map((symbol) => fetchDepositAddress(symbol));
   const arr = await Promise.all(requests);
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
-  arr.forEach(address => {
+  arr.forEach((address) => {
     if (address) {
       if (!(address.symbol in result)) result[address.symbol] = {};
 
@@ -230,7 +227,7 @@ export function getWithdrawalFees(): { [key: string]: { [key: string]: Withdrawa
   };
 
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
-  Object.keys(data).forEach(symbol => {
+  Object.keys(data).forEach((symbol) => {
     result[symbol] = {};
 
     result[symbol][symbol] = {

@@ -11,7 +11,7 @@ test("getWithdrawalFees('Bitstamp')", async () => {
 
   const addresses = await getWithdrawalFees('Bitstamp');
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);
   });
 });

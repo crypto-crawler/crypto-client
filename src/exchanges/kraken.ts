@@ -151,7 +151,7 @@ export async function queryOrder(
   return data[orderId];
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const path = '/0/private/BalanceEx';
 
   const balances = await privateMethod<{ [key: string]: { balance: string; hold_trade: string } }>(
@@ -163,7 +163,7 @@ export async function queryAllBalances(all: boolean = false): Promise<{ [key: st
   if (balances instanceof Error) return {};
 
   const result: { [key: string]: number } = {};
-  Object.keys(balances).forEach(symbol => {
+  Object.keys(balances).forEach((symbol) => {
     const symbolNormalized = normalizeSymbol(symbol, 'Kraken');
     result[symbolNormalized] = all
       ? parseFloat(balances[symbol].balance)
@@ -225,7 +225,7 @@ async function getDepositMethod(
 
 export async function getDepositAddress(
   symbol: string,
-  generateNew: boolean = false,
+  generateNew = false,
 ): Promise<DepositAddress | Error> {
   assert.ok(symbol);
   assert.ok(
@@ -276,7 +276,7 @@ export async function getDepositAddresses(
   symbols: string[],
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols.length);
-  symbols = symbols.filter(symbol => !FIAT_SYMBOLS.includes(symbol)); // eslint-disable-line no-param-reassign
+  symbols = symbols.filter((symbol) => !FIAT_SYMBOLS.includes(symbol)); // eslint-disable-line no-param-reassign
 
   const result: { [key: string]: { [key: string]: DepositAddress } } = {};
 
@@ -332,7 +332,7 @@ export async function getWithdrawalFees(): Promise<{
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
   const fees = getAllWithdrawalFees();
-  Object.keys(fees).forEach(symbol => {
+  Object.keys(fees).forEach((symbol) => {
     const platform = fees[symbol].platform || symbol;
     if (!(symbol in result)) result[symbol] = {};
 

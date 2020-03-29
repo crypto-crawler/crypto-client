@@ -86,14 +86,14 @@ export async function queryOrder(
   }
 }
 
-export async function queryAllBalances(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
   const client = createAuthenticatedClient();
 
   const accounts = await client.getAccounts();
 
   const result: { [key: string]: number } = {};
 
-  accounts.forEach(account => {
+  accounts.forEach((account) => {
     result[account.currency] = parseFloat(all ? account.balance : account.available);
   });
 
@@ -149,7 +149,7 @@ export function getWithdrawalFees(): { [key: string]: { [key: string]: Withdrawa
   };
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
 
-  Object.keys(data).forEach(symbol => {
+  Object.keys(data).forEach((symbol) => {
     const fee = data[symbol] || 0;
 
     result[symbol] = {};

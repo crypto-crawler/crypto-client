@@ -10,25 +10,29 @@ export const FIAT_SYMBOLS = ['CAD', 'CHF', 'EUR', 'GBP', 'JPY', 'USD'];
 export type AsyncFunc = (...args: any[]) => Promise<any>;
 
 export async function sleep(ms: number): Promise<any> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 // See https://stackoverflow.com/a/29837695/381712
 // Decorator for function is not supported in TypeScript,
 // see https://github.com/microsoft/TypeScript/issues/7318
-export function Retry(times: number = 1, logger: any = console) {
+export function Retry(times = 1, logger: any = console) {
   assert.ok(times > 0);
   // eslint-disable-next-line func-names
-  return function(
+  return function (
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore: its value is never read
-    target: Object,
+    target: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore: its value is never read
     propertyName: string,
     propertyDesciptor: TypedPropertyDescriptor<AsyncFunc>,
   ): TypedPropertyDescriptor<AsyncFunc> {
     const originalMethod = propertyDesciptor.value!;
     // eslint-disable-next-line no-param-reassign,func-names
-    propertyDesciptor.value = async function(...args: any[]) {
+    propertyDesciptor.value = async function (...args: any[]) {
       let error = new Error();
       try {
         for (let i = 0; i < times; i += 1) {
@@ -47,7 +51,7 @@ export function Retry(times: number = 1, logger: any = console) {
 
 export async function retry(
   func: (...args: any[]) => Promise<any>,
-  times: number = 1,
+  times = 1,
   logger: any = console,
   ...args: any[]
 ) {
@@ -70,7 +74,7 @@ export function calcPrecision(numberStr: string): number {
   return numberStr.length - numberStr.indexOf('.') - 1;
 }
 
-export function numberToString(n: number, decimal: number, ceil: boolean = false): string {
+export function numberToString(n: number, decimal: number, ceil = false): string {
   const rounded = new BigNumber(n)
     .times(new BigNumber(10).pow(decimal + 1))
     .integerValue()
@@ -78,10 +82,7 @@ export function numberToString(n: number, decimal: number, ceil: boolean = false
   const restored = ceil
     ? rounded.integerValue(BigNumber.ROUND_CEIL)
     : rounded.integerValue(BigNumber.ROUND_DOWN);
-  return restored
-    .div(new BigNumber(10).pow(decimal))
-    .toNumber()
-    .toFixed(decimal);
+  return restored.div(new BigNumber(10).pow(decimal)).toNumber().toFixed(decimal);
 }
 
 export function validatePriceQuantity(
@@ -147,7 +148,7 @@ export function calcTokenPlatform(depositAddresses: {
   [key: string]: { [key: string]: DepositAddress };
 }): { [key: string]: string } {
   const result: { [key: string]: string } = {};
-  Object.keys(depositAddresses).forEach(symbol => {
+  Object.keys(depositAddresses).forEach((symbol) => {
     const platforms = Object.keys(depositAddresses[symbol]);
     if (platforms.length === 1) {
       result[symbol] = platforms[0]; // eslint-disable-line prefer-destructuring

@@ -5,8 +5,8 @@ An unified client for all cryptocurrency exchanges.
 ## How to use
 
 ```javascript
-/* eslint-disable no-console */
-const CryptoClient = require('crypto-client'); // eslint-disable-line import/no-unresolved
+/* eslint-disable */
+const CryptoClient = require('crypto-client');
 
 (async () => {
   await CryptoClient.init({

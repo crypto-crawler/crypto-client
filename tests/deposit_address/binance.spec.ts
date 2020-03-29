@@ -12,14 +12,14 @@ test("getDepositAddresses('Binance')", async () => {
   const addresses = await getDepositAddresses('Binance', symbols);
 
   symbols
-    .filter(x => x !== 'XXX')
-    .forEach(symbol => {
+    .filter((x) => x !== 'XXX')
+    .forEach((symbol) => {
       expect(addresses).toHaveProperty(symbol);
     });
 
   symbols
-    .filter(x => x === 'USDT')
-    .forEach(symbol => {
+    .filter((x) => x === 'USDT')
+    .forEach((symbol) => {
       expect(addresses[symbol]).toHaveProperty('ERC20');
     });
 

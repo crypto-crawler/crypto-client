@@ -100,14 +100,14 @@ export async function queryOrder(
   return arr[0];
 }
 
-export async function queryAllBalancesV2(all: boolean = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalancesV2(all = false): Promise<{ [key: string]: number }> {
   const authClient = createAuthenticatedClient();
 
   const wallets = (await authClient.wallets()) as any[];
-  const arr = wallets.filter(x => !all && x.type === 'exchange');
+  const arr = wallets.filter((x) => !all && x.type === 'exchange');
 
   const result: { [key: string]: number } = {};
-  arr.forEach(x => {
+  arr.forEach((x) => {
     const pair = normalizeSymbol(x.currency, 'Bitfinex');
     result[pair] = x.balance;
   });
@@ -115,9 +115,7 @@ export async function queryAllBalancesV2(all: boolean = false): Promise<{ [key: 
   return result;
 }
 
-export async function queryAllBalances(
-  all: boolean = false,
-): Promise<{ [key: string]: number } | Error> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const authClient = createAuthenticatedClient('v1');
 
   interface Item {
@@ -187,10 +185,10 @@ async function fetchMethod(): Promise<{
 
   const symbolMethodMap: { [key: string]: { method: string; rawSymbol: string } } = {};
   const arr = response.data[0] as [string, string[]][];
-  arr.forEach(x => {
+  arr.forEach((x) => {
     assert.equal(x.length, 2);
     const [method, currencies] = x;
-    currencies.forEach(rawSymbol => {
+    currencies.forEach((rawSymbol) => {
       if (rawSymbol === 'USD') return; // skip USD
       // BCH is now fully replaced by BAB when using API, ["BCH","Bitcoin Cash"]
       // will be removed, quoted from custom support.
@@ -231,7 +229,7 @@ export async function getDepositAddresses(
 
     const symbolOrLabels =
       symbol === 'USDT'
-        ? Object.values(USDT_METHOD_MAP).map(x => x.toLowerCase())
+        ? Object.values(USDT_METHOD_MAP).map((x) => x.toLowerCase())
         : [symbol in symbolMethodMap ? symbolMethodMap[symbol].method : symbol];
 
     for (let j = 0; j < symbolOrLabels.length; j += 1) {
@@ -265,18 +263,18 @@ export async function getWithdrawalFees(): Promise<{
   const client = createAuthenticatedClient();
   const data = (await client.accountFees()) as { withdraw: { [key: string]: string } };
 
-  Object.keys(data.withdraw).forEach(rawSymbol => {
+  Object.keys(data.withdraw).forEach((rawSymbol) => {
     const normalizedSymbol = normalizeSymbol(rawSymbol, 'Bitfinex');
     data.withdraw[normalizedSymbol] = data.withdraw[rawSymbol];
   });
 
   const depositAddresses = await getDepositAddresses(
-    Object.keys(data.withdraw).map(rawSymbol => normalizeSymbol(rawSymbol, 'Bitfinex')),
+    Object.keys(data.withdraw).map((rawSymbol) => normalizeSymbol(rawSymbol, 'Bitfinex')),
   );
   const tokenPlatformMap = calcTokenPlatform(depositAddresses);
 
   const result: { [key: string]: { [key: string]: WithdrawalFee } } = {};
-  Object.keys(data.withdraw).forEach(rawSymbol => {
+  Object.keys(data.withdraw).forEach((rawSymbol) => {
     const symbol = normalizeSymbol(rawSymbol, 'Bitfinex');
     if (!(symbol in result)) result[symbol] = {};
     const platform = tokenPlatformMap[symbol] || symbol;

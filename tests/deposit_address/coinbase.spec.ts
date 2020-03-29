@@ -12,7 +12,7 @@ test("getDepositAddresses('Coinbase')", async () => {
 
   const addresses = await getDepositAddresses('Coinbase', symbols);
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);
   });
 });

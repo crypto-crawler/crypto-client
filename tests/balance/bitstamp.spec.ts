@@ -11,7 +11,7 @@ test('queryAllBalances(Bitstamp)', async () => {
   const balances = await queryAllBalances();
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP'];
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(balances).toHaveProperty(symbol);
   });
 });

@@ -11,7 +11,7 @@ test("getWithdrawalFees('Kraken')", async () => {
 
   const addresses = await getWithdrawalFees('Kraken');
 
-  symbols.forEach(symbol => {
+  symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);
   });
 });

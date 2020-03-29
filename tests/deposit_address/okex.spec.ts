@@ -12,14 +12,14 @@ test("getDepositAddresses('OKEx_Spot')", async () => {
   const addresses = await getDepositAddresses('OKEx_Spot', symbols);
 
   symbols
-    .filter(x => x !== 'XXX')
-    .forEach(symbol => {
+    .filter((x) => x !== 'XXX')
+    .forEach((symbol) => {
       expect(addresses).toHaveProperty(symbol);
     });
 
   symbols
-    .filter(x => x === 'USDT')
-    .forEach(symbol => {
+    .filter((x) => x === 'USDT')
+    .forEach((symbol) => {
       expect(addresses[symbol]).toHaveProperty('OMNI');
     });
 
