@@ -122,16 +122,16 @@ export async function testBitstamp(): Promise<void> {
 }
 
 export async function testCoinbase(): Promise<void> {
-  console.info(await queryBalance('Coinbase', 'BCH'));
+  console.info(await queryBalance('CoinbasePro', 'BCH'));
 
-  const orderId = await placeOrder('Coinbase', 'BCH_USD', 3999.48, 0.1, true);
+  const orderId = await placeOrder('CoinbasePro', 'BCH_USD', 3999.48, 0.1, true);
   console.info(orderId);
 
-  console.info(await queryOrder('Coinbase', 'BCH_USD', orderId));
+  console.info(await queryOrder('CoinbasePro', 'BCH_USD', orderId));
 
-  console.info(await cancelOrder('Coinbase', 'BCH_USD', orderId));
+  console.info(await cancelOrder('CoinbasePro', 'BCH_USD', orderId));
 
-  console.info(await queryOrder('Coinbase', 'BCH_USD', orderId));
+  console.info(await queryOrder('CoinbasePro', 'BCH_USD', orderId));
 }
 
 export async function testHuobi(): Promise<void> {
@@ -170,16 +170,16 @@ export async function testNewdexMYKEY(): Promise<void> {
 }
 
 export async function testOKEx_Spot(): Promise<void> {
-  console.info(await queryBalance('OKEx_Spot', 'ETH'));
+  console.info(await queryBalance('OKEx', 'ETH'));
 
-  const orderId = await placeOrder('OKEx_Spot', 'ETH_USDT', 299.99, 0.001001, true);
+  const orderId = await placeOrder('OKEx', 'ETH_USDT', 299.99, 0.001001, true);
   console.info(orderId);
 
-  console.info(await queryOrder('OKEx_Spot', 'ETH_USDT', orderId));
+  console.info(await queryOrder('OKEx', 'ETH_USDT', orderId));
 
-  console.info(await cancelOrder('OKEx_Spot', 'ETH_USDT', orderId));
+  console.info(await cancelOrder('OKEx', 'ETH_USDT', orderId));
 
-  console.info(await queryOrder('OKEx_Spot', 'ETH_USDT', orderId));
+  console.info(await queryOrder('OKEx', 'ETH_USDT', orderId));
 }
 
 export async function testWhaleEx(): Promise<void> {

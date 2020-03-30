@@ -7,10 +7,10 @@ beforeAll(async () => {
   jest.setTimeout(30 * 1000); // 30 seconds
 });
 
-test("getDepositAddresses('Coinbase')", async () => {
+test("getDepositAddresses('CoinbasePro')", async () => {
   const symbols = ['BCH', 'BTC', 'ETH', 'LTC', 'XRP']; // TODO: EOS, Internal server error
 
-  const addresses = await getDepositAddresses('Coinbase', symbols);
+  const addresses = await getDepositAddresses('CoinbasePro', symbols);
 
   symbols.forEach((symbol) => {
     expect(addresses).toHaveProperty(symbol);

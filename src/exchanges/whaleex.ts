@@ -1,9 +1,9 @@
 // forked from https://github.com/WhaleEx/API/blob/master/sample/nodejs/whaleex-api.js
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
 import { getTokenInfo } from 'eos-token-info';
-import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings } from '../util';
@@ -50,23 +50,18 @@ export async function initilize(apiKey: string, userId: string): Promise<void> {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
     assert.ok(USER_CONFIG.WHALEEX_API_KEY, 'APIKey is empty');
     assert.ok(USER_CONFIG.eosAccount);
     assert.ok(USER_CONFIG.eosPrivateKey);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const path = '/api/v1/order/orders/place';
 
@@ -86,20 +81,20 @@ export async function placeOrder(
       orderId,
       amount: quantityStr,
       price: priceStr,
-      symbol: pairInfo.raw_pair,
+      symbol: market.id,
       type: sell ? 'sell-limit' : 'buy-limit',
     };
 
-    let baseToken = pairInfo.normalized_pair.split('_')[0];
+    let baseToken = market.base;
     if (baseToken === 'MYKEY') baseToken = 'KEY';
 
     const symbolObj: SymbolObj = {
       baseToken,
-      quoteToken: pairInfo.normalized_pair.split('_')[1],
-      basePrecision: pairInfo.base_precision,
-      quotePrecision: pairInfo.quote_precision,
-      baseContract: pairInfo.base_contract!,
-      quoteContract: pairInfo.quote_contract!,
+      quoteToken: market.quote,
+      basePrecision: market.precision.base,
+      quotePrecision: market.precision.quote!,
+      baseContract: market.info.baseContract,
+      quoteContract: market.info.quoteContract,
     };
     const params = signDataOrder(order, symbolObj);
 
@@ -126,8 +121,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
+export async function cancelOrder(orderId: string): Promise<boolean> {
   assert.ok(USER_CONFIG.WHALEEX_API_KEY);
   assert.ok(USER_CONFIG.eosAccount);
   assert.ok(USER_CONFIG.eosPrivateKey);
@@ -140,11 +134,7 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return response.status === 200 && response.data.returnCode === '0';
 }
 
-export async function queryOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
+export async function queryOrder(orderId: string): Promise<{ [key: string]: any } | undefined> {
   assert.ok(USER_CONFIG.WHALEEX_API_KEY);
 
   const path = `/api/v1/order/orders/${orderId}`;

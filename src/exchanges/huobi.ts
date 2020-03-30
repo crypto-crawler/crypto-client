@@ -1,8 +1,8 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
+import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
-import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, DepositAddress, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -44,31 +44,26 @@ function signRequest(
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
     assert.ok(USER_CONFIG.HUOBI_ACCESS_KEY);
     assert.ok(USER_CONFIG.HUOBI_SECRET_KEY);
     assert.ok(USER_CONFIG.HUOBI_ACCOUNT_ID);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const path = '/v1/order/orders/place';
     const params: { [key: string]: string } = {
       'account-id': USER_CONFIG.HUOBI_ACCOUNT_ID!.toString(),
       amount: quantityStr,
       price: priceStr,
-      symbol: pairInfo.raw_pair,
+      symbol: market.id,
       type: sell ? 'sell-limit' : 'buy-limit',
     };
     if (clientOrderId) {
@@ -91,9 +86,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
-
+export async function cancelOrder(orderId: string): Promise<boolean> {
   const path = `/v1/order/orders/${orderId}/submitcancel`;
 
   const params = {};
@@ -107,12 +100,7 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return (response.data.data as string) === orderId;
 }
 
-export async function queryOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
-
+export async function queryOrder(orderId: string): Promise<{ [key: string]: any } | undefined> {
   const path = `/v1/order/orders/${orderId}`;
 
   const fullUrl = signRequest('GET', path);

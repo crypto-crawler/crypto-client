@@ -1,10 +1,10 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
 import { getTokenInfo } from 'eos-token-info';
 import { EOS_API_ENDPOINTS, getTableRows } from 'eos-utils';
 import { Serialize } from 'eosjs';
-import { PairInfo } from 'exchange-info';
 import https from 'https';
 import { Bloks } from '../blockchain';
 import { USER_CONFIG } from '../config';
@@ -20,36 +20,37 @@ import {
 const promiseAny = require('promise.any');
 
 export function createOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): ActionExtended {
-  assert.ok(pairInfo);
+  assert.ok(market);
   assert.ok(USER_CONFIG.eosAccount);
 
-  const [priceStr, quantityStr, quoteQuantityStr] = convertPriceAndQuantityToStrings(
-    pairInfo,
-    price,
-    quantity,
-    sell,
-  );
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
   const memo: NewdexOrder = {
     type: sell ? 'sell-limit' : 'buy-limit',
-    symbol: pairInfo.pair_symbol,
+    symbol: market.id,
     price: priceStr,
     channel: 'dapp',
     ref: 'coinrace.com',
   };
 
-  let baseSymbol = pairInfo.normalized_pair.split('_')[0];
+  let baseSymbol = market.base;
   if (baseSymbol === 'MYKEY') {
     baseSymbol = 'KEY';
   }
-  const quoteSymbol = pairInfo.normalized_pair.split('_')[1];
-  assert.equal(baseSymbol, pairInfo.base_symbol.sym.split(',')[1]);
-  assert.equal(quoteSymbol, pairInfo.quote_symbol.sym.split(',')[1]);
+  const quoteSymbol = market.quote;
+  assert.equal(baseSymbol, market.info.base_symbol.sym.split(',')[1]);
+  assert.equal(quoteSymbol, market.info.quote_symbol.sym.split(',')[1]);
+
+  const quoteQuantity = numberToString(
+    parseFloat(priceStr) * parseFloat(quantityStr),
+    market.precision.quote!,
+    !sell,
+  );
 
   const action = sell
     ? createTransferAction(
@@ -63,7 +64,7 @@ export function createOrder(
         USER_CONFIG.eosAccount!,
         'newdexpublic',
         quoteSymbol,
-        quoteQuantityStr,
+        quoteQuantity,
         JSON.stringify(memo),
       );
 
@@ -74,17 +75,17 @@ export function createOrder(
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
     assert.ok(USER_CONFIG.eosAccount);
     assert.ok(USER_CONFIG.eosPrivateKey);
 
-    const actionExt = createOrder(pairInfo, price, quantity, sell);
+    const actionExt = createOrder(market, price, quantity, sell);
     const response = await sendTransaction([actionExt.action], USER_CONFIG.eosPrivateKey!).catch(
       (e: Error) => {
         return e;
@@ -97,11 +98,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(
-  pairInfo: PairInfo,
-  transactionId: string,
-): Promise<boolean | string> {
-  assert.ok(pairInfo);
+export async function cancelOrder(transactionId: string): Promise<boolean | string> {
   assert.ok(transactionId);
   assert.ok(USER_CONFIG.eosAccount);
   assert.ok(USER_CONFIG.eosPrivateKey);
@@ -139,7 +136,6 @@ export interface NewdexOrderOnChain {
 }
 
 export async function queryOrder(
-  pairInfo: PairInfo,
   transactionId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   const orderId = await Bloks.getOrderId(transactionId);
@@ -178,14 +174,8 @@ export async function queryOrder(
   assert.equal(response.rows.length, 1);
 
   const order = response.rows[0] as NewdexOrderOnChain;
-  const sell = order.type === 2; // 1 buy, 2 sell
 
   assert.equal(order.owner, USER_CONFIG.eosAccount!);
-
-  assert.equal(
-    order.contract,
-    sell ? pairInfo.base_symbol.contract : pairInfo.quote_symbol.contract,
-  );
   return order;
 }
 

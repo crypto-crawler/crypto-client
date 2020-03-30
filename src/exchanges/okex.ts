@@ -1,7 +1,7 @@
 import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -24,26 +24,21 @@ function createAuthenticatedClient(): any {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const params: { [key: string]: string } = {
       type: 'limit',
       side: sell ? 'sell' : 'buy',
-      instrument_id: pairInfo.raw_pair,
+      instrument_id: market.id,
       price: priceStr,
       size: quantityStr,
     };
@@ -71,14 +66,14 @@ export async function placeOrder(
 }
 
 export async function cancelOrder(
-  pairInfo: PairInfo,
+  market: Market,
   orderId: string,
   clientOrderId?: string,
 ): Promise<boolean> {
-  assert.ok(pairInfo);
+  assert.ok(market);
 
   const params: { [key: string]: string } = {
-    instrument_id: pairInfo.raw_pair,
+    instrument_id: market.id,
   };
   if (clientOrderId) {
     params.client_oid = clientOrderId;
@@ -90,14 +85,14 @@ export async function cancelOrder(
 }
 
 export async function queryOrder(
-  pairInfo: PairInfo,
+  market: Market,
   orderId: string,
   clientOrderId?: string,
 ): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
+  assert.ok(market);
 
   const params = {
-    instrument_id: pairInfo.raw_pair,
+    instrument_id: market.id,
   };
 
   const authClient = createAuthenticatedClient();

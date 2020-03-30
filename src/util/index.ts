@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
 import bs58 from 'bs58';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import Web3Utils from 'web3-utils';
 import { DepositAddress } from '../pojo';
 
@@ -85,63 +85,52 @@ export function numberToString(n: number, decimal: number, ceil = false): string
   return restored.div(new BigNumber(10).pow(decimal)).toNumber().toFixed(decimal);
 }
 
-export function validatePriceQuantity(
-  pairInfo: PairInfo,
-  price: string,
-  quantity: string,
-  quoteQuantity: string,
-): boolean {
+export function validatePriceQuantity(market: Market, price: string, quantity: string): boolean {
   assert.equal(
     calcPrecision(price),
-    pairInfo.price_precision,
-    `${pairInfo.exchange} ${pairInfo.normalized_pair} price_precision doesn't match`,
+    market.precision.price,
+    `${market.exchange} ${market.pair} precision.price doesn't match`,
   );
   assert.equal(
     calcPrecision(quantity),
-    pairInfo.base_precision,
-    `${pairInfo.exchange} ${pairInfo.normalized_pair} base_precision doesn't match`,
-  );
-  assert.equal(
-    calcPrecision(quoteQuantity),
-    pairInfo.quote_precision,
-    `${pairInfo.exchange} ${pairInfo.normalized_pair} quote_precision doesn't match`,
+    market.precision.base,
+    `${market.exchange} ${market.pair} precision.base doesn't match`,
   );
 
-  assert.ok(pairInfo.min_base_quantity || pairInfo.min_quote_quantity);
-  if (pairInfo.min_quote_quantity && parseFloat(quoteQuantity) <= pairInfo.min_quote_quantity) {
+  // At least one of them exist
+  assert.ok(market.minQuantity.base || market.minQuantity.quote);
+
+  if (market.minQuantity.base && parseFloat(quantity) < market.minQuantity.base!) {
     throw Error(
-      `The order volume ${quoteQuantity} is less than min_quote_quantity ${
-        pairInfo.min_quote_quantity
-      } ${pairInfo.normalized_pair.split('_')[1]}`,
-    );
-  }
-  if (pairInfo.min_base_quantity && parseFloat(quantity) < pairInfo.min_base_quantity) {
-    throw Error(
-      `The base quantity ${quantity} is less than min_base_quantity ${pairInfo.min_base_quantity} ${
-        pairInfo.normalized_pair.split('_')[0]
+      `The base quantity ${quantity} is less than minQuantity.base ${market.minQuantity.base!} ${
+        market.base
       }`,
     );
   }
+
+  const quoteQuantity = parseFloat(price) * parseFloat(quantity);
+  if (market.minQuantity.quote && quoteQuantity <= market.minQuantity.quote!) {
+    throw Error(
+      `The order volume ${quoteQuantity} is less than minQuantity.quote ${market.minQuantity
+        .quote!} ${market.quote}`,
+    );
+  }
+
   return true;
 }
 
 export function convertPriceAndQuantityToStrings(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
-): [string, string, string] {
-  const priceStr = numberToString(price, pairInfo.price_precision, !sell);
-  const quantityStr = numberToString(quantity, pairInfo.base_precision, false);
-  const quoteQuantity = numberToString(
-    parseFloat(priceStr) * parseFloat(quantityStr),
-    pairInfo.quote_precision,
-    !sell,
-  );
+): [string, string] {
+  const priceStr = numberToString(price, market.precision.price, !sell);
+  const quantityStr = numberToString(quantity, market.precision.base, false);
 
-  assert.ok(validatePriceQuantity(pairInfo, priceStr, quantityStr, quoteQuantity));
+  assert.ok(validatePriceQuantity(market, priceStr, quantityStr));
 
-  return [priceStr, quantityStr, quoteQuantity];
+  return [priceStr, quantityStr];
 }
 
 export function calcTokenPlatform(depositAddresses: {

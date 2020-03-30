@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import { AuthenticatedClient, LimitOrder } from 'coinbase-pro';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings, detectPlatform } from '../util';
@@ -18,27 +18,22 @@ function createAuthenticatedClient(): AuthenticatedClient {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
 
     const client = createAuthenticatedClient();
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const order: LimitOrder = {
       type: 'limit',
       side: sell ? 'sell' : 'buy',
-      product_id: pairInfo.raw_pair,
+      product_id: market.id,
       price: priceStr,
       size: quantityStr,
     };
@@ -54,9 +49,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
-
+export async function cancelOrder(orderId: string): Promise<boolean> {
   const client = createAuthenticatedClient();
 
   const arr = await client.cancelOrder(orderId);
@@ -64,18 +57,12 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   return ((arr as unknown) as string) === orderId; // TODO: coinbase-pro need to fix its types
 }
 
-export async function queryOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
-
+export async function queryOrder(orderId: string): Promise<{ [key: string]: any } | undefined> {
   const client = createAuthenticatedClient();
 
   try {
     const orderInfo = await client.getOrder(orderId);
     assert.equal(orderInfo.id, orderId);
-    assert.equal(orderInfo.product_id, pairInfo.raw_pair);
 
     return orderInfo;
   } catch (e) {

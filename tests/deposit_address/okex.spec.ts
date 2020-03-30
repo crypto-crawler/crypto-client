@@ -6,10 +6,10 @@ beforeAll(async () => {
   await init(userConfig);
 });
 
-test("getDepositAddresses('OKEx_Spot')", async () => {
+test("getDepositAddresses('OKEx')", async () => {
   const symbols = ['BTC', 'EOS', 'ETH', 'TRX', 'USDT', 'XXX'];
 
-  const addresses = await getDepositAddresses('OKEx_Spot', symbols);
+  const addresses = await getDepositAddresses('OKEx', symbols);
 
   symbols
     .filter((x) => x !== 'XXX')

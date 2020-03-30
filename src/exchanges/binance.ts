@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -18,26 +18,21 @@ function createAuthenticatedClient(): Binance {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
 
     const client = createAuthenticatedClient();
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const order = await client
       .order({
-        symbol: pairInfo.raw_pair,
+        symbol: market.id,
         type: 'LIMIT',
         side: sell ? 'SELL' : 'BUY',
         quantity: quantityStr,
@@ -54,13 +49,13 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
+export async function cancelOrder(market: Market, orderId: string): Promise<boolean> {
+  assert.ok(market);
 
   const client = createAuthenticatedClient();
 
   const cancelResult = await client.cancelOrder({
-    symbol: pairInfo.raw_pair,
+    symbol: market.id,
     orderId: parseInt(orderId, 10),
   });
 
@@ -68,15 +63,15 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
 }
 
 export async function queryOrder(
-  pairInfo: PairInfo,
+  market: Market,
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
+  assert.ok(market);
 
   const client = createAuthenticatedClient();
 
   const orderResult = client.getOrder({
-    symbol: pairInfo.raw_pair,
+    symbol: market.id,
     orderId: parseInt(orderId, 10),
   });
 

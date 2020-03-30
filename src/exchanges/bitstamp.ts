@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import qs from 'qs';
 import { v1 as uuidv1 } from 'uuid';
 import { USER_CONFIG } from '../config';
@@ -124,16 +124,16 @@ async function privateRequest(path: string, params: { [key: string]: string } = 
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
-  assert.ok(pairInfo);
+  assert.ok(market);
 
-  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(pairInfo, price, quantity, sell);
+  const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
-  const path = `/api/v2/${sell ? 'sell' : 'buy'}/${pairInfo.raw_pair}/`;
+  const path = `/api/v2/${sell ? 'sell' : 'buy'}/${market.id}/`;
   const data = await privateRequest(path, { price: priceStr, amount: quantityStr });
   if (data instanceof Error) return data;
   return data.id as string;

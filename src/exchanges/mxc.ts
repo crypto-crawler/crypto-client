@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
-import { PairInfo } from 'exchange-info';
+import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
 import { convertPriceAndQuantityToStrings } from '../util';
 import debug from '../util/debug';
@@ -55,29 +55,24 @@ function sign(params: Params, secretKey: string): [string, string] {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
     assert.ok(USER_CONFIG.MXC_ACCESS_KEY);
     assert.ok(USER_CONFIG.MXC_SECRET_KEY);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
 
     const path = '/open/api/v1/private/order';
 
     const params = {
       api_key: USER_CONFIG.MXC_ACCESS_KEY!,
       req_time: Date.now(),
-      market: pairInfo.raw_pair,
+      market: market.id,
       price: priceStr,
       quantity: quantityStr,
       trade_type: sell ? 2 : 1,
@@ -100,15 +95,15 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
+export async function cancelOrder(market: Market, orderId: string): Promise<boolean> {
+  assert.ok(market);
 
   const path = '/open/api/v1/private/order';
 
   const params = {
     api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
-    market: pairInfo.raw_pair,
+    market: market.id,
     trade_no: orderId,
   };
   const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);
@@ -122,17 +117,17 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
 }
 
 export async function queryOrder(
-  pairInfo: PairInfo,
+  market: Market,
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
+  assert.ok(market);
 
   const path = '/open/api/v1/private/order';
 
   const params: { [key: string]: any } = {
     api_key: USER_CONFIG.MXC_ACCESS_KEY!,
     req_time: Date.now(),
-    market: pairInfo.raw_pair,
+    market: market.id,
     trade_no: orderId,
   };
   const [paramsText, signature] = sign(params, USER_CONFIG.MXC_SECRET_KEY!);

@@ -196,8 +196,8 @@ test("fetchCurrencies('Huobi')", async () => {
   expect(currencies).not.toHaveProperty('XXX');
 });
 
-test("fetchCurrencies('OKEx_Spot')", async () => {
-  const currencies = await fetchCurrencies('OKEx_Spot');
+test("fetchCurrencies('OKEx')", async () => {
+  const currencies = await fetchCurrencies('OKEx');
 
   const blacklist = [
     'ADA',

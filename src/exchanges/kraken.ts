@@ -1,8 +1,8 @@
 import assert from 'assert';
 import Axios from 'axios';
 import crypto from 'crypto';
+import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
-import { PairInfo } from 'exchange-info';
 import { getAllWithdrawalFees, getWithdrawalFee } from 'kraken-withdrawal-fee';
 import qs from 'qs';
 import { USER_CONFIG } from '../config';
@@ -64,30 +64,25 @@ async function privateMethod<T>(
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
     assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
     assert.ok(USER_CONFIG.KRAKEN_PRIVATE_KEY);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
     assert.ok(priceStr);
     assert.ok(quantityStr);
 
     const path = '/0/private/AddOrder';
 
     const params: { nonce: number; [key: string]: string | number } = {
-      pair: pairInfo.raw_pair,
+      pair: market.id,
       type: sell ? 'sell' : 'buy',
       ordertype: 'limit',
       price,
@@ -107,13 +102,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-  clientOrderId?: string,
-): Promise<boolean> {
-  assert.ok(pairInfo);
-
+export async function cancelOrder(orderId: string, clientOrderId?: string): Promise<boolean> {
   const path = '/0/private/CancelOrder';
 
   const params: { nonce: number; [key: string]: string | number } = {
@@ -130,12 +119,9 @@ export async function cancelOrder(
 }
 
 export async function queryOrder(
-  pairInfo: PairInfo,
   orderId: string,
   clientOrderId?: string,
 ): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
-
   const path = '/0/private/QueryOrders';
 
   const params: { nonce: number; [key: string]: string | number } = {

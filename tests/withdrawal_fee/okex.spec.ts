@@ -7,8 +7,8 @@ beforeAll(async () => {
   jest.setTimeout(90 * 1000);
 });
 
-test("getWithdrawalFees('OKEx_Spot')", async () => {
-  const addresses = await getWithdrawalFees('OKEx_Spot');
+test("getWithdrawalFees('OKEx')", async () => {
+  const addresses = await getWithdrawalFees('OKEx');
 
   expect(addresses).toHaveProperty('BTC');
   expect(addresses).toHaveProperty('EOS');

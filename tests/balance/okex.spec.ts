@@ -1,4 +1,4 @@
-import { queryAllBalances } from '../../src/exchanges/okex_spot';
+import { queryAllBalances } from '../../src/exchanges/okex';
 import { init } from '../../src/index';
 import readUserConfig from '../user_config';
 

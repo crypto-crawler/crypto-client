@@ -6,8 +6,8 @@ beforeAll(async () => {
   await init(userConfig);
 });
 
-test("getWithdrawalFees('Coinbase')", async () => {
-  const addresses = await getWithdrawalFees('Coinbase');
+test("getWithdrawalFees('CoinbasePro')", async () => {
+  const addresses = await getWithdrawalFees('CoinbasePro');
 
   expect(addresses).toHaveProperty('USD');
   expect(addresses).toHaveProperty('EUR');

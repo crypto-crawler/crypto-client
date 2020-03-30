@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import Axios from 'axios';
+import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
-import { PairInfo } from 'exchange-info';
 import { USER_CONFIG } from '../config';
 import { DepositAddress, WithdrawalFee } from '../pojo';
 import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
@@ -29,24 +29,19 @@ function createAuthenticatedClient(version: 'v1' | 'v2' = 'v2'): any {
 }
 
 export async function placeOrder(
-  pairInfo: PairInfo,
+  market: Market,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string | Error> {
   try {
-    assert.ok(pairInfo);
+    assert.ok(market);
 
-    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(
-      pairInfo,
-      price,
-      quantity,
-      sell,
-    );
+    const [priceStr, quantityStr] = convertPriceAndQuantityToStrings(market, price, quantity, sell);
     const order: { [key: string]: string | number } = {
       type: 'EXCHANGE LIMIT',
-      symbol: `t${pairInfo.raw_pair.toUpperCase()}`,
+      symbol: `t${market.id.toUpperCase()}`,
       price: priceStr,
       amount: `${sell ? '-' : ''}${quantityStr}`, // positive for buy, negative for sell
     };
@@ -66,9 +61,7 @@ export async function placeOrder(
   }
 }
 
-export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<boolean> {
-  assert.ok(pairInfo);
-
+export async function cancelOrder(orderId: string): Promise<boolean> {
   const authClient = createAuthenticatedClient();
   try {
     const arr = (await authClient.cancelOrder(parseInt(orderId, 10))) as any[];
@@ -79,12 +72,7 @@ export async function cancelOrder(pairInfo: PairInfo, orderId: string): Promise<
   }
 }
 
-export async function queryOrder(
-  pairInfo: PairInfo,
-  orderId: string,
-): Promise<{ [key: string]: any } | undefined> {
-  assert.ok(pairInfo);
-
+export async function queryOrder(orderId: string): Promise<{ [key: string]: any } | undefined> {
   const authClient = createAuthenticatedClient();
   // eslint-disable-next-line no-underscore-dangle
   const arr = await authClient._makeAuthRequest(

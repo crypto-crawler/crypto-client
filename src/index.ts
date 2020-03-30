@@ -1,18 +1,17 @@
 import { strict as assert } from 'assert';
+import fetchMarkets, { Market } from 'crypto-markets';
 import { isValidPrivate } from 'eosjs-ecc';
-import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { UserConfig, USER_CONFIG } from './config';
 import * as Binance from './exchanges/binance';
 import * as Bitfinex from './exchanges/bitfinex';
 import * as Bitstamp from './exchanges/bitstamp';
-import * as Coinbase from './exchanges/coinbase';
+import * as CoinbasePro from './exchanges/coinbase_pro';
 import * as Huobi from './exchanges/huobi';
 import * as Kraken from './exchanges/kraken';
 import * as MXC from './exchanges/mxc';
 import * as Newdex from './exchanges/newdex';
-import * as OKEx_Spot from './exchanges/okex_spot';
+import * as OKEx from './exchanges/okex';
 import * as WhaleEx from './exchanges/whaleex';
-import { createOrder as createOrderWhaleEx } from './exchanges/whaleex_eos';
 import { ActionExtended } from './pojo';
 import { Currency } from './pojo/currency';
 import { CurrencyStatus } from './pojo/currency_status';
@@ -27,17 +26,17 @@ export const SUPPORTED_EXCHANGES = [
   'Binance',
   'Bitfinex',
   'Bitstamp',
-  'Coinbase',
+  'CoinbasePro',
   'Huobi',
   'Kraken',
   'MXC',
   'Newdex',
-  'OKEx_Spot',
+  'OKEx',
   'WhaleEx',
 ] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
 
-const EXCHANGE_INFO_CACHE: { [key: string]: ExchangeInfo } = {};
+const EXCHANGE_MARKETS_CACHE: { [key: string]: readonly Market[] } = {};
 
 /**
  * Initialize.
@@ -139,21 +138,21 @@ export async function init({
   }
 }
 
-async function getExchangeInfoAndUpdateCache(
-  exchange: string | ExchangeInfo,
-): Promise<ExchangeInfo> {
+async function getExchangeMarketsAndUpdateCache(
+  exchange: string | readonly Market[],
+): Promise<readonly Market[]> {
   if (typeof exchange === 'string') {
-    if (!(exchange in EXCHANGE_INFO_CACHE)) {
-      EXCHANGE_INFO_CACHE[exchange] = await getExchangeInfo(exchange as SupportedExchange, 'Spot');
+    if (!(exchange in EXCHANGE_MARKETS_CACHE)) {
+      EXCHANGE_MARKETS_CACHE[exchange] = await fetchMarkets(exchange as SupportedExchange, 'Spot');
     }
-    return EXCHANGE_INFO_CACHE[exchange];
+    return EXCHANGE_MARKETS_CACHE[exchange];
   }
   if (typeof exchange === 'object') {
-    const exchangeInfo = exchange as ExchangeInfo;
-    EXCHANGE_INFO_CACHE[exchangeInfo.name] = exchangeInfo;
-    return exchangeInfo;
+    const markets = exchange as readonly Market[];
+    EXCHANGE_MARKETS_CACHE[markets[0].exchange] = markets;
+    return markets;
   }
-  throw new Error(`Illegal exchange: ${exchange}`);
+  throw new Error(`Unknown exchange: ${exchange}`);
 }
 
 /**
@@ -169,21 +168,19 @@ async function getExchangeInfoAndUpdateCache(
  * @returns ActionExtended
  */
 export async function createOrder(
-  exchange: SupportedExchange | ExchangeInfo,
+  exchange: SupportedExchange | readonly Market[],
   pair: string,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<ActionExtended> {
-  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
-  const pairInfo = exchangeInfo.pairs[pair];
+  const markets = await getExchangeMarketsAndUpdateCache(exchange);
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
 
   switch (exchange) {
     case 'Newdex':
-      return Newdex.createOrder(pairInfo, price, quantity, sell);
-    case 'WhaleEx': {
-      return createOrderWhaleEx(pairInfo, price, quantity, sell);
-    }
+      return Newdex.createOrder(market, price, quantity, sell);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -200,53 +197,52 @@ export async function createOrder(
  * @returns transaction_id for dex, or order_id for central
  */
 export async function placeOrder(
-  exchange: SupportedExchange | ExchangeInfo,
+  exchange: SupportedExchange | readonly Market[],
   pair: string,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string> {
-  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
-  assert.ok(exchangeInfo);
-  const pairInfo = exchangeInfo.pairs[pair];
-  assert.ok(pairInfo, `${exchangeInfo.name} does NOT have pair ${pair}`);
+  const markets = await getExchangeMarketsAndUpdateCache(exchange);
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
 
   let result: string | Error;
-  switch (exchangeInfo.name) {
+  switch (market.exchange) {
     case 'Binance':
-      result = await Binance.placeOrder(pairInfo, price, quantity, sell);
+      result = await Binance.placeOrder(market, price, quantity, sell);
       break;
     case 'Bitfinex':
-      result = await Bitfinex.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Bitfinex.placeOrder(market, price, quantity, sell, clientOrderId);
       break;
     case 'Bitstamp':
-      result = await Bitstamp.placeOrder(pairInfo, price, quantity, sell);
+      result = await Bitstamp.placeOrder(market, price, quantity, sell);
       break;
-    case 'Coinbase':
-      result = await Coinbase.placeOrder(pairInfo, price, quantity, sell);
+    case 'CoinbasePro':
+      result = await CoinbasePro.placeOrder(market, price, quantity, sell);
       break;
     case 'Huobi':
-      result = await Huobi.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Huobi.placeOrder(market, price, quantity, sell, clientOrderId);
       break;
     case 'Kraken':
-      result = await Kraken.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+      result = await Kraken.placeOrder(market, price, quantity, sell, clientOrderId);
       break;
     case 'MXC':
-      result = await MXC.placeOrder(pairInfo, price, quantity, sell);
+      result = await MXC.placeOrder(market, price, quantity, sell);
       break;
     case 'Newdex':
-      result = await Newdex.placeOrder(pairInfo, price, quantity, sell);
+      result = await Newdex.placeOrder(market, price, quantity, sell);
       break;
-    case 'OKEx_Spot':
-      result = await OKEx_Spot.placeOrder(pairInfo, price, quantity, sell, clientOrderId);
+    case 'OKEx':
+      result = await OKEx.placeOrder(market, price, quantity, sell, clientOrderId);
       break;
     case 'WhaleEx': {
-      result = await WhaleEx.placeOrder(pairInfo, price, quantity, sell);
+      result = await WhaleEx.placeOrder(market, price, quantity, sell);
       break;
     }
     default:
-      throw Error(`Unknown exchange: ${exchangeInfo.name}`);
+      throw Error(`Unknown exchange: ${market.exchange}`);
   }
 
   if (result instanceof Error) throw result;
@@ -262,36 +258,37 @@ export async function placeOrder(
  * @returns boolean if central, transaction_id if dex
  */
 export async function cancelOrder(
-  exchange: SupportedExchange | ExchangeInfo,
+  exchange: SupportedExchange | readonly Market[],
   pair: string,
   orderId_or_transactionId: string,
 ): Promise<boolean | string> {
   assert.ok(orderId_or_transactionId);
 
-  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
-  const pairInfo = exchangeInfo.pairs[pair];
+  const markets = await getExchangeMarketsAndUpdateCache(exchange);
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
 
   switch (exchange) {
     case 'Binance':
-      return Binance.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Binance.cancelOrder(market, orderId_or_transactionId);
     case 'Bitfinex':
-      return Bitfinex.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Bitfinex.cancelOrder(orderId_or_transactionId);
     case 'Bitstamp':
       return Bitstamp.cancelOrder(orderId_or_transactionId);
-    case 'Coinbase':
-      return Coinbase.cancelOrder(pairInfo, orderId_or_transactionId);
+    case 'CoinbasePro':
+      return CoinbasePro.cancelOrder(orderId_or_transactionId);
     case 'Huobi':
-      return Huobi.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Huobi.cancelOrder(orderId_or_transactionId);
     case 'Kraken':
-      return Kraken.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Kraken.cancelOrder(orderId_or_transactionId);
     case 'MXC':
-      return MXC.cancelOrder(pairInfo, orderId_or_transactionId);
+      return MXC.cancelOrder(market, orderId_or_transactionId);
     case 'Newdex':
-      return Newdex.cancelOrder(pairInfo, orderId_or_transactionId);
-    case 'OKEx_Spot':
-      return OKEx_Spot.cancelOrder(pairInfo, orderId_or_transactionId);
+      return Newdex.cancelOrder(orderId_or_transactionId);
+    case 'OKEx':
+      return OKEx.cancelOrder(market, orderId_or_transactionId);
     case 'WhaleEx':
-      return WhaleEx.cancelOrder(pairInfo, orderId_or_transactionId);
+      return WhaleEx.cancelOrder(orderId_or_transactionId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -306,36 +303,37 @@ export async function cancelOrder(
  * @returns The order information
  */
 export async function queryOrder(
-  exchange: SupportedExchange | ExchangeInfo,
+  exchange: SupportedExchange | readonly Market[],
   pair: string,
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   assert.ok(orderId);
 
-  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
-  const pairInfo = exchangeInfo.pairs[pair];
+  const markets = await getExchangeMarketsAndUpdateCache(exchange);
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
 
   switch (exchange) {
     case 'Binance':
-      return Binance.queryOrder(pairInfo, orderId);
+      return Binance.queryOrder(market, orderId);
     case 'Bitfinex':
-      return Bitfinex.queryOrder(pairInfo, orderId);
+      return Bitfinex.queryOrder(orderId);
     case 'Bitstamp':
       return Bitstamp.queryOrder(orderId);
-    case 'Coinbase':
-      return Coinbase.queryOrder(pairInfo, orderId);
+    case 'CoinbasePro':
+      return CoinbasePro.queryOrder(orderId);
     case 'Huobi':
-      return Huobi.queryOrder(pairInfo, orderId);
+      return Huobi.queryOrder(orderId);
     case 'Kraken':
-      return Kraken.queryOrder(pairInfo, orderId);
+      return Kraken.queryOrder(orderId);
     case 'MXC':
-      return MXC.queryOrder(pairInfo, orderId);
+      return MXC.queryOrder(market, orderId);
     case 'Newdex':
-      return Newdex.queryOrder(pairInfo, orderId);
-    case 'OKEx_Spot':
-      return OKEx_Spot.queryOrder(pairInfo, orderId);
+      return Newdex.queryOrder(orderId);
+    case 'OKEx':
+      return OKEx.queryOrder(market, orderId);
     case 'WhaleEx':
-      return WhaleEx.queryOrder(pairInfo, orderId);
+      return WhaleEx.queryOrder(orderId);
     default:
       throw Error(`Unknown exchange: ${exchange}`);
   }
@@ -362,8 +360,8 @@ export async function queryAllBalances(
     case 'Bitstamp':
       result = await Bitstamp.queryAllBalances(all);
       break;
-    case 'Coinbase':
-      result = await Coinbase.queryAllBalances(all);
+    case 'CoinbasePro':
+      result = await CoinbasePro.queryAllBalances(all);
       break;
     case 'Huobi':
       result = await Huobi.queryAllBalances(all);
@@ -377,8 +375,8 @@ export async function queryAllBalances(
     case 'Newdex':
       result = await Newdex.queryAllBalances();
       break;
-    case 'OKEx_Spot':
-      result = await OKEx_Spot.queryAllBalances(all);
+    case 'OKEx':
+      result = await OKEx.queryAllBalances(all);
       break;
     case 'WhaleEx':
       result = await WhaleEx.queryAllBalances(all);
@@ -413,35 +411,33 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
  * @returns symbol->platform->DepositAddress
  */
 export async function getDepositAddresses(
-  exchange: SupportedExchange | ExchangeInfo,
+  exchange: SupportedExchange,
   symbols: string[],
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols);
   if (symbols.length === 0) return {};
 
-  const exchangeInfo = await getExchangeInfoAndUpdateCache(exchange);
-
-  switch (exchangeInfo.name) {
+  switch (exchange) {
     case 'Binance':
       return Binance.getDepositAddresses(symbols);
     case 'Bitfinex':
       return Bitfinex.getDepositAddresses(symbols);
     case 'Bitstamp':
       return Bitstamp.getDepositAddresses(symbols);
-    case 'Coinbase':
-      return Coinbase.getDepositAddresses(symbols);
+    case 'CoinbasePro':
+      return CoinbasePro.getDepositAddresses(symbols);
     case 'Huobi':
       return Huobi.getDepositAddresses();
     case 'Kraken':
       return Kraken.getDepositAddresses(symbols);
-    case 'OKEx_Spot':
-      return OKEx_Spot.getDepositAddresses(symbols);
+    case 'OKEx':
+      return OKEx.getDepositAddresses(symbols);
     case 'Newdex':
       return Newdex.getDepositAddresses(symbols);
     case 'WhaleEx':
       return WhaleEx.getDepositAddresses(symbols);
     default:
-      throw Error(`Unsupported exchange: ${exchangeInfo.name}`);
+      throw Error(`Unsupported exchange: ${exchange}`);
   }
 }
 
@@ -465,8 +461,8 @@ export async function getWithdrawalFees(
       return Bitfinex.getWithdrawalFees();
     case 'Bitstamp':
       return Bitstamp.getWithdrawalFees();
-    case 'Coinbase':
-      return Coinbase.getWithdrawalFees();
+    case 'CoinbasePro':
+      return CoinbasePro.getWithdrawalFees();
     case 'Huobi':
       return Huobi.getWithdrawalFees();
     case 'Kraken':
@@ -476,8 +472,8 @@ export async function getWithdrawalFees(
         throw Error(`${exchange} requires an array of symbols`);
       return Newdex.getWithdrawalFees(symbols);
     }
-    case 'OKEx_Spot':
-      return OKEx_Spot.getWithdrawalFees();
+    case 'OKEx':
+      return OKEx.getWithdrawalFees();
     case 'WhaleEx': {
       if (symbols === undefined || symbols.length <= 0)
         throw Error(`${exchange} requires an array of symbols`);
@@ -506,8 +502,8 @@ export async function fetchCurrencies(
       return Binance.fetchCurrencies();
     case 'Huobi':
       return Huobi.fetchCurrencies();
-    case 'OKEx_Spot':
-      return OKEx_Spot.fetchCurrencies();
+    case 'OKEx':
+      return OKEx.fetchCurrencies();
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
@@ -523,8 +519,8 @@ export async function fetchCurrencyStatuses(
       return Binance.fetchCurrencyStatuses();
     case 'Huobi':
       return Huobi.fetchCurrencyStatuses();
-    case 'OKEx_Spot':
-      return OKEx_Spot.fetchCurrencyStatuses();
+    case 'OKEx':
+      return OKEx.fetchCurrencyStatuses();
     default:
       throw Error(`Unsupported exchange: ${exchange}`);
   }
@@ -578,8 +574,8 @@ export async function withdraw(
     case 'Bitstamp':
       result = await Bitstamp.withdraw(symbol, address, amount, memo);
       break;
-    case 'Coinbase':
-      result = await Coinbase.withdraw(symbol, address, amount, memo);
+    case 'CoinbasePro':
+      result = await CoinbasePro.withdraw(symbol, address, amount, memo);
       break;
     case 'Huobi':
       result = await Huobi.withdraw(symbol, address, amount, platform, memo);
@@ -596,8 +592,8 @@ export async function withdraw(
     case 'Newdex':
       result = await Newdex.withdraw(symbol, address, amount, platform, memo!);
       break;
-    case 'OKEx_Spot':
-      result = await OKEx_Spot.withdraw(symbol, address, amount, platform, memo);
+    case 'OKEx':
+      result = await OKEx.withdraw(symbol, address, amount, platform, memo);
       break;
     case 'WhaleEx':
       throw Error(`WhaleEx does NOT have withdraw API`);
