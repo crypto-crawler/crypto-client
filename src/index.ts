@@ -22,6 +22,19 @@ import { detectPlatform } from './util';
 export { UserConfig } from './config';
 export * from './pojo';
 
+export const SUPPORTED_EXCHANGES = [
+  'Binance',
+  'Bitfinex',
+  'Bitstamp',
+  'CoinbasePro',
+  'Huobi',
+  'Kraken',
+  'MXC',
+  'Newdex',
+  'OKEx',
+  'WhaleEx',
+];
+
 // Spot: exchange -> marketType -> pair -> Market
 // Other: exchange -> marketType -> rawPair -> Market
 const EXCHANGE_MARKET_CACHE: { [key: string]: { [key: string]: { [key: string]: Market } } } = {};
