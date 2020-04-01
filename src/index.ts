@@ -22,20 +22,6 @@ import { detectPlatform } from './util';
 export { UserConfig } from './config';
 export * from './pojo';
 
-export const SUPPORTED_EXCHANGES = [
-  'Binance',
-  'Bitfinex',
-  'Bitstamp',
-  'CoinbasePro',
-  'Huobi',
-  'Kraken',
-  'MXC',
-  'Newdex',
-  'OKEx',
-  'WhaleEx',
-] as const;
-export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
-
 // Spot: exchange -> marketType -> pair -> Market
 // Other: exchange -> marketType -> rawPair -> Market
 const EXCHANGE_MARKET_CACHE: { [key: string]: { [key: string]: { [key: string]: Market } } } = {};
@@ -141,7 +127,7 @@ export async function init({
 }
 
 async function getExchangeMarketAndUpdateCache(
-  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  market: { exchange: string; type: MarketType; pair: string; id?: string } | Market,
 ): Promise<Market | undefined> {
   if (
     !(market.exchange in EXCHANGE_MARKET_CACHE) ||
@@ -182,7 +168,7 @@ async function getExchangeMarketAndUpdateCache(
  * @returns ActionExtended
  */
 export async function createOrder(
-  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  market: { exchange: string; type: MarketType; pair: string; id?: string } | Market,
   price: number,
   quantity: number,
   sell: boolean,
@@ -211,7 +197,7 @@ export async function createOrder(
  * @returns transaction_id for dex, or order_id for central
  */
 export async function placeOrder(
-  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  market: { exchange: string; type: MarketType; pair: string; id?: string } | Market,
   price: number,
   quantity: number,
   sell: boolean,
@@ -272,7 +258,7 @@ export async function placeOrder(
  * @returns boolean if central, transaction_id if dex
  */
 export async function cancelOrder(
-  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  market: { exchange: string; type: MarketType; pair: string; id?: string } | Market,
   orderId: string,
 ): Promise<boolean | string> {
   assert.ok(orderId);
@@ -317,7 +303,7 @@ export async function cancelOrder(
  * @returns The order information
  */
 export async function queryOrder(
-  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  market: { exchange: string; type: MarketType; pair: string; id?: string } | Market,
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   assert.ok(orderId);
@@ -361,7 +347,7 @@ export async function queryOrder(
  * @param all Only used for debugging. False, get only available balances; True, get all including free and locked balances. Default to false.
  */
 export async function queryAllBalances(
-  exchange: SupportedExchange,
+  exchange: string,
   all = false,
 ): Promise<{ [key: string]: number }> {
   let result: { [key: string]: number } | Error;
@@ -410,7 +396,7 @@ export async function queryAllBalances(
   return resultTmp;
 }
 
-export async function queryBalance(exchange: SupportedExchange, symbol: string): Promise<number> {
+export async function queryBalance(exchange: string, symbol: string): Promise<number> {
   if (exchange === 'Newdex') return Newdex.queryBalance(symbol);
 
   const balances = await queryAllBalances(exchange);
@@ -426,7 +412,7 @@ export async function queryBalance(exchange: SupportedExchange, symbol: string):
  * @returns symbol->platform->DepositAddress
  */
 export async function getDepositAddresses(
-  exchange: SupportedExchange,
+  exchange: string,
   symbols: string[],
 ): Promise<{ [key: string]: { [key: string]: DepositAddress } }> {
   assert.ok(symbols);
@@ -463,7 +449,7 @@ export async function getDepositAddresses(
  * @returns symbol->platform -> WithdrawalFee
  */
 export async function getWithdrawalFees(
-  exchange: SupportedExchange,
+  exchange: string,
   symbols?: string[],
 ): Promise<{ [key: string]: { [key: string]: WithdrawalFee } }> {
   assert.ok(exchange);
@@ -507,9 +493,7 @@ export async function getWithdrawalFees(
  * @param exchange The exchange name
  * @returns symbol -> chain -> SymbolStatus or symbol -> SymbolStatus
  */
-export async function fetchCurrencies(
-  exchange: SupportedExchange,
-): Promise<{ [key: string]: Currency }> {
+export async function fetchCurrencies(exchange: string): Promise<{ [key: string]: Currency }> {
   assert.ok(exchange);
 
   switch (exchange) {
@@ -525,7 +509,7 @@ export async function fetchCurrencies(
 }
 
 export async function fetchCurrencyStatuses(
-  exchange: SupportedExchange,
+  exchange: string,
 ): Promise<{ [key: string]: CurrencyStatus }> {
   assert.ok(exchange);
 
@@ -553,7 +537,7 @@ export async function fetchCurrencyStatuses(
  * @returns Withdrawal ID
  */
 export async function withdraw(
-  exchange: SupportedExchange,
+  exchange: string,
   symbol: string,
   address: string,
   amount: number,
