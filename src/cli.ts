@@ -85,127 +85,205 @@ const { argv } = yargs.options({
 export async function testBinance(): Promise<void> {
   console.info(await queryBalance('Binance', 'EOS'));
 
-  const orderId = await placeOrder('Binance', 'EOS_USDT', 10.9, 1.1, true);
+  const orderId = await placeOrder(
+    { exchange: 'Binance', pair: 'EOS_USDT', type: 'Spot' },
+    10.9,
+    1.1,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Binance', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'Binance', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Binance', 'EOS_USDT', orderId));
+  console.info(await cancelOrder({ exchange: 'Binance', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Binance', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'Binance', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 }
 
 export async function testBitfinex(): Promise<void> {
   console.info(await queryBalance('Bitfinex', 'ETH'));
 
-  const orderId = await placeOrder('Bitfinex', 'ETH_USD', 241.11111, 0.04, true, '123456');
+  const orderId = await placeOrder(
+    { exchange: 'Bitfinex', pair: 'ETH_USD', type: 'Spot' },
+    241.11111,
+    0.04,
+    true,
+    '123456',
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Bitfinex', 'ETH_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Bitfinex', pair: 'ETH_USD', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Bitfinex', 'ETH_USD', orderId));
+  console.info(await cancelOrder({ exchange: 'Bitfinex', pair: 'ETH_USD', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Bitfinex', 'ETH_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Bitfinex', pair: 'ETH_USD', type: 'Spot' }, orderId));
 }
 
 export async function testBitstamp(): Promise<void> {
   console.info(await queryBalance('Bitstamp', 'ETH'));
 
-  const orderId = await placeOrder('Bitstamp', 'ETH_USD', 400.9, 0.1, true);
+  const orderId = await placeOrder(
+    { exchange: 'Bitstamp', pair: 'ETH_USD', type: 'Spot' },
+    400.9,
+    0.1,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Bitstamp', 'ETH_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Bitstamp', pair: 'ETH_USD', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Bitstamp', 'ETH_USD', orderId));
+  console.info(await cancelOrder({ exchange: 'Bitstamp', pair: 'ETH_USD', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Bitstamp', 'ETH_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Bitstamp', pair: 'ETH_USD', type: 'Spot' }, orderId));
 }
 
 export async function testCoinbase(): Promise<void> {
   console.info(await queryBalance('CoinbasePro', 'BCH'));
 
-  const orderId = await placeOrder('CoinbasePro', 'BCH_USD', 3999.48, 0.1, true);
+  const orderId = await placeOrder(
+    { exchange: 'CoinbasePro', pair: 'BCH_USD', type: 'Spot' },
+    3999.48,
+    0.1,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('CoinbasePro', 'BCH_USD', orderId));
+  console.info(
+    await queryOrder({ exchange: 'CoinbasePro', pair: 'BCH_USD', type: 'Spot' }, orderId),
+  );
 
-  console.info(await cancelOrder('CoinbasePro', 'BCH_USD', orderId));
+  console.info(
+    await cancelOrder({ exchange: 'CoinbasePro', pair: 'BCH_USD', type: 'Spot' }, orderId),
+  );
 
-  console.info(await queryOrder('CoinbasePro', 'BCH_USD', orderId));
+  console.info(
+    await queryOrder({ exchange: 'CoinbasePro', pair: 'BCH_USD', type: 'Spot' }, orderId),
+  );
 }
 
 export async function testHuobi(): Promise<void> {
   console.info(await queryBalance('Huobi', 'EOS'));
 
-  const orderId = await placeOrder('Huobi', 'EOS_USDT', 10.9, 0.1, true);
+  const orderId = await placeOrder(
+    { exchange: 'Huobi', pair: 'EOS_USDT', type: 'Spot' },
+    10.9,
+    0.1,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Huobi', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'Huobi', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Huobi', 'EOS_USDT', orderId));
+  console.info(await cancelOrder({ exchange: 'Huobi', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Huobi', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'Huobi', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 }
 
 export async function testNewdex(): Promise<void> {
-  const placeOrderId = await placeOrder('Newdex', 'EIDOS_EOS', 0.00121, 9.2644, false);
+  const placeOrderId = await placeOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
+    0.00121,
+    9.2644,
+    false,
+  );
   console.info(placeOrderId);
 
-  const orderInfo = await queryOrder('Newdex', 'EIDOS_EOS', placeOrderId);
+  const orderInfo = await queryOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
+    placeOrderId,
+  );
   console.info(orderInfo);
 
-  const cancelOrderId = await cancelOrder('Newdex', 'EIDOS_EOS', placeOrderId);
+  const cancelOrderId = await cancelOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
+    placeOrderId,
+  );
   console.info(cancelOrderId);
 }
 
 export async function testNewdexMYKEY(): Promise<void> {
-  const placeOrderId = await placeOrder('Newdex', 'MYKEY_EOS', 0.34567, 0.5, true);
+  const placeOrderId = await placeOrder(
+    { exchange: 'Newdex', pair: 'MYKEY_EOS', type: 'Spot' },
+    0.34567,
+    0.5,
+    true,
+  );
   console.info(placeOrderId);
 
-  const orderInfo = await queryOrder('Newdex', 'MYKEY_EOS', placeOrderId);
+  const orderInfo = await queryOrder(
+    { exchange: 'Newdex', pair: 'MYKEY_EOS', type: 'Spot' },
+    placeOrderId,
+  );
   console.info(orderInfo);
 
-  const cancelOrderId = await cancelOrder('Newdex', 'MYKEY_EOS', placeOrderId);
+  const cancelOrderId = await cancelOrder(
+    { exchange: 'Newdex', pair: 'MYKEY_EOS', type: 'Spot' },
+    placeOrderId,
+  );
   console.info(cancelOrderId);
 }
 
 export async function testOKEx_Spot(): Promise<void> {
   console.info(await queryBalance('OKEx', 'ETH'));
 
-  const orderId = await placeOrder('OKEx', 'ETH_USDT', 299.99, 0.001001, true);
+  const orderId = await placeOrder(
+    { exchange: 'OKEx', pair: 'ETH_USDT', type: 'Spot' },
+    299.99,
+    0.001001,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('OKEx', 'ETH_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'OKEx', pair: 'ETH_USDT', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('OKEx', 'ETH_USDT', orderId));
+  console.info(await cancelOrder({ exchange: 'OKEx', pair: 'ETH_USDT', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('OKEx', 'ETH_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'OKEx', pair: 'ETH_USDT', type: 'Spot' }, orderId));
 }
 
 export async function testWhaleEx(): Promise<void> {
-  const orderId = await placeOrder('WhaleEx', 'EIDOS_EOS', 0.00121, 9.2644, false);
+  const orderId = await placeOrder(
+    { exchange: 'WhaleEx', pair: 'EIDOS_EOS', type: 'Spot' },
+    0.00121,
+    9.2644,
+    false,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
+  console.info(await queryOrder({ exchange: 'WhaleEx', pair: 'EIDOS_EOS', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('WhaleEx', 'EIDOS_EOS', orderId));
+  console.info(
+    await cancelOrder({ exchange: 'WhaleEx', pair: 'EIDOS_EOS', type: 'Spot' }, orderId),
+  );
 
-  console.info(await queryOrder('WhaleEx', 'EIDOS_EOS', orderId));
+  console.info(await queryOrder({ exchange: 'WhaleEx', pair: 'EIDOS_EOS', type: 'Spot' }, orderId));
 }
 
 export async function testWhaleExMYKEY(): Promise<void> {
-  const orderId = await placeOrder('WhaleEx', 'MYKEY_EOS', 0.345678, 0.5, true);
+  const orderId = await placeOrder(
+    { exchange: 'WhaleEx', pair: 'MYKEY_EOS', type: 'Spot' },
+    0.345678,
+    0.5,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('WhaleEx', 'MYKEY_EOS', orderId));
+  console.info(await queryOrder({ exchange: 'WhaleEx', pair: 'MYKEY_EOS', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('WhaleEx', 'MYKEY_EOS', orderId));
+  console.info(
+    await cancelOrder({ exchange: 'WhaleEx', pair: 'MYKEY_EOS', type: 'Spot' }, orderId),
+  );
 
-  console.info(await queryOrder('WhaleEx', 'MYKEY_EOS', orderId));
+  console.info(await queryOrder({ exchange: 'WhaleEx', pair: 'MYKEY_EOS', type: 'Spot' }, orderId));
 }
 
 export async function testWhaleExEos(): Promise<void> {
-  const action = createOrder('WhaleEx', 'EIDOS_EOS', 0.00121, 9.2644, false);
+  const action = createOrder(
+    { exchange: 'WhaleEx', pair: 'EIDOS_EOS', type: 'Spot' },
+    0.00121,
+    9.2644,
+    false,
+  );
   console.info(action);
   // const txid = await sendTransaction([action], getRandomApi(USER_CONFIG.eosPrivateKey!));
   // console.info(txid);
@@ -214,40 +292,55 @@ export async function testWhaleExEos(): Promise<void> {
 export async function testKraken1(): Promise<void> {
   console.info(await queryBalance('Kraken', 'USD'));
 
-  const orderId = await placeOrder('Kraken', 'EOS_USD', 1.6666, 3.11111111, false);
+  const orderId = await placeOrder(
+    { exchange: 'Kraken', pair: 'EOS_USD', type: 'Spot' },
+    1.6666,
+    3.11111111,
+    false,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Kraken', 'EOS_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Kraken', pair: 'EOS_USD', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Kraken', 'EOS_USD', orderId));
+  console.info(await cancelOrder({ exchange: 'Kraken', pair: 'EOS_USD', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Kraken', 'EOS_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Kraken', pair: 'EOS_USD', type: 'Spot' }, orderId));
 }
 
 export async function testKraken(): Promise<void> {
   console.info(await queryBalance('Kraken', 'USD'));
 
-  const orderId = await placeOrder('Kraken', 'BTC_USD', 1.6, 3.11111111, false);
+  const orderId = await placeOrder(
+    { exchange: 'Kraken', pair: 'BTC_USD', type: 'Spot' },
+    1.6,
+    3.11111111,
+    false,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('Kraken', 'BTC_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Kraken', pair: 'BTC_USD', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('Kraken', 'BTC_USD', orderId));
+  console.info(await cancelOrder({ exchange: 'Kraken', pair: 'BTC_USD', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('Kraken', 'BTC_USD', orderId));
+  console.info(await queryOrder({ exchange: 'Kraken', pair: 'BTC_USD', type: 'Spot' }, orderId));
 }
 
 export async function testMXC(): Promise<void> {
   console.info(await queryBalance('MXC', 'EOS'));
 
-  const orderId = await placeOrder('MXC', 'EOS_USDT', 9.4873, 1.111, true);
+  const orderId = await placeOrder(
+    { exchange: 'MXC', pair: 'EOS_USDT', type: 'Spot' },
+    9.4873,
+    1.111,
+    true,
+  );
   console.info(orderId);
 
-  console.info(await queryOrder('MXC', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'MXC', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await cancelOrder('MXC', 'EOS_USDT', orderId));
+  console.info(await cancelOrder({ exchange: 'MXC', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 
-  console.info(await queryOrder('MXC', 'EOS_USDT', orderId));
+  console.info(await queryOrder({ exchange: 'MXC', pair: 'EOS_USDT', type: 'Spot' }, orderId));
 }
 
 (async (): Promise<void> => {

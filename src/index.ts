@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import fetchMarkets, { Market } from 'crypto-markets';
+import fetchMarkets, { Market, MarketType } from 'crypto-markets';
 import { isValidPrivate } from 'eosjs-ecc';
 import { UserConfig, USER_CONFIG } from './config';
 import * as Binance from './exchanges/binance';
@@ -36,7 +36,9 @@ export const SUPPORTED_EXCHANGES = [
 ] as const;
 export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
 
-const EXCHANGE_MARKETS_CACHE: { [key: string]: readonly Market[] } = {};
+// Spot: exchange -> marketType -> pair -> Market
+// Other: exchange -> marketType -> rawPair -> Market
+const EXCHANGE_MARKET_CACHE: { [key: string]: { [key: string]: { [key: string]: Market } } } = {};
 
 /**
  * Initialize.
@@ -138,21 +140,34 @@ export async function init({
   }
 }
 
-async function getExchangeMarketsAndUpdateCache(
-  exchange: string | readonly Market[],
-): Promise<readonly Market[]> {
-  if (typeof exchange === 'string') {
-    if (!(exchange in EXCHANGE_MARKETS_CACHE)) {
-      EXCHANGE_MARKETS_CACHE[exchange] = await fetchMarkets(exchange as SupportedExchange, 'Spot');
-    }
-    return EXCHANGE_MARKETS_CACHE[exchange];
+async function getExchangeMarketAndUpdateCache(
+  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+): Promise<Market | undefined> {
+  if (
+    !(market.exchange in EXCHANGE_MARKET_CACHE) ||
+    !(market.type in EXCHANGE_MARKET_CACHE[market.exchange])
+  ) {
+    if (!(market.exchange in EXCHANGE_MARKET_CACHE)) EXCHANGE_MARKET_CACHE[market.exchange] = {};
+    if (!(market.type in EXCHANGE_MARKET_CACHE[market.exchange]))
+      EXCHANGE_MARKET_CACHE[market.exchange][market.type] = {};
   }
-  if (typeof exchange === 'object') {
-    const markets = exchange as readonly Market[];
-    EXCHANGE_MARKETS_CACHE[markets[0].exchange] = markets;
-    return markets;
+
+  if (!('fees' in market)) {
+    const markets = await fetchMarkets(market.exchange, market.type);
+
+    markets.forEach((m) => {
+      const key = m.type === 'Spot' ? m.pair : m.id;
+      EXCHANGE_MARKET_CACHE[m.exchange][m.type][key] = m;
+    });
+  } else {
+    EXCHANGE_MARKET_CACHE[market.exchange][market.type][
+      market.type === 'Spot' ? market.pair : market.id!
+    ] = market as Market;
   }
-  throw new Error(`Unknown exchange: ${exchange}`);
+
+  return EXCHANGE_MARKET_CACHE[market.exchange][market.type][
+    market.type === 'Spot' ? market.pair : market.id!
+  ];
 }
 
 /**
@@ -160,85 +175,85 @@ async function getExchangeMarketsAndUpdateCache(
  *
  * This API is only used in DEX exchanges.
  *
- * @param exchange Dex exchange name
- * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param market The trading market
  * @param price The price
  * @param quantity The quantity
  * @param sell true if sell, otherwise false
  * @returns ActionExtended
  */
 export async function createOrder(
-  exchange: SupportedExchange | readonly Market[],
-  pair: string,
+  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
   price: number,
   quantity: number,
   sell: boolean,
 ): Promise<ActionExtended> {
-  const markets = await getExchangeMarketsAndUpdateCache(exchange);
-  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
-  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
+  const realMarket = await getExchangeMarketAndUpdateCache(market);
+  assert.ok(
+    realMarket,
+    `Can NOT find market for ${market.exchange} ${market.pair} in ${market.type} type`,
+  );
 
-  switch (exchange) {
+  switch (market.exchange) {
     case 'Newdex':
-      return Newdex.createOrder(market, price, quantity, sell);
+      return Newdex.createOrder(realMarket!, price, quantity, sell);
     default:
-      throw Error(`Unknown exchange: ${exchange}`);
+      throw Error(`Unknown exchange: ${market.exchange}`);
   }
 }
 
 /**
  * Place an order.
  *
- * @param exchange  The exchange name
- * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param market The trading market
  * @param price The price
  * @param quantity The quantity
  * @param sell true if sell, otherwise false
  * @returns transaction_id for dex, or order_id for central
  */
 export async function placeOrder(
-  exchange: SupportedExchange | readonly Market[],
-  pair: string,
+  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
   price: number,
   quantity: number,
   sell: boolean,
   clientOrderId?: string,
 ): Promise<string> {
-  const markets = await getExchangeMarketsAndUpdateCache(exchange);
-  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
-  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
+  const realMarket = await getExchangeMarketAndUpdateCache(market);
+  assert.ok(
+    realMarket,
+    `Can NOT find market for ${market.exchange} ${market.pair} in ${market.type} type`,
+  );
 
   let result: string | Error;
   switch (market.exchange) {
     case 'Binance':
-      result = await Binance.placeOrder(market, price, quantity, sell);
+      result = await Binance.placeOrder(realMarket!, price, quantity, sell);
       break;
     case 'Bitfinex':
-      result = await Bitfinex.placeOrder(market, price, quantity, sell, clientOrderId);
+      result = await Bitfinex.placeOrder(realMarket!, price, quantity, sell, clientOrderId);
       break;
     case 'Bitstamp':
-      result = await Bitstamp.placeOrder(market, price, quantity, sell);
+      result = await Bitstamp.placeOrder(realMarket!, price, quantity, sell);
       break;
     case 'CoinbasePro':
-      result = await CoinbasePro.placeOrder(market, price, quantity, sell);
+      result = await CoinbasePro.placeOrder(realMarket!, price, quantity, sell);
       break;
     case 'Huobi':
-      result = await Huobi.placeOrder(market, price, quantity, sell, clientOrderId);
+      result = await Huobi.placeOrder(realMarket!, price, quantity, sell, clientOrderId);
       break;
     case 'Kraken':
-      result = await Kraken.placeOrder(market, price, quantity, sell, clientOrderId);
+      result = await Kraken.placeOrder(realMarket!, price, quantity, sell, clientOrderId);
       break;
     case 'MXC':
-      result = await MXC.placeOrder(market, price, quantity, sell);
+      result = await MXC.placeOrder(realMarket!, price, quantity, sell);
       break;
     case 'Newdex':
-      result = await Newdex.placeOrder(market, price, quantity, sell);
+      result = await Newdex.placeOrder(realMarket!, price, quantity, sell);
       break;
     case 'OKEx':
-      result = await OKEx.placeOrder(market, price, quantity, sell, clientOrderId);
+      result = await OKEx.placeOrder(realMarket!, price, quantity, sell, clientOrderId);
       break;
     case 'WhaleEx': {
-      result = await WhaleEx.placeOrder(market, price, quantity, sell);
+      result = await WhaleEx.placeOrder(realMarket!, price, quantity, sell);
       break;
     }
     default:
@@ -252,70 +267,70 @@ export async function placeOrder(
 /**
  * Cancel an order.
  *
- * @param exchange  The exchange name
- * @param pair The normalized pair, e.g., EIDOS_EOS
- * @param orderId_or_transactionId orderId if central, transactionId if dex
+ * @param market The trading market
+ * @param orderId Order ID
  * @returns boolean if central, transaction_id if dex
  */
 export async function cancelOrder(
-  exchange: SupportedExchange | readonly Market[],
-  pair: string,
-  orderId_or_transactionId: string,
+  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
+  orderId: string,
 ): Promise<boolean | string> {
-  assert.ok(orderId_or_transactionId);
+  assert.ok(orderId);
 
-  const markets = await getExchangeMarketsAndUpdateCache(exchange);
-  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
-  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
+  const realMarket = await getExchangeMarketAndUpdateCache(market);
+  assert.ok(
+    realMarket,
+    `Can NOT find market for ${market.exchange} ${market.pair} in ${market.type} type`,
+  );
 
-  switch (exchange) {
+  switch (market.exchange) {
     case 'Binance':
-      return Binance.cancelOrder(market, orderId_or_transactionId);
+      return Binance.cancelOrder(realMarket!, orderId);
     case 'Bitfinex':
-      return Bitfinex.cancelOrder(orderId_or_transactionId);
+      return Bitfinex.cancelOrder(orderId);
     case 'Bitstamp':
-      return Bitstamp.cancelOrder(orderId_or_transactionId);
+      return Bitstamp.cancelOrder(orderId);
     case 'CoinbasePro':
-      return CoinbasePro.cancelOrder(orderId_or_transactionId);
+      return CoinbasePro.cancelOrder(orderId);
     case 'Huobi':
-      return Huobi.cancelOrder(orderId_or_transactionId);
+      return Huobi.cancelOrder(orderId);
     case 'Kraken':
-      return Kraken.cancelOrder(orderId_or_transactionId);
+      return Kraken.cancelOrder(orderId);
     case 'MXC':
-      return MXC.cancelOrder(market, orderId_or_transactionId);
+      return MXC.cancelOrder(realMarket!, orderId);
     case 'Newdex':
-      return Newdex.cancelOrder(orderId_or_transactionId);
+      return Newdex.cancelOrder(orderId);
     case 'OKEx':
-      return OKEx.cancelOrder(market, orderId_or_transactionId);
+      return OKEx.cancelOrder(realMarket!, orderId);
     case 'WhaleEx':
-      return WhaleEx.cancelOrder(orderId_or_transactionId);
+      return WhaleEx.cancelOrder(orderId);
     default:
-      throw Error(`Unknown exchange: ${exchange}`);
+      throw Error(`Unknown exchange: ${market.exchange}`);
   }
 }
 
 /**
  * Query an order.
  *
- * @param exchange The exchange name
- * @param pair The normalized pair, e.g., EIDOS_EOS
+ * @param market The trading market
  * @param orderId Order ID
  * @returns The order information
  */
 export async function queryOrder(
-  exchange: SupportedExchange | readonly Market[],
-  pair: string,
+  market: { exchange: SupportedExchange; type: MarketType; pair: string; id?: string } | Market,
   orderId: string,
 ): Promise<{ [key: string]: any } | undefined> {
   assert.ok(orderId);
 
-  const markets = await getExchangeMarketsAndUpdateCache(exchange);
-  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
-  assert.ok(market, `Can NOT find market for ${exchange} ${pair} in Spot type`);
+  const realMarket = await getExchangeMarketAndUpdateCache(market);
+  assert.ok(
+    realMarket,
+    `Can NOT find market for ${market.exchange} ${market.pair} in ${market.type} type`,
+  );
 
-  switch (exchange) {
+  switch (market.exchange) {
     case 'Binance':
-      return Binance.queryOrder(market, orderId);
+      return Binance.queryOrder(realMarket!, orderId);
     case 'Bitfinex':
       return Bitfinex.queryOrder(orderId);
     case 'Bitstamp':
@@ -327,15 +342,15 @@ export async function queryOrder(
     case 'Kraken':
       return Kraken.queryOrder(orderId);
     case 'MXC':
-      return MXC.queryOrder(market, orderId);
+      return MXC.queryOrder(realMarket!, orderId);
     case 'Newdex':
       return Newdex.queryOrder(orderId);
     case 'OKEx':
-      return OKEx.queryOrder(market, orderId);
+      return OKEx.queryOrder(realMarket!, orderId);
     case 'WhaleEx':
       return WhaleEx.queryOrder(orderId);
     default:
-      throw Error(`Unknown exchange: ${exchange}`);
+      throw Error(`Unknown exchange: ${market.exchange}`);
   }
 }
 

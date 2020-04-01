@@ -15,19 +15,24 @@ const CryptoClient = require('crypto-client');
   });
 
   // buy
-  const transactionId = await CryptoClient.placeOrder(
-    'Newdex',
-    'EIDOS_EOS',
+  const transactionId = await placeOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
     0.00121,
     9.2644,
     false,
   );
   console.info(transactionId);
 
-  const orderInfo = await CryptoClient.queryOrder('Newdex', 'EIDOS_EOS', transactionId);
+  const orderInfo = await CryptoClient.queryOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
+    transactionId,
+  );
   console.info(orderInfo);
 
-  const cancelTransactionId = await CryptoClient.cancelOrder('Newdex', 'EIDOS_EOS', transactionId);
+  const cancelTransactionId = await CryptoClient.cancelOrder(
+    { exchange: 'Newdex', pair: 'EIDOS_EOS', type: 'Spot' },
+    transactionId,
+  );
   console.info(cancelTransactionId);
 })();
 ```
@@ -37,12 +42,12 @@ const CryptoClient = require('crypto-client');
 - Binance
 - Bitfinex
 - Bitstamp
-- Coinbase
+- CoinbasePro
 - Huobi
 - Kraken
 - MXC
 - Newdex
-- OKEx_Spot
+- OKEx
 - WhaleEx
 
 ## Related Projects

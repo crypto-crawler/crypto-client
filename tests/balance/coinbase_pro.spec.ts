@@ -1,4 +1,4 @@
-import { queryAllBalances } from '../../src/exchanges/coinbase';
+import { queryAllBalances } from '../../src/exchanges/coinbase_pro';
 import { init } from '../../src/index';
 import readUserConfig from '../user_config';
 
