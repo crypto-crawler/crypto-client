@@ -316,8 +316,18 @@ export async function getWithdrawalFees(): Promise<{
       x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
     });
 
+  // Only USDT has '-'
+  withdrawalFees
+    .filter((x) => x.currency.includes('-'))
+    .map((x) => parseCurrency(x.currency)[0])
+    .forEach((currency) => {
+      assert.equal(currency, 'USDT');
+    });
+
   const depositAddresses = await getDepositAddresses(
-    withdrawalFees.filter((x) => x.min_fee).map((x) => parseCurrency(x.currency)[0]),
+    withdrawalFees
+      .filter((x) => x.min_fee && !x.currency.includes('-'))
+      .map((x) => parseCurrency(x.currency)[0]),
     true,
   );
   const tokenPlatformMap = calcTokenPlatform(depositAddresses);

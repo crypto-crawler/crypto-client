@@ -139,9 +139,8 @@ export function calcTokenPlatform(depositAddresses: {
   const result: { [key: string]: string } = {};
   Object.keys(depositAddresses).forEach((symbol) => {
     const platforms = Object.keys(depositAddresses[symbol]);
-    if (platforms.length === 1) {
-      result[symbol] = platforms[0]; // eslint-disable-line prefer-destructuring
-    }
+    assert.equal(platforms.length, 1);
+    result[symbol] = platforms[0]; // eslint-disable-line prefer-destructuring
   });
 
   return result;
