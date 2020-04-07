@@ -126,7 +126,7 @@ export async function getDepositAddresses(
         assert.equal(platform, detectPlatform(address.address, symbol));
       }
       if (address.address === trxAddress && symbol !== 'TRX') {
-        platform = 'TRC20';
+        platform = symbol === 'BTT' ? 'TRC10' : 'TRC20';
         assert.equal(platform, detectPlatform(address.address, symbol));
       }
       if (address.address === bnbAddress && symbol !== 'BNB') {
@@ -269,6 +269,7 @@ export async function withdraw(
     const platformNetworkMap: { [key: string]: string } = {
       ERC20: 'ETH',
       OMNI: 'BTC',
+      TRC10: 'TRX',
       TRC20: 'TRX',
     };
     const network = platformNetworkMap[platform];

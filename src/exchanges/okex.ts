@@ -227,7 +227,7 @@ export async function getDepositAddresses(
         assert.equal(platform, detectPlatform(x.address, symbol));
       }
       if (trxAddresses.includes(x.address) && symbol !== 'TRX') {
-        platform = 'TRC20';
+        platform = symbol === 'BTT' ? 'TRC10' : 'TRC20';
         assert.equal(platform, detectPlatform(x.address, symbol));
       }
 

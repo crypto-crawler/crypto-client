@@ -245,6 +245,7 @@ export function detectPlatform(address: string, symbol: string): string | undefi
   if (platform === 'OMNI') return ['BTC', 'BCH', 'BSV', 'BHD'].includes(symbol) ? symbol : platform;
   if (platform === 'ERC20') return ['ETH', 'ETC'].includes(symbol) ? symbol : platform;
   if (platform === 'TRC20' && symbol === 'TRX') return 'TRX';
+  if (platform === 'TRC20' && symbol === 'BTT') return 'TRC10'; // BTT is a TRC10 token
   if (platform === 'NRC20' && symbol === 'NAS') return 'NAS';
   if (platform === 'EOS' && symbol === 'EOS') return 'EOS';
   if (platform === 'BEP2' && symbol === 'BNB') return 'BNB';
