@@ -239,8 +239,8 @@ export async function getDepositAddresses(
       if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
 
       if (platform in result[symbol]) {
-        if (x.to === 6) {
-          // fund address has higher priority
+        if (x.to === 1) {
+          // spot address has higher priority
           result[symbol][platform] = depositAddress;
         }
       } else {
