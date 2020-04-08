@@ -216,7 +216,7 @@ export async function getDepositAddresses(
   // console.info(arr);
 
   arr
-    .filter((x) => all || x.to === 1) // 1, spot; 6, fund
+    .filter((x) => all || x.to === 1 || x.to === 6) // 1, spot; 6, fund
     .forEach((x) => {
       const [symbol, platformTmp] = parseCurrency(x.currency);
       if (!(symbol in result)) result[symbol] = {};
@@ -238,7 +238,14 @@ export async function getDepositAddresses(
       };
       if (x.memo || x.tag) depositAddress.memo = x.memo || x.tag;
 
-      result[symbol][platform] = depositAddress;
+      if (platform in result[symbol]) {
+        if (x.to === 6) {
+          // fund address has higher priority
+          result[symbol][platform] = depositAddress;
+        }
+      } else {
+        result[symbol][platform] = depositAddress;
+      }
     });
 
   return result;
