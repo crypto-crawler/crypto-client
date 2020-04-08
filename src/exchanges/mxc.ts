@@ -173,8 +173,12 @@ async function getAccountInfo(): Promise<{
   return response.data;
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
-  const accountInfo = await getAccountInfo();
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
+  const accountInfo = await getAccountInfo().catch((e: Error) => {
+    return e;
+  });
+  if (accountInfo instanceof Error) return accountInfo;
+
   const result: { [key: string]: number } = {};
 
   Object.keys(accountInfo).forEach((symbol) => {

@@ -179,7 +179,7 @@ export async function queryOrder(
   return order;
 }
 
-export async function queryAllBalances(): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(): Promise<{ [key: string]: number } | Error> {
   const agent = new https.Agent({
     rejectUnauthorized: false,
   });
@@ -198,7 +198,10 @@ export async function queryAllBalances(): Promise<{ [key: string]: number }> {
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
       },
     },
-  );
+  ).catch((e: Error) => {
+    return e;
+  });
+  if (response instanceof Error) return response;
   assert.equal(response.status, 200);
 
   const arr = response.data.tokens as {

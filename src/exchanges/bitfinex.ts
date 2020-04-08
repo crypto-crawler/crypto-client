@@ -88,14 +88,17 @@ export async function queryOrder(orderId: string): Promise<{ [key: string]: any 
   return arr[0];
 }
 
-export async function queryAllBalancesV2(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalancesV2(all = false): Promise<{ [key: string]: number } | Error> {
   const authClient = createAuthenticatedClient();
 
-  const wallets = (await authClient.wallets()) as any[];
-  const arr = wallets.filter((x) => !all && x.type === 'exchange');
+  const wallets = await authClient.wallets().catch((e: Error) => {
+    return e;
+  });
+  if (wallets instanceof Error) return wallets;
+  const arr = wallets.filter((x: any) => !all && x.type === 'exchange');
 
   const result: { [key: string]: number } = {};
-  arr.forEach((x) => {
+  arr.forEach((x: any) => {
     const pair = normalizeSymbol(x.currency, 'Bitfinex');
     result[pair] = x.balance;
   });

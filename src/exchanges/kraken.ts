@@ -137,7 +137,7 @@ export async function queryOrder(
   return data[orderId];
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const path = '/0/private/BalanceEx';
 
   const balances = await privateMethod<{ [key: string]: { balance: string; hold_trade: string } }>(
@@ -146,7 +146,7 @@ export async function queryAllBalances(all = false): Promise<{ [key: string]: nu
       nonce: generateNonce(),
     },
   );
-  if (balances instanceof Error) return {};
+  if (balances instanceof Error) return balances;
 
   const result: { [key: string]: number } = {};
   Object.keys(balances).forEach((symbol) => {

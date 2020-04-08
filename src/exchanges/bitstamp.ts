@@ -154,11 +154,12 @@ export async function cancelOrder(orderId: string): Promise<boolean> {
   return data.id === parseInt(orderId, 10);
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const result: { [key: string]: number } = {};
 
   const data = await privateRequest('/api/v2/balance/');
-  if (data instanceof Error) return result;
+  if (data instanceof Error) return data;
+
   const dataTyped = data as { [key: string]: string };
 
   Object.keys(dataTyped)

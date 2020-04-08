@@ -160,10 +160,13 @@ export async function queryOpenOrder(sell = false): Promise<{ [key: string]: any
   return undefined;
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const path = '/api/v1/assets';
   const params = signData('GET', path);
-  const response = await Axios.get(`${URL_PREFIX}${path}?${params}`);
+  const response = await Axios.get(`${URL_PREFIX}${path}?${params}`).catch((e: Error) => {
+    return e;
+  });
+  if (response instanceof Error) return response;
   assert.equal(response.status, 200);
 
   if (response.data.returnCode !== '0') {

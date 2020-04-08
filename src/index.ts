@@ -362,7 +362,7 @@ export async function queryOrder(
 export async function queryAllBalances(
   exchange: string,
   all = false,
-): Promise<{ [key: string]: number }> {
+): Promise<{ [key: string]: number } | Error> {
   let result: { [key: string]: number } | Error;
   switch (exchange) {
     case 'Binance':
@@ -399,7 +399,7 @@ export async function queryAllBalances(
       throw Error(`Unknown exchange: ${exchange}`);
   }
 
-  if (result instanceof Error) throw result;
+  if (result instanceof Error) return result;
 
   // filter out zero balances
   const resultTmp: { [key: string]: number } = result;
@@ -413,6 +413,7 @@ export async function queryBalance(exchange: string, symbol: string): Promise<nu
   if (exchange === 'Newdex') return Newdex.queryBalance(symbol);
 
   const balances = await queryAllBalances(exchange);
+  if (balances instanceof Error) return 0;
 
   return balances[symbol] || 0;
 }

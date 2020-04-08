@@ -100,9 +100,16 @@ export async function queryOrder(
   return data;
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const authClient = createAuthenticatedClient();
-  const arr = (await authClient.spot().getAccounts()) as {
+  const data = await authClient
+    .spot()
+    .getAccounts()
+    .catch((e: Error) => {
+      return e;
+    });
+  if (data instanceof Error) return data;
+  const arr = data as {
     id: string;
     currency: string;
     balance: string;

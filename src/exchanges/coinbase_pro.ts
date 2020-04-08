@@ -73,10 +73,13 @@ export async function queryOrder(orderId: string): Promise<{ [key: string]: any 
   }
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const client = createAuthenticatedClient();
 
-  const accounts = await client.getAccounts();
+  const accounts = await client.getAccounts().catch((e: Error) => {
+    return e;
+  });
+  if (accounts instanceof Error) return accounts;
 
   const result: { [key: string]: number } = {};
 

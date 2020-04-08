@@ -154,10 +154,16 @@ interface ReferenceCurrency {
   chains: Chain[];
 }
 
-export async function queryAllBalances(all = false): Promise<{ [key: string]: number }> {
+export async function queryAllBalances(all = false): Promise<{ [key: string]: number } | Error> {
   const path = `/v1/account/accounts/${USER_CONFIG.HUOBI_ACCOUNT_ID!}/balance`;
   const fullUrl = signRequest('GET', path);
-  const response = await Axios.get(fullUrl, { headers: { 'Content-Type': 'application/json' } });
+  const response = await Axios.get(fullUrl, {
+    headers: { 'Content-Type': 'application/json' },
+  }).catch((e: Error) => {
+    return e;
+  });
+  if (response instanceof Error) return response;
+
   assert.equal(response.status, 200);
   assert.equal(response.data.status, 'ok');
   const data = response.data.data as {
