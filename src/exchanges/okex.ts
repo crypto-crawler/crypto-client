@@ -4,8 +4,7 @@ import BigNumber from 'bignumber.js';
 import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
 import { USER_CONFIG } from '../config';
-import { CurrencyStatus, WithdrawalFee } from '../pojo';
-import { Currency } from '../pojo/currency';
+import { Currency, WithdrawalFee } from '../pojo';
 import { DepositAddress } from '../pojo/deposit_address';
 import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
@@ -395,38 +394,6 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     };
   });
 
-  return result;
-}
-
-export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
-  const result: { [key: string]: CurrencyStatus } = {};
-
-  const authClient = createAuthenticatedClient();
-
-  const currencies = (await await authClient.account().getCurrencies()) as ReadonlyArray<{
-    name: string;
-    currency: string;
-    can_deposit: '0' | '1';
-    can_withdraw: '0' | '1';
-    min_withdrawal?: string;
-  }>;
-  // Rename USDT to USDT-OMNI
-  currencies
-    .filter((x) => x.currency === 'USDT')
-    .forEach((x) => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
-    });
-  // console.info(JSON.stringify(currencies, undefined, 2));
-
-  currencies.forEach((x) => {
-    const [symbol, platform] = parseCurrency(x.currency);
-    if (!(symbol in result)) {
-      result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {} };
-    }
-
-    result[symbol].deposit_enabled[platform] = x.can_deposit === '1';
-    result[symbol].withdrawal_enabled[platform] = x.can_withdraw === '1';
-  });
   return result;
 }
 

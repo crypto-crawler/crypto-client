@@ -4,8 +4,7 @@ import crypto from 'crypto';
 import { Market } from 'crypto-markets';
 import { normalizeSymbol } from 'crypto-pair';
 import { USER_CONFIG } from '../config';
-import { CurrencyStatus, DepositAddress, WithdrawalFee } from '../pojo';
-import { Currency } from '../pojo/currency';
+import { Currency, DepositAddress, WithdrawalFee } from '../pojo';
 import { convertPriceAndQuantityToStrings, detectPlatform, numberToString, sleep } from '../util';
 
 const DOMAIN = 'api.huobi.pro';
@@ -347,31 +346,6 @@ export async function fetchCurrencies(): Promise<{
       };
       result[symbol].active =
         result[symbol].active && result[symbol].depositEnabled && result[symbol].withdrawalEnabled;
-    });
-
-  return result;
-}
-
-export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
-  const arr = await getReferenceCurrencies();
-
-  const result: { [key: string]: CurrencyStatus } = {};
-
-  arr
-    .filter((x) => x.chains.length > 0)
-    .forEach((x) => {
-      const trading = x.instStatus === 'normal';
-      const symbol = normalizeSymbol(x.currency, 'Huobi');
-      if (!(symbol in result)) {
-        result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {}, trading };
-      }
-
-      x.chains.forEach((y) => {
-        const platform = y.baseChainProtocol || symbol;
-
-        result[symbol].deposit_enabled[platform] = y.depositStatus === 'allowed';
-        result[symbol].withdrawal_enabled[platform] = y.withdrawStatus === 'allowed';
-      });
     });
 
   return result;

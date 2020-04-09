@@ -2,8 +2,7 @@ import { strict as assert } from 'assert';
 import createClient, { Binance } from 'binance-api-node';
 import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
-import { CurrencyStatus, WithdrawalFee } from '../pojo';
-import { Currency } from '../pojo/currency';
+import { Currency, WithdrawalFee } from '../pojo';
 import { DepositAddress } from '../pojo/deposit_address';
 import { calcTokenPlatform, convertPriceAndQuantityToStrings, detectPlatform } from '../util';
 
@@ -203,33 +202,6 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
       depositEnabled: detail.depositStatus,
       withdrawalEnabled: detail.withdrawStatus,
     };
-  });
-
-  return result;
-}
-
-export async function fetchCurrencyStatuses(): Promise<{ [key: string]: CurrencyStatus }> {
-  const result: { [key: string]: CurrencyStatus } = {};
-
-  const client = createAuthenticatedClient();
-  const assetDetail = await client.assetDetail();
-  if (!assetDetail.success) return result;
-
-  // console.info(JSON.stringify(assetDetail.assetDetail, undefined, 2));
-
-  Object.keys(assetDetail.assetDetail).forEach((symbol) => {
-    const detail = assetDetail.assetDetail[symbol];
-    if (detail === undefined) return;
-
-    let platform = symbol;
-    if (symbol === 'WTC') platform = 'ERC20';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
-
-    if (!(symbol in result)) {
-      result[symbol] = { symbol, deposit_enabled: {}, withdrawal_enabled: {} };
-    }
-    result[symbol].deposit_enabled[platform] = detail.depositStatus;
-    result[symbol].withdrawal_enabled[platform] = detail.withdrawStatus;
   });
 
   return result;
