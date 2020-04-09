@@ -2,6 +2,7 @@ import { AuthenticatedClient } from '@okfe/okex-node';
 import { strict as assert } from 'assert';
 import BigNumber from 'bignumber.js';
 import { Market } from 'crypto-markets';
+import { normalizeSymbol } from 'crypto-pair';
 import { USER_CONFIG } from '../config';
 import { CurrencyStatus, WithdrawalFee } from '../pojo';
 import { Currency } from '../pojo/currency';
@@ -381,128 +382,19 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
     can_withdraw: '0' | '1';
     min_withdrawal?: string;
   }>;
-  // Rename USDT to USDT-OMNI
-  currencies
-    .filter((x) => x.currency === 'USDT')
-    .forEach((x) => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
-    });
+
   // console.info(JSON.stringify(currencies, undefined, 2));
 
-  // Usded for validation
-  const currencyMap: {
-    [key: string]: {
-      symbol: string;
-      can_deposit: boolean;
-      can_withdraw: boolean;
-      min_withdraw_amount?: number;
-    };
-  } = {};
   currencies.forEach((x) => {
-    currencyMap[x.currency] = {
-      symbol: x.currency,
-      can_deposit: x.can_deposit === '1',
-      can_withdraw: x.can_withdraw === '1',
+    const symbol = normalizeSymbol(x.currency, 'OKEx');
+    result[symbol] = {
+      symbol,
+      active: x.can_deposit === '1' && x.can_withdraw === '1',
+      depositEnabled: x.can_deposit === '1',
+      withdrawalEnabled: x.can_withdraw === '1',
     };
-    if (x.min_withdrawal) {
-      currencyMap[x.currency].min_withdraw_amount = parseFloat(x.min_withdrawal);
-    }
   });
 
-  const withdrawalFees = (await authClient.account().getWithdrawalFee()) as ReadonlyArray<{
-    min_fee: string;
-    currency: string;
-    max_fee: string;
-  }>;
-
-  // console.info(JSON.stringify(withdrawalFees, undefined, 2));
-
-  // Rename USDT to USDT-OMNI
-  withdrawalFees
-    .filter((x) => x.currency === 'USDT')
-    .forEach((x) => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
-    });
-
-  // console.info(withdrawalFees.filter(x => x.currency.includes('-')).map(x => x.currency));
-  withdrawalFees
-    .filter((x) => x.min_fee)
-    .forEach((x) => {
-      const [symbol, platform] = parseCurrency(x.currency);
-
-      const currency: Currency = result[symbol] || {
-        symbol,
-        trading: true,
-        deposit: {},
-        withdrawal: {},
-      };
-
-      currency.deposit[platform] = {
-        platform,
-        enabled: x.currency in currencyMap ? currencyMap[x.currency].can_deposit : false,
-      };
-
-      currency.withdrawal[platform] = {
-        platform,
-        enabled: true,
-        fee: parseFloat(x.min_fee),
-        min:
-          x.currency in currencyMap && 'min_withdraw_amount' in currencyMap[x.currency]
-            ? currencyMap[x.currency].min_withdraw_amount!
-            : 0.0,
-      };
-
-      result[symbol] = currency;
-    });
-
-  const requests = Object.keys(result).map((symbol) => getAddressWithTryCatch(authClient, symbol));
-  const depositAddresses = (await Promise.all(requests))
-    .filter((x) => !(x instanceof Error))
-    .flatMap(
-      (x) =>
-        x as {
-          address: string;
-          currency: string;
-          to: number;
-          memo?: string;
-          tag?: string;
-        }[],
-    );
-
-  depositAddresses.forEach((x) => {
-    x.currency = x.currency.toUpperCase(); // eslint-disable-line no-param-reassign
-  });
-  // Rename USDT to USDT-OMNI
-  depositAddresses
-    .filter((x) => x.currency === 'USDT')
-    .forEach((x) => {
-      x.currency = 'USDT-OMNI'; // eslint-disable-line no-param-reassign
-    });
-
-  // console.info(depositAddresses);
-  // console.info(depositAddresses.filter(x => x.currency.includes('-')).map(x => x.currency));
-
-  depositAddresses.forEach((x) => {
-    const [symbol, platform] = parseCurrency(x.currency);
-
-    const currency = result[symbol];
-    assert.ok(currency);
-
-    if (platform in currency.deposit) {
-      if (x.currency in currencyMap) {
-        // if (!currencyMap[x.currency].can_deposit) console.error(x);
-        // Exception: ACE can_deposit is false but it is in depositAddresses
-        // assert.ok(currencyMap[x.currency].can_deposit);
-      } else {
-        currency.deposit[platform].enabled = true;
-      }
-    } else {
-      currency.deposit[platform] = {
-        platform,
-        enabled: true,
-      };
-    }
-  });
   return result;
 }
 

@@ -1,12 +1,7 @@
 export interface Currency {
   symbol: string;
-  trading: boolean;
+  active: boolean;
   // TODO: precision: number;
-  // platform -> enabled
-  deposit: {
-    [key: string]: { platform: string; enabled: boolean; fee?: number; min?: number; max?: number };
-  };
-  withdrawal: {
-    [key: string]: { platform: string; enabled: boolean; fee: number; min: number; max?: number };
-  };
+  depositEnabled: boolean;
+  withdrawalEnabled: boolean;
 }

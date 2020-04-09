@@ -196,28 +196,12 @@ export async function fetchCurrencies(): Promise<{ [key: string]: Currency }> {
 
   Object.keys(assetDetail.assetDetail).forEach((symbol) => {
     const detail = assetDetail.assetDetail[symbol];
-    if (detail === undefined) return;
-
-    let platform = symbol;
-    if (symbol === 'WTC') platform = 'ERC20';
-    if (['GTO', 'MITH'].includes(symbol)) platform = 'BEP2';
 
     result[symbol] = {
       symbol,
-      trading: true,
-      deposit: {},
-      withdrawal: {},
-    };
-    result[symbol].deposit[platform] = {
-      platform,
-      enabled: detail.depositStatus,
-    };
-
-    result[symbol].withdrawal[platform] = {
-      platform,
-      enabled: detail.withdrawStatus,
-      fee: detail.withdrawFee,
-      min: detail.minWithdrawAmount,
+      active: detail.depositStatus && detail.withdrawStatus,
+      depositEnabled: detail.depositStatus,
+      withdrawalEnabled: detail.withdrawStatus,
     };
   });
 

@@ -333,26 +333,22 @@ export async function fetchCurrencies(): Promise<{
   arr
     .filter((x) => x.chains.length > 0)
     .forEach((x) => {
-      const trading = x.instStatus === 'normal';
+      const active = x.instStatus === 'normal';
       const symbol = normalizeSymbol(x.currency, 'Huobi');
-      result[symbol] = { symbol, trading, deposit: {}, withdrawal: {} };
-
-      x.chains.forEach((y) => {
-        const platform = y.baseChainProtocol || symbol;
-
-        result[symbol].deposit[platform] = {
-          platform,
-          enabled: y.depositStatus === 'allowed',
-          min: parseFloat(y.minDepositAmt),
-        };
-        result[symbol].withdrawal[platform] = {
-          platform,
-          enabled: y.withdrawStatus === 'allowed',
-          fee: parseFloat(y.transactFeeWithdraw || y.minTransactFeeWithdraw || '0.0'),
-          min: parseFloat(y.minWithdrawAmt),
-        };
-      });
+      result[symbol] = {
+        symbol,
+        active,
+        depositEnabled: x.chains
+          .map((chain) => chain.depositStatus)
+          .some((status) => status === 'allowed'),
+        withdrawalEnabled: x.chains
+          .map((chain) => chain.withdrawStatus)
+          .some((status) => status === 'allowed'),
+      };
+      result[symbol].active =
+        result[symbol].active && result[symbol].depositEnabled && result[symbol].withdrawalEnabled;
     });
+
   return result;
 }
 
