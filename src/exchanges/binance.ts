@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import createClient, { Binance } from 'binance-api-node';
+import createClient, { Binance, DepositAddress as BinanceDepositAddress } from 'binance-api-node';
 import { Market } from 'crypto-markets';
 import { USER_CONFIG } from '../config';
 import { Currency, WithdrawalFee } from '../pojo';
@@ -103,8 +103,20 @@ export async function getDepositAddresses(
   if (!symbols.includes('BNB')) symbols.push('BNB');
 
   const client = createAuthenticatedClient();
-  const requests = symbols.map((symbol) => client.depositAddress({ asset: symbol }));
-  const addresses = (await Promise.all(requests)).filter((x) => x.success);
+
+  const addresses: BinanceDepositAddress[] = [];
+  for (let i = 0; i < symbols.length; i += 1) {
+    const symbol = symbols[i];
+    // eslint-disable-next-line no-await-in-loop
+    const address = await client.depositAddress({ asset: symbol });
+    if (address.success) {
+      addresses.push(address);
+    } else {
+      assert.notEqual(symbol, 'ETH');
+      assert.notEqual(symbol, 'TRX');
+      assert.notEqual(symbol, 'BNB');
+    }
+  }
 
   const ethAddress = addresses.filter((address) => address.asset === 'ETH')[0].address;
   assert.ok(ethAddress);
