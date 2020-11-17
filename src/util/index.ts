@@ -22,10 +22,10 @@ export function Retry(times = 1, logger: any = console) {
   assert.ok(times > 0);
   // eslint-disable-next-line func-names
   return function (
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: its value is never read
     target: Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: its value is never read
     propertyName: string,
     propertyDesciptor: TypedPropertyDescriptor<AsyncFunc>,
@@ -50,7 +50,7 @@ export function Retry(times = 1, logger: any = console) {
 }
 
 export async function retry(
-  func: (...args: any[]) => Promise<any>,
+  func: (...args: any[]) => Promise<any>, // eslint-disable-line no-shadow
   times = 1,
   logger: any = console,
   ...args: any[]

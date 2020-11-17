@@ -14,6 +14,8 @@ const math = create(all, {
 
 const WHALEEX_EOS_ACCOUNT = 'whaleexchang';
 
+export type Params = { [key: string]: string | number | boolean };
+
 function defaultHandler(params: Params): Params {
   return {
     timestamp: Date.now(),
@@ -23,7 +25,6 @@ function defaultHandler(params: Params): Params {
   };
 }
 
-export type Params = { [key: string]: string | number | boolean };
 type Handler = (params: Params) => Params;
 
 const HANDLER: { [key: string]: Handler } = {

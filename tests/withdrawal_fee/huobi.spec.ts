@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import { getWithdrawalFees, init } from '../../src/index';
 import readUserConfig from '../user_config';
 
